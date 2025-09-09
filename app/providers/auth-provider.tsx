@@ -92,13 +92,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription?.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    setTimeout(() => {
-      if (!user) {
-        router.push("/login");
-      }
-    }, 200);
-  }, [user, router]);
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     if (!user) {
+  //       router.push("/login");
+  //     }
+  //   }, 200);
+  // }, [user, router]);
 
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({

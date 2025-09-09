@@ -198,7 +198,7 @@ const SignupForm: React.FC = () => {
   );
 
   return (
-    <div className="w-96 p-6 border border-primary rounded-lg shadow-lg flex flex-col">
+    <div className="w-[90%] lg:w-96 p-6 border border-primary rounded-lg shadow-lg flex flex-col">
       <div className="flex items-center gap-2 mb-4">
         <UserPlus2 className="h-6 w-6 text-primary" />
         <h3 className="text-xl font-bold text-primary">Sign Up</h3>

@@ -11,6 +11,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { getTotalBusinessOutstanding } from "./services/outstanding";
+import Hero from "./components/dashboard/Hero";
 
 const Index = async () => {
   const totalOutstanding = await getTotalBusinessOutstanding();
@@ -19,15 +20,7 @@ const Index = async () => {
     <div className="min-h-screen bg-background">
       <main className="container mx-auto p-6 space-y-6">
         {/* Hero Section */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">
-            Welcome back, Mama 👋
-          </h1>
-          <p className="text-muted-foreground">
-            Here&apos;s what&apos;s happening with your business today.
-          </p>
-        </div>
-
+        <Hero />
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <MetricsCard

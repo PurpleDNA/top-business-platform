@@ -66,9 +66,11 @@ export const DashboardHeader = () => {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">John Doe</p>
+                  <p className="text-sm font-medium">
+                    {profile?.user_metadata?.display_name}
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    john@company.com
+                    {profile?.profile?.email}
                   </p>
                 </div>
               </DropdownMenuLabel>
