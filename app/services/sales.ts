@@ -1,0 +1,55 @@
+import supabase from "@/client";
+
+export const fetchAllSales = async () => {
+  try {
+    const { data: sales, error } = await supabase
+      .from("sales")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error("Error fetching sales:", error);
+      return [];
+    }
+    return sales;
+  } catch (error) {
+    console.error("Unexpected error in fetchAllSales:", error);
+    return [];
+  }
+};
+
+export const fetchSalesByCustomerId = async (customerId: string) => {
+  try {
+    const { data: sales, error } = await supabase
+      .from("sales")
+      .select("*")
+      .eq("customer_id", customerId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching sales by customer ID:", error);
+      return [];
+    }
+
+    return sales;
+  } catch (error) {
+    console.error("Unexpected error in fetchSalesByCustomerId:", error);
+    return [];
+  }
+};
+
+export const fetchSalesByProductionId = async (productionId: string) => {
+  try {
+    const { data: sales, error } = await supabase
+      .from("sales")
+      .select("*")
+      .eq("production_id", productionId);
+
+    if (error) {
+      throw error;
+    }
+
+    return sales;
+  } catch (error) {
+    console.error("Unexpected error in fetchSalesByProductionId:", error);
+  }
+};
