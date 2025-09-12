@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use server";
 import supabase from "@/client";
-
+import { toast } from "sonner";
 interface Customer {
   id: string;
   name: string;
@@ -12,6 +15,13 @@ interface Customer {
     amount_paid: number;
   }[];
   created_at: string;
+}
+
+interface Create {
+  name: string;
+  phoneNumber: string;
+  hasDebt: boolean;
+  debtAmount?: string;
 }
 
 export const fetchAllCustomers = async (): Promise<Customer[] | []> => {
@@ -67,5 +77,27 @@ export const fetchCustomerTotalSpent = async (customerId: string) => {
   } catch (error) {
     console.error("Error fetching total customer spent:", error);
     return 0;
+  }
+};
+
+export const createCustomer = async (payload: Create) => {
+  try {
+    const { data: customerData, error } = await supabase
+      .from("customers")
+      .insert({
+        name: payload.name,
+        phone_number: payload.phoneNumber,
+        debt_free: !payload.hasDebt,
+        total_debt: Number(payload.debtAmount) || 0,
+      })
+      .select();
+
+    if (error) {
+      throw new Error("Create Customer Error");
+    }
+    return { status: "SUCCESS", error: "", res: customerData[0] };
+  } catch (error) {
+    console.log("create customer error>>>>>>>>", error);
+    throw new Error("Unexpected Error Occured");
   }
 };

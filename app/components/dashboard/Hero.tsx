@@ -7,7 +7,7 @@ const Hero = () => {
   return (
     <div className="space-y-2">
       <h1 className="text-3xl font-bold text-foreground">
-        Welcome back, {profile?.profile?.first_name} 👋
+        Welcome back, {profile?.profile?.first_name || "User"} 👋
       </h1>
       <p className="text-muted-foreground">
         Here&apos;s what&apos;s happening with your business today.

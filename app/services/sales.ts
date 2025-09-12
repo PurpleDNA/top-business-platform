@@ -1,5 +1,12 @@
 import supabase from "@/client";
 
+interface Sale {
+  customer_id: string;
+  production_id: string;
+  amount: number;
+  paid: boolean;
+}
+
 export const fetchAllSales = async () => {
   try {
     const { data: sales, error } = await supabase
@@ -51,5 +58,22 @@ export const fetchSalesByProductionId = async (productionId: string) => {
     return sales;
   } catch (error) {
     console.error("Unexpected error in fetchSalesByProductionId:", error);
+  }
+};
+
+export const createNewSale = async (payload: Sale) => {
+  try {
+    const { data: saleData, error } = await supabase
+      .from("sales")
+      .insert(payload)
+      .select();
+
+    if (error) {
+      throw new Error("Create Customer Error");
+    }
+    return { status: "SUCCESS", error: "", res: saleData[0] };
+  } catch (error) {
+    console.log("create sale error>>>>>>", error);
+    throw new Error("Unexpected Error Occured");
   }
 };

@@ -5,6 +5,7 @@ import { Bell, Search, Settings, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,21 +16,33 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DarkModeToggle } from "./DarkModeToggle";
 import { useAuth } from "@/app/providers/auth-provider";
+import { Bungee } from "next/font/google";
+
+export const bungee = Bungee({
+  subsets: ["latin"],
+  variable: "--font-bungee",
+  weight: ["400"],
+});
 
 export const DashboardHeader = () => {
+  const router = useRouter();
+
   const { signOut, profile } = useAuth();
   const pathname = usePathname();
   console.log(profile);
   return (
     <header
       className={`sticky top-0 z-50 w-full border-b bg-card ${
-        pathname === "/login" ? "hidden" : ""
-      }`}
+        bungee.className
+      } ${pathname === "/login" ? "hidden" : ""}`}
     >
       <div className="flex h-16 items-center justify-between px-6">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-semibold text-foreground">
-            CRM Dashboard
+        <div
+          className="flex items-center gap-4 cursor-pointer hover:scale-95 transition-all duration-200"
+          onClick={() => router.push("/")}
+        >
+          <h1 className="text-xl font-semibold text-foreground ">
+            Top Special
           </h1>
         </div>
 
@@ -48,13 +61,12 @@ export const DashboardHeader = () => {
             </span>
           </Button>
 
-          <Button variant="ghost" size="icon">
-            <Settings className="h-5 w-5" />
-          </Button>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+              <Button
+                variant="ghost"
+                className="relative h-9 w-9 rounded-full cursor-pointer"
+              >
                 <Avatar className="h-9 w-9">
                   <AvatarImage src="/placeholder-avatar.jpg" alt="User" />
                   <AvatarFallback className="bg-primary text-primary-foreground">
@@ -75,10 +87,16 @@ export const DashboardHeader = () => {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
+                Settings
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={signOut}>Sign out</DropdownMenuItem>
+              <DropdownMenuItem onClick={signOut} className="cursor-pointer">
+                Sign out
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

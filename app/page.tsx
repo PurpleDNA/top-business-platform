@@ -85,7 +85,7 @@ const Index = async () => {
             <CustomersTable />
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-6 cursor-pointer">
             <QuickActions />
           </div>
         </div>
