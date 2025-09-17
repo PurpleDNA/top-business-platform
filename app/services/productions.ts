@@ -1,6 +1,27 @@
 "use server";
 import supabase from "@/client";
 
+export interface Production {
+  id: string;
+  quantity: {
+    blue: number;
+    green: number;
+    orange: number;
+    [key: string]: number; // allows future extensions
+  };
+  total: number;
+  break_even: boolean;
+  short_or_excess: boolean;
+  short_amount: number;
+  excess_amount: number;
+  expenses_total: number;
+  cash: number;
+  outstanding: number;
+  created_at: string;
+  updated_at: string;
+  paid_outstanding: number;
+}
+
 interface Create {
   quantity: {
     orange: string;
@@ -36,6 +57,36 @@ export const createProduction = async (payload: Create) => {
     return { status: "SUCCESS", error: "", res: ProductionData[0] };
   } catch (error) {
     console.log("create production error>>>>>>>>, error");
+    throw new Error(String(error));
+  }
+};
+
+export const getLatestProduction = async () => {
+  try {
+    const { data: lastProduction } = await supabase
+      .from("productions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    return lastProduction;
+  } catch (error) {
+    console.log("getLatestProduction Error>>>>>>>", error);
+    throw new Error(String(error));
+  }
+};
+
+export const getLast10Productions = async () => {
+  try {
+    const { data: last10 } = await supabase
+      .from("productions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    return last10;
+  } catch (error) {
+    console.log("getLatestProduction Error>>>>>>>", error);
     throw new Error(String(error));
   }
 };

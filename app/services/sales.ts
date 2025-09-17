@@ -3,7 +3,7 @@ import supabase from "@/client";
 interface Sale {
   customer_id: string;
   production_id: string;
-  amount: number;
+  amount: string;
   paid: boolean;
 }
 
@@ -65,7 +65,12 @@ export const createNewSale = async (payload: Sale) => {
   try {
     const { data: saleData, error } = await supabase
       .from("sales")
-      .insert(payload)
+      .insert({
+        customer_id: payload.customer_id,
+        production_id: payload.production_id,
+        amount: Number(payload.amount),
+        paid: payload.paid,
+      })
       .select();
 
     if (error) {

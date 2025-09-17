@@ -9,6 +9,7 @@ import { formatDate } from "@/app/services/utils";
 import PaymentHistory from "@/app/components/customer/PaymentHistory";
 import { AlertTriangle } from "lucide-react";
 import PurchaseHistory from "@/app/components/customer/PurchaseHistory";
+import Link from "next/link";
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
@@ -54,9 +55,13 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                   {/* download icon */}
                   Export
                 </button>
-                <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-indigo-500 hover:bg-indigo-400 text-neutral-900 transition">
-                  New Sale
-                </button>
+                <Link
+                  href={{ pathname: "/sale/new", query: { customer_id: id } }}
+                >
+                  <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-indigo-500 hover:bg-indigo-400 text-neutral-900 transition">
+                    New Sale
+                  </button>
+                </Link>
               </div>
             </div>
           </div>

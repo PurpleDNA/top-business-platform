@@ -4,7 +4,7 @@ import {
   Plus,
   UserPlus,
   FileText,
-  Calendar,
+  CircleDollarSign,
   TrendingUp,
   Mail,
 } from "lucide-react";
@@ -27,10 +27,11 @@ export const QuickActions = () => {
       to: "/production/new",
     },
     {
-      icon: Calendar,
-      label: "Schedule Meeting",
-      description: "Book customer appointment",
+      icon: CircleDollarSign,
+      label: "New Sale",
+      description: "Create New Sale",
       variant: "outline" as const,
+      to: "/sale/new",
     },
     {
       icon: TrendingUp,

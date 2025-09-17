@@ -3,7 +3,7 @@
 "use server";
 import supabase from "@/client";
 import { toast } from "sonner";
-interface Customer {
+export interface Customer {
   id: string;
   name: string;
   phone_number: string;
@@ -15,6 +15,7 @@ interface Customer {
     amount_paid: number;
   }[];
   created_at: string;
+  updated_at: string;
 }
 
 interface Create {
@@ -99,5 +100,27 @@ export const createCustomer = async (payload: Create) => {
   } catch (error) {
     console.log("create customer error>>>>>>>>", error);
     throw new Error("Unexpected Error Occured");
+  }
+};
+
+export const searchCustomers = async (searchTerm: string) => {
+  if (!searchTerm || searchTerm.length < 2) {
+    return []; // Don't search for very short terms
+  }
+
+  try {
+    const { data, error } = await supabase.rpc("search_customers", {
+      search_term: searchTerm,
+    });
+
+    if (error) {
+      console.error("Error searching customers:", error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Search failed:", error);
+    return [];
   }
 };

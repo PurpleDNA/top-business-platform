@@ -19,7 +19,7 @@ const validateCreate = z.object({
   debtAmount: z.coerce.number().min(1, "Debt amount is required"),
 });
 
-const RegisterForm = () => {
+const CustomerCreateForm = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [payload, setPayload] = useState({
     name: "",
@@ -157,4 +157,4 @@ const RegisterForm = () => {
   );
 };
 
-export default RegisterForm;
+export default CustomerCreateForm;
