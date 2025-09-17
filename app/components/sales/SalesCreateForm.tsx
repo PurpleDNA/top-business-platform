@@ -2,11 +2,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { createNewSale } from "@/app/services/sales";
-import { getLatestProduction } from "@/app/services/productions";
 import React, { useActionState, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, UserRoundX } from "lucide-react";
 import z from "zod";
 import { toast } from "sonner";
 import { formatDateTime, getTimeFrame } from "@/app/services/utils";
@@ -23,7 +22,7 @@ const validate = z.object({
   customer_id: z.string().min(1, "Customer ID is required"),
   production_id: z.string().min(1, "Production ID is required"),
   amount: z.coerce.number().min(1, "Amount is required"),
-  paid: z.string().transform((v) => v === "true"),
+  paid: z.boolean(),
 });
 
 const multipliers: Record<string, number> = {
@@ -35,18 +34,22 @@ const multipliers: Record<string, number> = {
 interface Props {
   productions?: Production[];
   customer?: Customer;
-  production_id?: string;
+  production?: Production;
 }
 
-const SalesCreateForm = ({ productions, customer, production_id }: Props) => {
+const SalesCreateForm = ({ productions, customer, production }: Props) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selected, setSelected] = useState({
-    production: productions && productions[0] ? productions[0] : null,
-    customer: customer || { name: "" },
+    production: production
+      ? production
+      : productions && productions[0]
+      ? productions[0]
+      : undefined,
+    customer: customer || undefined,
   });
   const [payload, setPayload] = useState({
-    customer_id: customer?.id || "",
-    production_id: production_id || "",
+    customer_id: selected?.customer?.id || "",
+    production_id: selected?.production?.id || "",
     amount: "",
     paid: false,
   });
@@ -58,12 +61,13 @@ const SalesCreateForm = ({ productions, customer, production_id }: Props) => {
   const [searchResults, setSearchResuls] = useState<Customer[]>([]);
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  // const [active, setActive] = useState({
-  //   producion: false,
-  //   customer: false,
-  // });
+  const [customerSearchValue, setCustomerSearchValue] = useState(
+    selected?.customer?.name || ""
+  );
 
   const handleSearch = async (search: string) => {
+    setCustomerSearchValue(search);
+
     if (search.length < 3) {
       setSearchResuls([]);
       setShowResults(false);
@@ -77,12 +81,13 @@ const SalesCreateForm = ({ productions, customer, production_id }: Props) => {
     } catch (error) {
       console.log(error);
     } finally {
-      // setShowResults(false);
+      setSearching(false);
     }
   };
 
   const handleClick = (customer: Customer) => {
     handleSelected("customer", null, customer);
+    setCustomerSearchValue(customer.name);
     setSearchResuls([]);
     setShowResults(false);
   };
@@ -115,11 +120,12 @@ const SalesCreateForm = ({ productions, customer, production_id }: Props) => {
 
   async function handleSubmit(prevState: any, formData: FormData) {
     const values = {
-      customer_id: formData.get("customer_id"),
-      production_id: formData.get("production_id"),
+      customer_id: payload.customer_id,
+      production_id: payload.production_id,
       amount: formData.get("amount"),
-      paid: formData.get("paid"),
+      paid: payload.paid,
     };
+    console.log(values);
 
     setErrors({});
 
@@ -172,22 +178,6 @@ const SalesCreateForm = ({ productions, customer, production_id }: Props) => {
     status: "",
     error: "",
   });
-
-  useEffect(() => {
-    const ISYNC = async () => {
-      const latestProduction = await getLatestProduction();
-
-      if (latestProduction) {
-        setPayload((prev) => ({
-          ...prev,
-          production_id:
-            productions && productions[0]?.id ? productions[0].id : "",
-        }));
-      }
-    };
-
-    ISYNC();
-  }, [productions]);
 
   return (
     <form action={formAction} className="flex flex-col gap-4 items-center my-5">
@@ -254,35 +244,47 @@ const SalesCreateForm = ({ productions, customer, production_id }: Props) => {
           <p className="text-red-500 text-xs mt-1">{errors.amount}</p>
         )}
       </div>
-      <div className="w-full">
+      <div className="w-full relative">
         <label htmlFor="customer_id" className="text-sm">
           Customer
         </label>
-        <Input
-          type="text"
-          placeholder="search customer"
-          name="customer"
-          className="w-full mt-1 py-6 rounded-lg text-center ring  font-semibold "
-          onChange={(e) => {
-            handleSearch(e.target.value);
-            setSelected((prev) => ({
-              ...prev,
-              customer: { ...prev.customer, name: e.target.value },
-            }));
-          }}
-          value={selected?.customer?.name}
-        />
+        <div className="relative">
+          <Input
+            type="text"
+            placeholder="search customer"
+            name="customer"
+            className="w-full mt-1 py-6 rounded-lg text-center ring  font-semibold"
+            onChange={(e) => {
+              handleSearch(e.target.value);
+            }}
+            value={customerSearchValue}
+          />
+
+          {searching && (
+            <LoaderCircle
+              size={18}
+              color="#368ffc"
+              className="absolute top-1/2 -translate-y-1/2 right-4 animate-spin"
+            />
+          )}
+        </div>
         {showResults && (
-          <div className="max-h-32 min-h-20 overflow-y-auto  w-max mx-auto p-3 shadow border-b border-r rounded-md mt-2 border-primary">
-            {searchResults?.map((result) => (
-              <div
-                key={result.id}
-                onClick={() => handleClick(result)}
-                className="px-2 py-1 hover:bg-blue-100 transition-colors duration-200 w-2xs border-b cursor-pointer rounded-md text-center"
-              >
-                {result.name}
+          <div className="max-h-32 min-h-20 overflow-y-auto w-max p-3 shadow border rounded-md mt-4 border-primary absolute z-20 bg-white justify-self-center flex items-center flex-col justify-center">
+            {searchResults.length > 0 ? (
+              searchResults?.map((result) => (
+                <div
+                  key={result.id}
+                  onClick={() => handleClick(result)}
+                  className="px-2 py-1 hover:bg-blue-100 transition-colors duration-200 w-2xs border-b cursor-pointer rounded-md text-center"
+                >
+                  {result.name}
+                </div>
+              ))
+            ) : (
+              <div className="w-2xs rounded-md flex gap-2 justify-center items-center ">
+                No customers found <UserRoundX size={18} />
               </div>
-            ))}
+            )}
           </div>
         )}
         {errors.customer_id && (

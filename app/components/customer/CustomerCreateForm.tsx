@@ -9,15 +9,30 @@ import { LoaderCircle } from "lucide-react";
 import z from "zod";
 import { toast } from "sonner";
 
-const validateCreate = z.object({
-  name: z.string().min(1, "Name is required"),
-  phoneNumber: z
-    .string()
-    .min(1, "Phone number is required")
-    .regex(/^[0-9]+$/, "Phone number must contain only digits"),
-  hasDebt: z.string().transform((v) => v === "true"),
-  debtAmount: z.coerce.number().min(1, "Debt amount is required"),
-});
+const validateCreate = z
+  .object({
+    name: z.string().min(1, "Name is required"),
+    phoneNumber: z
+      .string()
+      .min(1, "Phone number is required")
+      .regex(/^[0-9]+$/, "Phone number must contain only digits"),
+    hasDebt: z.boolean(),
+    debtAmount: z.coerce.number().optional(), // make it optional at base level
+  })
+  .refine(
+    (data) => {
+      // only valid if hasDebt is false OR debtAmount is given
+      if (data.hasDebt) {
+        return data.debtAmount !== undefined && data.debtAmount > 0;
+      }
+      return true;
+    },
+    {
+      message: "Debt amount is required",
+      path: ["debtAmount"], // attach error to the field
+    }
+  );
+// });
 
 const CustomerCreateForm = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -39,7 +54,7 @@ const CustomerCreateForm = () => {
     const values = {
       name: formData.get("name"),
       phoneNumber: formData.get("phoneNumber"),
-      hasDebt: formData.get("hasDebt"),
+      hasDebt: payload.hasDebt,
       debtAmount: formData.get("debtAmount"),
     };
 
@@ -147,7 +162,7 @@ const CustomerCreateForm = () => {
         </div>
       )}
       <Button
-        className="bg-primary font-bungee cursor-pointer"
+        className="bg-primary  cursor-pointer"
         disabled={isPending}
         type="submit"
       >

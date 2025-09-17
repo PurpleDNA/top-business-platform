@@ -1,5 +1,6 @@
 "use server";
 import supabase from "@/client";
+import { revalidateTag } from "next/cache";
 
 export interface Production {
   id: string;
@@ -54,6 +55,8 @@ export const createProduction = async (payload: Create) => {
     if (error) {
       throw new Error("Create Production Error");
     }
+    revalidateTag("last10");
+
     return { status: "SUCCESS", error: "", res: ProductionData[0] };
   } catch (error) {
     console.log("create production error>>>>>>>>, error");
@@ -88,5 +91,24 @@ export const getLast10Productions = async () => {
   } catch (error) {
     console.log("getLatestProduction Error>>>>>>>", error);
     throw new Error(String(error));
+  }
+};
+
+export const getProductionById = async (id: string) => {
+  try {
+    const { data: production, error } = await supabase
+      .from("productions")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (error) {
+      console.error("Error fetching production by ID:", error);
+      return null;
+    }
+
+    return production;
+  } catch (error) {
+    console.error("Unexpected error in fetchProductionById:", error);
+    return null;
   }
 };

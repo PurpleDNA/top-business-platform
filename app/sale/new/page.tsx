@@ -1,6 +1,9 @@
 import React from "react";
 import SalesCreateForm from "@/app/components/sales/SalesCreateForm";
-import { getLast10Productions } from "@/app/services/productions";
+import {
+  getLast10Productions,
+  getProductionById,
+} from "@/app/services/productions";
 import { fetchCustomerById } from "@/app/services/customers";
 import { unstable_cache } from "next/cache";
 
@@ -21,9 +24,15 @@ const page = async ({ searchParams }: Props) => {
       tags: ["last10"],
     }
   );
-
+  let customer;
+  let production;
   const productions = await getProductions();
-  const customer = await fetchCustomerById(customer_id || "");
+  if (customer_id) {
+    customer = await fetchCustomerById(customer_id);
+  }
+  if (production_id) {
+    production = await getProductionById(production_id);
+  }
 
   return (
     <div className="flex justify-center items-center">
@@ -34,7 +43,7 @@ const page = async ({ searchParams }: Props) => {
         <SalesCreateForm
           productions={productions ?? undefined}
           customer={customer}
-          production_id={production_id}
+          production={production}
         />
       </div>
     </div>
