@@ -32,7 +32,6 @@ const validateCreate = z
       path: ["debtAmount"], // attach error to the field
     }
   );
-// });
 
 const CustomerCreateForm = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});

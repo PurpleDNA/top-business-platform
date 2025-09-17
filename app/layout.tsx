@@ -5,6 +5,7 @@ import { ThemeProvider } from "./components/theme-provider";
 import { DashboardHeader } from "./components/dashboard/DashboardHeader";
 import { AuthProvider } from "./providers/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { Analytics } from "@vercel/analytics/next";
 
 const rubik = Rubik({
   variable: "--font-rubik",
@@ -44,6 +45,7 @@ export default function RootLayout({
             <DashboardHeader />
             <Toaster />
             {children}
+            <Analytics />
           </ThemeProvider>
         </AuthProvider>
       </body>
