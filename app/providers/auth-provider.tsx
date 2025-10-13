@@ -49,8 +49,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState({});
-  const router = useRouter();
 
+  const router = useRouter();
   useEffect(() => {
     const getInitialSession = async () => {
       const {
@@ -59,6 +59,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(session?.user ?? null);
       setLoading(false);
+      if (!session?.user) {
+        router.push("/login");
+      }
     };
 
     getInitialSession();
@@ -87,15 +90,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
+      if (event === "SIGNED_OUT") {
+        router.push("/login");
+      }
     });
 
     return () => subscription?.unsubscribe();
-  }, []);
+  }, [router]);
 
   // useEffect(() => {
   //   setTimeout(() => {
   //     if (!user) {
-  //       router.push("/login");
   //     }
   //   }, 200);
   // }, [user, router]);
@@ -151,7 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) {
       console.error("Error signing out:", error.message);
     }
-    window.location.replace("http://localhost:3000/login");
+    // window.location.replace("http://localhost:3000/login");
   };
 
   const value = {

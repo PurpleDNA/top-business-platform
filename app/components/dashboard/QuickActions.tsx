@@ -5,8 +5,8 @@ import {
   UserPlus,
   FileText,
   CircleDollarSign,
-  TrendingUp,
   Mail,
+  BriefcaseBusiness,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -27,17 +27,18 @@ export const QuickActions = () => {
       to: "/production/new",
     },
     {
-      icon: CircleDollarSign,
+      icon: BriefcaseBusiness,
       label: "New Sale",
       description: "Create New Sale",
       variant: "outline" as const,
       to: "/sale/new",
     },
     {
-      icon: TrendingUp,
-      label: "View Reports",
-      description: "Analyze business metrics",
+      icon: CircleDollarSign,
+      label: "New Payment",
+      description: "Create New Payment",
       variant: "outline" as const,
+      to: "payment/new",
     },
     {
       icon: Mail,

@@ -10,20 +10,15 @@ import PaymentHistory from "@/app/components/customer/PaymentHistory";
 import { AlertTriangle } from "lucide-react";
 import PurchaseHistory from "@/app/components/customer/PurchaseHistory";
 import Link from "next/link";
+import { getPaymentsByCustomerID } from "@/app/services/payments";
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
-  const {
-    name,
-    email,
-    phone_number,
-    created_at,
-    debt_free,
-    total_debt,
-    payment_history,
-  } = await fetchCustomerById(id);
+  const { name, email, phone_number, created_at, has_debt, total_debt } =
+    await fetchCustomerById(id);
   const sales = await fetchSalesByCustomerId(id);
   const total_spent = await fetchCustomerTotalSpent(id);
+  const payment_history = await getPaymentsByCustomerID(id, 10);
 
   return (
     <div className="bg-neutral-950 text-neutral-100 antialiased selection:bg-indigo-500/30 selection:text-indigo-200 scrollbar-hide">
@@ -62,6 +57,16 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                     New Sale
                   </button>
                 </Link>
+                <Link
+                  href={{
+                    pathname: "/payment/new",
+                    query: { customer_id: id },
+                  }}
+                >
+                  <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-green-500 hover:bg-indigo-400 text-neutral-900 transition">
+                    New Payment
+                  </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -87,11 +92,11 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                       <span
                         id="debtStatusBadge"
                         className={`inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-md bg-amber-500/10 ${
-                          debt_free ? `text-green-500` : `text-amber-500`
+                          has_debt ? `text-amber-500` : `text-green-500`
                         } ring-1 ring-amber-300/20`}
                       >
-                        {!debt_free && <AlertTriangle size={12} />}
-                        {debt_free ? "Debt Free" : "Has Debt"}
+                        {has_debt && <AlertTriangle size={12} />}
+                        {has_debt ? "Has Debt" : "Debt Free"}
                       </span>
                     </div>
                   </div>

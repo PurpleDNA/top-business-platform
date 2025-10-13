@@ -3,7 +3,7 @@ import React from "react";
 const PaymentHistory = async ({
   payment_history,
 }: {
-  payment_history: { date: string; amount_paid: number }[];
+  payment_history: { paid_at: string; amount_paid: number }[] | null;
 }) => {
   return (
     <div>
@@ -40,17 +40,17 @@ const PaymentHistory = async ({
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {payment_history.map(
+              {payment_history?.map(
                 (
-                  payment: { date: string; amount_paid: number },
+                  payment: { paid_at: string; amount_paid: number },
                   index: number
                 ) => (
                   <tr className="hover:bg-white/5 transition" key={index}>
                     <td className="px-3 py-3 text-neutral-400">
-                      {payment.date}
+                      {payment?.paid_at}
                     </td>
                     <td className="px-3 py-3 text-neutral-100">
-                      ₦{payment.amount_paid}
+                      ₦{payment?.amount_paid}
                     </td>
                   </tr>
                 )

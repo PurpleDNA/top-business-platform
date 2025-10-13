@@ -10,7 +10,12 @@ import z from "zod";
 import { toast } from "sonner";
 import { formatDateTime, getTimeFrame } from "@/app/services/utils";
 import { Production } from "@/app/services/productions";
-import { Customer, searchCustomers } from "@/app/services/customers";
+import { addPayment } from "@/app/services/payments";
+import {
+  Customer,
+  searchCustomers,
+  updateCustomer,
+} from "@/app/services/customers";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,6 +69,8 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
   const [customerSearchValue, setCustomerSearchValue] = useState(
     selected?.customer?.name || ""
   );
+
+  console.log(payload);
 
   const handleSearch = async (search: string) => {
     setCustomerSearchValue(search);
@@ -125,16 +132,22 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
       amount: formData.get("amount"),
       paid: payload.paid,
     };
-    console.log(values);
 
     setErrors({});
 
     try {
       await validate.parseAsync(values);
       const response = await createNewSale(payload);
+      if (payload.paid) {
+        await addPayment({
+          customerId: payload.customer_id,
+          amountPaid: Number(payload.amount),
+        });
+      } else {
+      }
 
       if (response.status === "SUCCESS") {
-        toast("Customer has been created successfully");
+        toast("Sale has been created successfully");
         return response;
       }
     } catch (error) {
@@ -178,7 +191,15 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
     status: "",
     error: "",
   });
+  function setDate(): string {
+    const date = new Date();
 
+    const day = String(date.getDate()).padStart(2, "0"); // 01–31
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // 0-based → +1
+    const year = date.getFullYear();
+
+    return `${day}-${month}-${year}`;
+  }
   return (
     <form action={formAction} className="flex flex-col gap-4 items-center my-5">
       <div className="w-full">

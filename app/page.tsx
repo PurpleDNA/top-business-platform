@@ -12,13 +12,21 @@ import {
 } from "lucide-react";
 import { getTotalBusinessOutstanding } from "./services/outstanding";
 import Hero from "./components/dashboard/Hero";
+import { getCustomerCount } from "./services/customers";
+import { getLatestProduction } from "./services/productions";
+import { ProductionCard } from "./components/dashboard/ProductionCard";
+import { Production } from "./services/productions";
+import { formatDate } from "./services/utils";
 
 const Index = async () => {
   const totalOutstanding = await getTotalBusinessOutstanding();
+  const customerCount = await getCustomerCount();
+  const latestProduction = (await getLatestProduction()) as Production[];
+  const date = formatDate(latestProduction[0]?.created_at);
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="container mx-auto p-6 space-y-6">
+      <main className="mx-auto p-6 space-y-6">
         {/* Hero Section */}
         <Hero />
         {/* Key Metrics */}
@@ -41,18 +49,21 @@ const Index = async () => {
             description="Revenue this week"
           />
 
-          <MetricsCard
-            title="Today's Production"
-            value="2,847 units"
-            change="+5% from yesterday"
-            changeType="positive"
+          <ProductionCard
+            title={`Latest Production - ${date}`}
+            value={{
+              orange: String(latestProduction[0]?.quantity?.orange),
+              blue: String(latestProduction[0]?.quantity?.blue),
+              green: String(latestProduction[0]?.quantity?.green),
+            }}
+            total={`₦${latestProduction[0]?.total}`}
             icon={Factory}
             description="Manufacturing output"
           />
 
           <MetricsCard
             title="Active Customers"
-            value="1,286"
+            value={String(customerCount)}
             change="+23 this week"
             changeType="positive"
             icon={Users}
