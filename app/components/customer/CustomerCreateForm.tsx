@@ -65,7 +65,15 @@ const CustomerCreateForm = () => {
 
       if (response.status === "SUCCESS") {
         toast("Customer has been created successfully");
+        // Reset form after successful submission
+        setPayload({
+          name: "",
+          phoneNumber: "",
+          hasDebt: false,
+          debtAmount: "",
+        });
       }
+      return response;
     } catch (error) {
       if (error instanceof z.ZodError) {
         const fieldErrors = error.flatten().fieldErrors;

@@ -15,6 +15,7 @@ import {
   Customer,
   searchCustomers,
   updateCustomer,
+  updateDebtStatus,
 } from "@/app/services/customers";
 import {
   DropdownMenu,
@@ -28,6 +29,7 @@ const validate = z.object({
   production_id: z.string().min(1, "Production ID is required"),
   amount: z.coerce.number().min(1, "Amount is required"),
   paid: z.boolean(),
+  remaining: z.coerce.number().min(1, "Remaining is required"),
 });
 
 const multipliers: Record<string, number> = {
@@ -57,11 +59,15 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
     production_id: selected?.production?.id || "",
     amount: "",
     paid: false,
+    remaining: 0,
   });
-  const [quantity, setQuantity] = useState({
-    orange: 0,
-    blue: 0,
-    green: 0,
+  const [amountPaid, setAmountPaid] = useState("");
+  const [quantity, setQuantity] = useState<{
+    [key: string]: number | undefined;
+  }>({
+    orange: undefined,
+    blue: undefined,
+    green: undefined,
   });
   const [searchResults, setSearchResuls] = useState<Customer[]>([]);
   const [searching, setSearching] = useState(false);
@@ -72,25 +78,39 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
 
   console.log(payload);
 
-  const handleSearch = async (search: string) => {
-    setCustomerSearchValue(search);
-
-    if (search.length < 3) {
+  // Debounced search effect
+  useEffect(() => {
+    // If search is too short, clear results immediately
+    if (customerSearchValue.length < 3) {
       setSearchResuls([]);
       setShowResults(false);
+      setSearching(false);
       return;
     }
+
+    // Debounce the search
     setSearching(true);
-    try {
-      const results = (await searchCustomers(search)) as Customer[];
-      setSearchResuls(results);
-      setShowResults(true);
-    } catch (error) {
-      console.log(error);
-    } finally {
+    const timeoutId = setTimeout(async () => {
+      try {
+        const results = (await searchCustomers(customerSearchValue)) as Customer[];
+        // Only update if the search value hasn't changed
+        if (customerSearchValue.length >= 3) {
+          setSearchResuls(results);
+          setShowResults(true);
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setSearching(false);
+      }
+    }, 300); // 300ms debounce
+
+    // Cleanup function to cancel pending searches
+    return () => {
+      clearTimeout(timeoutId);
       setSearching(false);
-    }
-  };
+    };
+  }, [customerSearchValue]);
 
   const handleClick = (customer: Customer) => {
     handleSelected("customer", null, customer);
@@ -131,6 +151,7 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
       production_id: payload.production_id,
       amount: formData.get("amount"),
       paid: payload.paid,
+      remaining: payload.remaining,
     };
 
     setErrors({});
@@ -138,16 +159,49 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
     try {
       await validate.parseAsync(values);
       const response = await createNewSale(payload);
+
       if (payload.paid) {
         await addPayment({
           customerId: payload.customer_id,
           amountPaid: Number(payload.amount),
         });
       } else {
+        // If partially paid, add the amount paid to payments and update debt
+        if (amountPaid && Number(amountPaid) > 0) {
+          await addPayment({
+            customerId: payload.customer_id,
+            amountPaid: Number(amountPaid),
+          });
+        }
+        // Update debt status with remaining amount
+        await updateDebtStatus(
+          payload.customer_id,
+          Number(payload.remaining),
+          "addDebt"
+        );
       }
 
       if (response.status === "SUCCESS") {
         toast("Sale has been created successfully");
+        // Reset form after successful submission
+        setPayload({
+          customer_id: "",
+          production_id: selected?.production?.id || "",
+          amount: "",
+          paid: false,
+          remaining: 0,
+        });
+        setAmountPaid("");
+        setQuantity({
+          orange: 0,
+          blue: 0,
+          green: 0,
+        });
+        setCustomerSearchValue("");
+        setSelected((prev) => ({
+          ...prev,
+          customer: undefined,
+        }));
         return response;
       }
     } catch (error) {
@@ -276,7 +330,7 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
             name="customer"
             className="w-full mt-1 py-6 rounded-lg text-center ring  font-semibold"
             onChange={(e) => {
-              handleSearch(e.target.value);
+              setCustomerSearchValue(e.target.value);
             }}
             value={customerSearchValue}
           />
@@ -340,21 +394,59 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
       </div>
       <div className="mr-auto">
         <label htmlFor="paid" className="text-sm">
-          Paid
+          Paid in Full
         </label>
         <Input
           type="checkbox"
           name="paid"
           className="h-8 w-8 mt-1"
-          onChange={(e) =>
-            setPayload((prev) => ({ ...prev, paid: e.target.checked }))
-          }
+          onChange={(e) => {
+            const isPaid = e.target.checked;
+            setPayload((prev) => ({
+              ...prev,
+              paid: isPaid,
+              remaining: isPaid ? 0 : Number(prev.amount) - Number(amountPaid),
+            }));
+            if (isPaid) {
+              setAmountPaid("");
+            }
+          }}
           checked={payload.paid}
         />
         {errors.paid && (
           <p className="text-red-500 text-xs mt-1">{errors.paid}</p>
         )}
       </div>
+
+      {/* Conditionally render amountPaid input when not paid in full */}
+      {!payload.paid && (
+        <div className="w-full transition-all animate-collapsible-down">
+          <label htmlFor="amountPaid" className="text-sm">
+            Amount Paid
+          </label>
+          <Input
+            type="number"
+            placeholder="Amount paid"
+            name="amountPaid"
+            className="w-full mt-1 no-spinners"
+            onChange={(e) => {
+              const paidAmount = e.target.value;
+              setAmountPaid(paidAmount);
+              const remaining = Number(payload.amount) - Number(paidAmount);
+              setPayload((prev) => ({
+                ...prev,
+                remaining: remaining >= 0 ? remaining : 0,
+              }));
+            }}
+            value={amountPaid}
+          />
+          {amountPaid && (
+            <p className="text-xs mt-1 text-muted-foreground">
+              Remaining: ₦{payload.remaining}
+            </p>
+          )}
+        </div>
+      )}
 
       <Button
         className="bg-primary font-bungee cursor-pointer"

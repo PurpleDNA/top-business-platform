@@ -11,6 +11,7 @@ export interface Payments {
 export interface Create {
   customerId: string;
   amountPaid: number;
+  saleId?: string;
 }
 
 export async function getPaymentsByCustomerID(

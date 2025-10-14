@@ -8,7 +8,7 @@ export interface Customer {
   name: string;
   phone_number: string;
   email: string;
-  debt_free: boolean;
+  has_debt: boolean;
   total_debt: number;
   payment_history: {
     date: string;
@@ -29,7 +29,8 @@ export const fetchAllCustomers = async (): Promise<Customer[] | []> => {
   try {
     const { data: customers, error } = await supabase
       .from("customers")
-      .select("*");
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching customers:", error);
@@ -160,7 +161,11 @@ export const updateCustomer = async (
   }
 };
 
-export const updateDebtStatus = async (customerId: string, amount: number) => {
+export const updateDebtStatus = async (
+  customerId: string,
+  amount: number,
+  type: string
+) => {
   try {
     const { data, error } = await supabase
       .from("customers")
@@ -174,20 +179,37 @@ export const updateDebtStatus = async (customerId: string, amount: number) => {
 
     const totalDebt = data.total_debt;
 
-    const { data: updatedData } = await supabase
-      .from("customers")
-      .update({ total_debt: totalDebt - amount })
-      .eq("id", customerId)
-      .select();
+    if (type === "addPayment") {
+      const { data: updatedData } = await supabase
+        .from("customers")
+        .update({ total_debt: totalDebt - amount })
+        .eq("id", customerId)
+        .select();
 
-    if (updatedData && updatedData[0]?.total_debt <= 0) {
-      try {
-        await updateCustomer(customerId, { has_debt: false });
-      } catch (error) {
-        throw error;
+      if (updatedData && updatedData[0]?.total_debt <= 0) {
+        try {
+          await updateCustomer(customerId, { has_debt: false });
+        } catch (error) {
+          throw error;
+        }
       }
+      return { status: "SUCCESS", error: "", res: "" };
+    } else {
+      const { data: updatedData } = await supabase
+        .from("customers")
+        .update({ total_debt: totalDebt + amount })
+        .eq("id", customerId)
+        .select();
+
+      if (updatedData && updatedData[0]?.total_debt > 0) {
+        try {
+          await updateCustomer(customerId, { has_debt: true });
+        } catch (error) {
+          throw error;
+        }
+      }
+      return { status: "SUCCESS", error: "", res: "" };
     }
-    return { status: "SUCCESS", error: "", res: "" };
   } catch (error) {
     console.log("UpdateDebtStatus Error>>", error);
     throw error;

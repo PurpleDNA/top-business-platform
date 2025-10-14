@@ -112,3 +112,22 @@ export const getProductionById = async (id: string) => {
     return null;
   }
 };
+
+export const fetchAllProductions = async (): Promise<Production[] | []> => {
+  try {
+    const { data: productions, error } = await supabase
+      .from("productions")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching productions:", error);
+      return [];
+    }
+
+    return productions;
+  } catch (error) {
+    console.error("Unexpected error in fetchAllProductions:", error);
+    return [];
+  }
+};

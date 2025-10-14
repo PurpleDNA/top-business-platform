@@ -22,7 +22,9 @@ const Index = async () => {
   const totalOutstanding = await getTotalBusinessOutstanding();
   const customerCount = await getCustomerCount();
   const latestProduction = (await getLatestProduction()) as Production[];
-  const date = formatDate(latestProduction[0]?.created_at);
+  const date =
+    latestProduction[0]?.created_at &&
+    formatDate(latestProduction[0]?.created_at);
 
   return (
     <div className="min-h-screen bg-background">

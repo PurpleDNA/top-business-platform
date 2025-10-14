@@ -5,8 +5,9 @@ import {
   UserPlus,
   FileText,
   CircleDollarSign,
-  Mail,
+  Users,
   BriefcaseBusiness,
+  Factory,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -20,31 +21,39 @@ export const QuickActions = () => {
       to: "/customers/new",
     },
     {
+      icon: Users,
+      label: "View All Customers",
+      description: "See complete customer list",
+      variant: "outline" as const,
+      to: "/customers/all",
+    },
+    {
       icon: FileText,
       label: "New Production",
-      description: "Create new production",
+      description: "Record new production batch",
       variant: "outline" as const,
       to: "/production/new",
     },
     {
+      icon: Factory,
+      label: "View All Productions",
+      description: "See production history",
+      variant: "outline" as const,
+      to: "/productions/all",
+    },
+    {
       icon: BriefcaseBusiness,
       label: "New Sale",
-      description: "Create New Sale",
+      description: "Create new sale record",
       variant: "outline" as const,
       to: "/sale/new",
     },
     {
       icon: CircleDollarSign,
       label: "New Payment",
-      description: "Create New Payment",
+      description: "Record customer payment",
       variant: "outline" as const,
-      to: "payment/new",
-    },
-    {
-      icon: Mail,
-      label: "Send Campaign",
-      description: "Email marketing campaign",
-      variant: "outline" as const,
+      to: "/payment/new",
     },
   ];
 

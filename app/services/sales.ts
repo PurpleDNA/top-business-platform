@@ -1,10 +1,19 @@
 import supabase from "@/client";
 
-interface Sale {
+interface CreateSale {
   customer_id: string;
   production_id: string;
   amount: string;
   paid: boolean;
+  remaining: number;
+}
+
+interface Sale {
+  customer_id?: string;
+  production_id?: string;
+  amount?: number;
+  paid?: boolean;
+  remaining?: number;
 }
 
 export const fetchAllSales = async () => {
@@ -44,6 +53,24 @@ export const fetchSalesByCustomerId = async (customerId: string) => {
   }
 };
 
+export const fetchSaleById = async (saleId: string) => {
+  try {
+    const { data: sale, error } = await supabase
+      .from("sales")
+      .select("*")
+      .eq("id", saleId);
+
+    if (error) {
+      throw new Error("Error fetching sale by ID:", error);
+    }
+
+    return sale;
+  } catch (error) {
+    console.error("Unexpected error in fetchSaleById:", error);
+    return [];
+  }
+};
+
 export const fetchSalesByProductionId = async (productionId: string) => {
   try {
     const { data: sales, error } = await supabase
@@ -61,7 +88,7 @@ export const fetchSalesByProductionId = async (productionId: string) => {
   }
 };
 
-export const createNewSale = async (payload: Sale) => {
+export const createNewSale = async (payload: CreateSale) => {
   try {
     const { data: saleData, error } = await supabase
       .from("sales")
@@ -70,6 +97,7 @@ export const createNewSale = async (payload: Sale) => {
         production_id: payload.production_id,
         amount: Number(payload.amount),
         paid: payload.paid,
+        remaining: payload.remaining,
       })
       .select();
 
@@ -79,6 +107,44 @@ export const createNewSale = async (payload: Sale) => {
     return { status: "SUCCESS", error: "", res: saleData[0] };
   } catch (error) {
     console.log("create sale error>>>>>>", error);
+    throw new Error("Unexpected Error Occured");
+  }
+};
+
+export const getUnpaidSalesByCustomerId = async (customerId: string) => {
+  try {
+    const { data: unpaidSales, error } = await supabase
+      .from("sales")
+      .select("*")
+      .eq("customer_id", customerId)
+      .eq("paid", false)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new Error("get unpaid sales error");
+    }
+    return { status: "SUCCESS", error: "", data: unpaidSales };
+  } catch (error) {
+    console.log("get unpaid sales error >>>>>>", error);
+    throw new Error("Unexpected Error Occured");
+  }
+};
+
+export const updateSale = async (saleId: string, payload: Sale) => {
+  try {
+    const { data: updatedSale, error } = await supabase
+      .from("sales")
+      .update(payload)
+      .eq("id", saleId)
+      .select();
+
+    if (error) {
+      throw new Error("update sale error");
+    }
+    console.log(updateSale);
+    return { status: "SUCCESS", error: "", data: updatedSale };
+  } catch (error) {
+    console.log("update sale error >>>>>>", error);
     throw new Error("Unexpected Error Occured");
   }
 };

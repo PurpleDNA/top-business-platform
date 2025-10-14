@@ -1,8 +1,31 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
 import { formatDate } from "@/app/services/utils";
-import { Check, X } from "lucide-react";
-import React from "react";
-const PurchaseHistory = async ({ sales }: { sales: any[] }) => {
+import { Check, ChevronLeft, ChevronRight, X } from "lucide-react";
+import React, { useState } from "react";
+
+const PurchaseHistory = ({ sales }: { sales: any[] }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // Calculate pagination
+  const totalPages = Math.ceil(sales.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentSales = sales.slice(startIndex, endIndex);
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
   return (
     <div>
       <section className="mt-6 rounded-xl bg-neutral-950/40 border border-white/10">
@@ -13,16 +36,6 @@ const PurchaseHistory = async ({ sales }: { sales: any[] }) => {
             </h3>
             <p className="text-xs text-neutral-400">Recent purchases</p>
           </div>
-          {/* <div className="flex items-center gap-2">
-            <button className="inline-flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-md bg-neutral-900 border border-white/10 hover:bg-neutral-800 hover:border-white/20 transition">
-              filter icon
-              Filters
-            </button>
-            <button className="inline-flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-md bg-neutral-900 border border-white/10 hover:bg-neutral-800 hover:border-white/20 transition">
-              colums 3 icon
-              Columns
-            </button>
-          </div> */}
         </div>
         <div className="border-t border-white/10"></div>
 
@@ -36,39 +49,81 @@ const PurchaseHistory = async ({ sales }: { sales: any[] }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {sales.map(
-                (
-                  sale: { created_at: string; amount: number; paid: boolean },
-                  index: number
-                ) => (
-                  <tr className="hover:bg-white/5 transition" key={index}>
-                    <td className="px-3 py-3 text-neutral-400">
-                      {formatDate(sale.created_at)}
-                    </td>
-                    <td className="px-3 py-3 text-neutral-100">
-                      ₦{sale.amount}
-                    </td>
-                    <td className=" px-5 py-3 text-neutral-100 text-right">
-                      {sale.paid ? (
-                        <Check
-                          size={20}
-                          color="white"
-                          className="bg-green-500 p-1 rounded-full ml-auto"
-                        />
-                      ) : (
-                        <X
-                          size={20}
-                          color="white"
-                          className="bg-red-500 p-1 rounded-full ml-auto"
-                        />
-                      )}
-                    </td>
-                  </tr>
+              {currentSales.length > 0 ? (
+                currentSales.map(
+                  (
+                    sale: { created_at: string; amount: number; paid: boolean },
+                    index: number
+                  ) => (
+                    <tr className="hover:bg-white/5 transition" key={index}>
+                      <td className="px-3 py-3 text-neutral-400">
+                        {formatDate(sale.created_at)}
+                      </td>
+                      <td className="px-3 py-3 text-neutral-100">
+                        ₦{sale.amount}
+                      </td>
+                      <td className=" px-5 py-3 text-neutral-100 text-right">
+                        {sale.paid ? (
+                          <Check
+                            size={20}
+                            color="white"
+                            className="bg-green-500 p-1 rounded-full ml-auto"
+                          />
+                        ) : (
+                          <X
+                            size={20}
+                            color="white"
+                            className="bg-red-500 p-1 rounded-full ml-auto"
+                          />
+                        )}
+                      </td>
+                    </tr>
+                  )
                 )
+              ) : (
+                <tr>
+                  <td
+                    colSpan={3}
+                    className="px-3 py-8 text-center text-neutral-400"
+                  >
+                    No purchase history available
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {sales.length > itemsPerPage && (
+          <div className="border-t border-white/10 px-4 py-3 flex items-center justify-between">
+            <div className="text-xs text-neutral-400">
+              Showing {startIndex + 1} to {Math.min(endIndex, sales.length)} of{" "}
+              {sales.length} purchases
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+                className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md bg-neutral-900 border border-white/10 hover:bg-neutral-800 hover:border-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-neutral-900"
+              >
+                <ChevronLeft size={14} />
+                Previous
+              </button>
+              <div className="text-xs text-neutral-400">
+                Page {currentPage} of {totalPages}
+              </div>
+              <button
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+                className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md bg-neutral-900 border border-white/10 hover:bg-neutral-800 hover:border-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-neutral-900"
+              >
+                Next
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );

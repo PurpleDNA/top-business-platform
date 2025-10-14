@@ -1,10 +1,35 @@
-import React from "react";
+"use client";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useState } from "react";
 
-const PaymentHistory = async ({
+const PaymentHistory = ({
   payment_history,
 }: {
   payment_history: { paid_at: string; amount_paid: number }[] | null;
 }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const payments = payment_history || [];
+
+  // Calculate pagination
+  const totalPages = Math.ceil(payments.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPayments = payments.slice(startIndex, endIndex);
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
   return (
     <div>
       <section className="mt-6 rounded-xl bg-neutral-950/40 border border-white/10">
@@ -15,16 +40,6 @@ const PaymentHistory = async ({
             </h3>
             <p className="text-xs text-neutral-400">Recent payments</p>
           </div>
-          {/* <div className="flex items-center gap-2">
-            <button className="inline-flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-md bg-neutral-900 border border-white/10 hover:bg-neutral-800 hover:border-white/20 transition">
-              filter icon
-              Filters
-            </button>
-            <button className="inline-flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-md bg-neutral-900 border border-white/10 hover:bg-neutral-800 hover:border-white/20 transition">
-              colums 3 icon
-              Columns
-            </button>
-          </div> */}
         </div>
         <div className="border-t border-white/10"></div>
 
@@ -34,30 +49,69 @@ const PaymentHistory = async ({
               <tr className="text-left text-neutral-400">
                 <th className="font-medium px-3 py-3">Date</th>
                 <th className="font-medium px-3 py-3">Amount</th>
-                {/* <th className="font-medium px-3 py-3 text-right pr-4">
-                  Actions
-                </th> */}
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {payment_history?.map(
-                (
-                  payment: { paid_at: string; amount_paid: number },
-                  index: number
-                ) => (
-                  <tr className="hover:bg-white/5 transition" key={index}>
-                    <td className="px-3 py-3 text-neutral-400">
-                      {payment?.paid_at}
-                    </td>
-                    <td className="px-3 py-3 text-neutral-100">
-                      ₦{payment?.amount_paid}
-                    </td>
-                  </tr>
+              {currentPayments.length > 0 ? (
+                currentPayments.map(
+                  (
+                    payment: { paid_at: string; amount_paid: number },
+                    index: number
+                  ) => (
+                    <tr className="hover:bg-white/5 transition" key={index}>
+                      <td className="px-3 py-3 text-neutral-400">
+                        {payment?.paid_at}
+                      </td>
+                      <td className="px-3 py-3 text-neutral-100">
+                        ₦{payment?.amount_paid}
+                      </td>
+                    </tr>
+                  )
                 )
+              ) : (
+                <tr>
+                  <td
+                    colSpan={2}
+                    className="px-3 py-8 text-center text-neutral-400"
+                  >
+                    No payment history available
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {payments.length > itemsPerPage && (
+          <div className="border-t border-white/10 px-4 py-3 flex items-center justify-between">
+            <div className="text-xs text-neutral-400">
+              Showing {startIndex + 1} to {Math.min(endIndex, payments.length)}{" "}
+              of {payments.length} payments
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+                className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md bg-neutral-900 border border-white/10 hover:bg-neutral-800 hover:border-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-neutral-900"
+              >
+                <ChevronLeft size={14} />
+                Previous
+              </button>
+              <div className="text-xs text-neutral-400">
+                Page {currentPage} of {totalPages}
+              </div>
+              <button
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+                className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md bg-neutral-900 border border-white/10 hover:bg-neutral-800 hover:border-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-neutral-900"
+              >
+                Next
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );

@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 import React from "react";
 import {
   fetchCustomerById,
@@ -18,7 +17,19 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
     await fetchCustomerById(id);
   const sales = await fetchSalesByCustomerId(id);
   const total_spent = await fetchCustomerTotalSpent(id);
-  const payment_history = await getPaymentsByCustomerID(id, 10);
+  // Fetch all payment history (using a high limit to get all records)
+  const payment_history = await getPaymentsByCustomerID(id, 1000);
+
+  // Helper function to get initials from full name
+  const getInitials = (fullName: string) => {
+    const names = fullName.trim().split(" ");
+    if (names.length === 1) {
+      return names[0]?.charAt(0).toUpperCase() || "?";
+    }
+    return ((names[0]?.charAt(0) || "") + (names[names.length - 1]?.charAt(0) || "")).toUpperCase();
+  };
+
+  const initials = getInitials(name);
 
   return (
     <div className="bg-neutral-950 text-neutral-100 antialiased selection:bg-indigo-500/30 selection:text-indigo-200 scrollbar-hide">
@@ -79,11 +90,11 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
             <section className="xl:col-span-1 rounded-xl border border-white/10 bg-neutral-950/40">
               <div className="p-5 border-b border-white/10">
                 <div className="flex items-start gap-4">
-                  <img
-                    src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=512&auto=format&fit=crop"
-                    alt="Customer avatar"
-                    className="h-14 w-14 rounded-lg object-cover ring-1 ring-white/10"
-                  />
+                  <div
+                    className="h-14 w-14 rounded-lg ring-1 ring-white/10 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-lg"
+                  >
+                    {initials}
+                  </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h1 className="text-xl tracking-tight font-semibold text-white">
