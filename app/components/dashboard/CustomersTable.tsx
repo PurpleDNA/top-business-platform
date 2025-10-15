@@ -100,11 +100,11 @@ export const CustomersTable = async () => {
                   <TableCell>
                     <Badge
                       variant={getStatusVariant(
-                        !customer.has_debt,
+                        customer.has_debt,
                         customer.total_debt
                       )}
                     >
-                      {getStatusText(!customer.has_debt, customer.total_debt)}
+                      {getStatusText(customer.has_debt, customer.total_debt)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">

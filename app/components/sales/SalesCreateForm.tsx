@@ -29,7 +29,7 @@ const validate = z.object({
   production_id: z.string().min(1, "Production ID is required"),
   amount: z.coerce.number().min(1, "Amount is required"),
   paid: z.boolean(),
-  remaining: z.coerce.number().min(1, "Remaining is required"),
+  remaining: z.coerce.number(),
 });
 
 const multipliers: Record<string, number> = {
@@ -61,7 +61,7 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
     paid: false,
     remaining: 0,
   });
-  const [amountPaid, setAmountPaid] = useState("");
+  const [amountPaid, setAmountPaid] = useState<number | undefined>(undefined);
   const [quantity, setQuantity] = useState<{
     [key: string]: number | undefined;
   }>({
@@ -92,7 +92,9 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
     setSearching(true);
     const timeoutId = setTimeout(async () => {
       try {
-        const results = (await searchCustomers(customerSearchValue)) as Customer[];
+        const results = (await searchCustomers(
+          customerSearchValue
+        )) as Customer[];
         // Only update if the search value hasn't changed
         if (customerSearchValue.length >= 3) {
           setSearchResuls(results);
@@ -191,7 +193,7 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
           paid: false,
           remaining: 0,
         });
-        setAmountPaid("");
+        setAmountPaid(undefined);
         setQuantity({
           orange: 0,
           blue: 0,
@@ -309,6 +311,13 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
             setPayload((prev) => ({
               ...prev,
               amount: e.target.value,
+              remaining:
+                Number(e.target.value) -
+                (prev.paid
+                  ? Number(e.target.value)
+                  : amountPaid
+                  ? amountPaid
+                  : 0),
             }));
             // clear quantities when typing manually into amount
             setQuantity({ orange: 0, blue: 0, green: 0 });
@@ -408,7 +417,7 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
               remaining: isPaid ? 0 : Number(prev.amount) - Number(amountPaid),
             }));
             if (isPaid) {
-              setAmountPaid("");
+              setAmountPaid(0);
             }
           }}
           checked={payload.paid}
@@ -431,7 +440,7 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
             className="w-full mt-1 no-spinners"
             onChange={(e) => {
               const paidAmount = e.target.value;
-              setAmountPaid(paidAmount);
+              setAmountPaid(Number(paidAmount));
               const remaining = Number(payload.amount) - Number(paidAmount);
               setPayload((prev) => ({
                 ...prev,
@@ -440,7 +449,7 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
             }}
             value={amountPaid}
           />
-          {amountPaid && (
+          {payload.remaining > 1 && (
             <p className="text-xs mt-1 text-muted-foreground">
               Remaining: ₦{payload.remaining}
             </p>

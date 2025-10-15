@@ -105,43 +105,44 @@ const AllCustomersPage = async () => {
                   </TableHeader>
                   <TableBody>
                     {customers.map((customer) => (
-                      <TableRow
+                      <Link
+                        href={`/customers/page/${customer.id}`}
                         key={customer.id}
-                        className="hover:bg-muted/50 cursor-pointer"
                       >
-                        <TableCell className="font-medium">
-                          {customer.name}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-4 w-4" />
-                            {customer.phone_number}
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-semibold">
-                          {customer.total_debt > 0
-                            ? `₦${customer.total_debt.toLocaleString()}`
-                            : "₦0"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={getDebtStatusVariant(
-                              customer.has_debt,
-                              customer.total_debt
-                            )}
-                          >
-                            {getDebtStatusText(
-                              customer.has_debt,
-                              customer.total_debt
-                            )}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {formatDate(customer.created_at)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Link href={`/customers/page/${customer.id}`}>
+                        <TableRow className="hover:bg-muted/50 cursor-pointer">
+                          <TableCell className="font-medium">
+                            {customer.name}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            <div className="flex items-center gap-2">
+                              <Phone className="h-4 w-4" />
+                              {customer.phone_number}
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-semibold">
+                            {customer.total_debt > 0
+                              ? `₦${customer.total_debt.toLocaleString()}`
+                              : "₦0"}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={getDebtStatusVariant(
+                                customer.has_debt,
+                                customer.total_debt
+                              )}
+                            >
+                              {getDebtStatusText(
+                                customer.has_debt,
+                                customer.total_debt
+                              )}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {formatDate(customer.created_at)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              {/* <Link href={`/customers/page/${customer.id}`}>
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -149,17 +150,18 @@ const AllCustomersPage = async () => {
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
-                            </Link>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                            </Link> */}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      </Link>
                     ))}
                   </TableBody>
                 </Table>

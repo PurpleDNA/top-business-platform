@@ -45,6 +45,7 @@ const PurchaseHistory = ({ sales }: { sales: any[] }) => {
               <tr className="text-left text-neutral-400">
                 <th className="font-medium px-3 py-3">Date</th>
                 <th className="font-medium px-3 py-3">Amount</th>
+                <th className="font-medium px-3 py-3">Remaining</th>
                 <th className="font-medium px-3 py-3 text-right pr-4">Paid</th>
               </tr>
             </thead>
@@ -52,7 +53,12 @@ const PurchaseHistory = ({ sales }: { sales: any[] }) => {
               {currentSales.length > 0 ? (
                 currentSales.map(
                   (
-                    sale: { created_at: string; amount: number; paid: boolean },
+                    sale: {
+                      created_at: string;
+                      amount: number;
+                      paid: boolean;
+                      remaining: number;
+                    },
                     index: number
                   ) => (
                     <tr className="hover:bg-white/5 transition" key={index}>
@@ -62,6 +68,7 @@ const PurchaseHistory = ({ sales }: { sales: any[] }) => {
                       <td className="px-3 py-3 text-neutral-100">
                         ₦{sale.amount}
                       </td>
+                      <td>{sale.remaining}</td>
                       <td className=" px-5 py-3 text-neutral-100 text-right">
                         {sale.paid ? (
                           <Check

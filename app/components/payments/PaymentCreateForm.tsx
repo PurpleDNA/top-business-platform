@@ -10,7 +10,7 @@ import {
 import React, { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
-import { addPayment } from "@/app/services/payments";
+import { addPayment, distributePaymentAcrossSales } from "@/app/services/payments";
 import { Input } from "@/components/ui/input";
 import { LoaderCircle, UserRoundX } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -185,6 +185,39 @@ const PaymentCreateForm = ({ customer }: Props) => {
 
     try {
       await validate.parseAsync(values);
+
+      // If no specific sale is selected, distribute payment across unpaid sales
+      if (!payload.saleId || payload.saleId === "") {
+        const result = await distributePaymentAcrossSales(
+          payload.customerId,
+          Number(payload.amountPaid)
+        );
+
+        if (result.status === "SUCCESS") {
+          const data = result.data!;
+          toast.success(
+            `Payment distributed! Cleared ${data.sales_fully_cleared} sale(s), updated ${data.sales_partially_paid} sale(s). New debt: ₦${data.new_debt}`
+          );
+
+          // Reset form after successful submission
+          setPayload({
+            customerId: "",
+            amountPaid: "",
+            saleId: "",
+          });
+          setCustomerSearchValue("");
+          setSelected({
+            customer: undefined,
+            sale: undefined,
+          });
+          return result;
+        } else {
+          toast.error("Error distributing payment: " + result.error);
+          return result;
+        }
+      }
+
+      // If specific sale is selected, handle normally
       const [response_1, response_2] = await Promise.all([
         addPayment({
           customerId: payload.customerId,
@@ -197,6 +230,7 @@ const PaymentCreateForm = ({ customer }: Props) => {
           "addPayment"
         ),
       ]);
+
       if (payload.saleId) {
         await updateSaleStatus();
       }
