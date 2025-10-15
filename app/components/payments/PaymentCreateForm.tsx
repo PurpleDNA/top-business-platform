@@ -10,7 +10,10 @@ import {
 import React, { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
-import { addPayment, distributePaymentAcrossSales } from "@/app/services/payments";
+import {
+  addPayment,
+  distributePaymentAcrossSales,
+} from "@/app/services/payments";
 import { Input } from "@/components/ui/input";
 import { LoaderCircle, UserRoundX } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -196,7 +199,7 @@ const PaymentCreateForm = ({ customer }: Props) => {
         if (result.status === "SUCCESS") {
           const data = result.data!;
           toast.success(
-            `Payment distributed! Cleared ${data.sales_fully_cleared} sale(s), updated ${data.sales_partially_paid} sale(s). New debt: ₦${data.new_debt}`
+            `Payment distributed! Cleared ${data.sales_fully_cleared} sale(s), updated ${data.sales_partially_paid}`
           );
 
           // Reset form after successful submission
