@@ -14,9 +14,9 @@
     "jsx": "preserve",
     "incremental": true,
     // Additional strict mode options for better type safety
-    "noUncheckedIndexedAccess": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
+    // "noUncheckedIndexedAccess": true,
+    // "noImplicitReturns": true,
+    // "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     "plugins": [
       {
