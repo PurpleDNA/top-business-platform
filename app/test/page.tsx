@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -71,7 +72,9 @@ export default function TestPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-muted rounded-md">
                   <p className="text-sm text-muted-foreground">Amount</p>
-                  <p className="text-2xl font-bold">₦{result[0]?.amount || 0}</p>
+                  <p className="text-2xl font-bold">
+                    ₦{result[0]?.amount || 0}
+                  </p>
                 </div>
                 <div className="p-4 bg-muted rounded-md">
                   <p className="text-sm text-muted-foreground">Paid Status</p>
@@ -99,7 +102,9 @@ export default function TestPage() {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Production ID:</span>
+                    <span className="text-muted-foreground">
+                      Production ID:
+                    </span>
                     <span className="font-mono text-sm">
                       {result[0]?.production_id}
                     </span>
