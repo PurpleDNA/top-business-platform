@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 import {
   getProductionById,
   getProductionOutstanding,
+  getProductionPaidOutstanding,
 } from "@/app/services/productions";
 import { OutstandingSection } from "@/app/components/productions/OutstandingSection";
 import { ProductionToggle } from "@/app/components/productions/ProductionToggle";
@@ -26,10 +28,9 @@ import Link from "next/link";
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
   const production = await getProductionById(id);
-  const outstandingList = await getProductionOutstanding(id);
+  const outstandingList = (await getProductionOutstanding(id)) || [];
+  const paidOutstandingList = (await getProductionPaidOutstanding(id)) || [];
   const expenses = await getExpensesByProdId(id);
-
-  console.log(outstandingList);
 
   if (!production) {
     return (
@@ -52,19 +53,36 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
     );
   }
 
-  const {
-    quantity,
-    total,
-    break_even,
-    short_or_excess,
-    expenses_total,
-    cash,
-    created_at,
-  } = production;
+  const { quantity, total, break_even, cash, created_at } = production;
 
-  // Calculate profit/loss
-  const profitLoss = total - expenses_total;
-  const isProfitable = profitLoss > 0;
+  // Calculate total expenses from expenses table
+  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+  // Calculate outstanding amounts
+  const totalOutstanding = outstandingList.reduce(
+    (sum, item) => sum + (item.outstanding || 0),
+    0
+  );
+
+  // Calculate paid outstanding total from the paidOutstandingList
+  const totalPaidOutstanding = paidOutstandingList.reduce(
+    (sum, item) => sum + (item.amount || 0),
+    0
+  );
+
+  // Financial calculations
+  // Money we have: cash + expenses + outstanding
+  const totalMoneyIn = cash + totalExpenses + totalOutstanding;
+
+  // Subtract paid outstanding (money that was paid back)
+  const adjustedTotal = totalMoneyIn - totalPaidOutstanding;
+
+  // Compare with revenue to see if we're short, excess, or balanced
+  const difference = adjustedTotal - total;
+
+  const isShort = difference < 0;
+  const isExcess = difference > 0;
+  const isBalanced = difference === 0;
 
   // Calculate total quantity
   const totalQuantity = quantity.blue + quantity.green + quantity.orange;
@@ -227,7 +245,10 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
             <section className="xl:col-span-2 space-y-6">
               {/* Outstanding Section */}
               <div className="mt-6">
-                <OutstandingSection productionId={id} />
+                <OutstandingSection
+                  outstanding={outstandingList}
+                  paidOutstanding={paidOutstandingList}
+                />
               </div>
 
               {/* Expenses Section */}
@@ -249,119 +270,126 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                 </div>
 
                 <div className="space-y-4">
-                  {/* Revenue */}
+                  {/* Cash Collected */}
                   <div className="flex items-center justify-between pb-3 border-b border-white/5">
                     <div className="flex items-center gap-2">
                       <DollarSign className="h-4 w-4 text-green-400" />
                       <span className="text-sm text-neutral-300">
-                        Total Revenue
+                        Cash Collected
                       </span>
                     </div>
                     <span className="text-sm font-semibold text-white">
-                      ₦{total.toLocaleString()}
+                      ₦{cash.toLocaleString()}
                     </span>
                   </div>
 
                   {/* Expenses */}
                   <div className="flex items-center justify-between pb-3 border-b border-white/5">
                     <div className="flex items-center gap-2">
-                      <Wallet className="h-4 w-4 text-red-400" />
+                      <Wallet className="h-4 w-4 text-amber-400" />
                       <span className="text-sm text-neutral-300">
                         Total Expenses
                       </span>
                     </div>
                     <span className="text-sm font-semibold text-white">
-                      ₦{expenses_total.toLocaleString()}
+                      ₦{totalExpenses.toLocaleString()}
                     </span>
                   </div>
 
-                  {/* Net Profit */}
+                  {/* Outstanding */}
                   <div className="flex items-center justify-between pb-3 border-b border-white/5">
                     <div className="flex items-center gap-2">
-                      {isProfitable ? (
-                        <TrendingUp className="h-4 w-4 text-green-400" />
-                      ) : (
-                        <TrendingDown className="h-4 w-4 text-red-400" />
-                      )}
+                      <AlertTriangle className="h-4 w-4 text-orange-400" />
                       <span className="text-sm text-neutral-300">
-                        Net Profit/Loss
+                        Outstanding
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-white">
+                      ₦{totalOutstanding.toLocaleString()}
+                    </span>
+                  </div>
+
+                  {/* Paid Outstanding */}
+                  <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-400" />
+                      <span className="text-sm text-neutral-300">
+                        Paid Outstanding
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-white">
+                      -₦{totalPaidOutstanding.toLocaleString()}
+                    </span>
+                  </div>
+
+                  {/* Subtotal */}
+                  <div className="flex items-center justify-between pb-3 border-b border-white/5 bg-neutral-900/30 px-3 py-2 rounded-lg">
+                    <span className="text-sm font-semibold text-neutral-200">
+                      Subtotal (Cash + Expenses + Outstanding - Paid)
+                    </span>
+                    <span className="text-sm font-bold text-white">
+                      ₦{adjustedTotal.toLocaleString()}
+                    </span>
+                  </div>
+
+                  {/* Revenue */}
+                  <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-blue-400" />
+                      <span className="text-sm text-neutral-300">
+                        Total Revenue
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-white">
+                      -₦{total.toLocaleString()}
+                    </span>
+                  </div>
+
+                  {/* Final Balance */}
+                  <div
+                    className={`flex items-center justify-between p-4 rounded-lg ${
+                      isBalanced
+                        ? "bg-blue-500/10 ring-1 ring-blue-500/20"
+                        : isShort
+                        ? "bg-red-500/10 ring-1 ring-red-500/20"
+                        : "bg-green-500/10 ring-1 ring-green-500/20"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {isBalanced ? (
+                        <CheckCircle2 className={`h-5 w-5 text-blue-400`} />
+                      ) : isShort ? (
+                        <TrendingDown className={`h-5 w-5 text-red-400`} />
+                      ) : (
+                        <TrendingUp className={`h-5 w-5 text-green-400`} />
+                      )}
+                      <span
+                        className={`text-base font-semibold ${
+                          isBalanced
+                            ? "text-blue-400"
+                            : isShort
+                            ? "text-red-400"
+                            : "text-green-400"
+                        }`}
+                      >
+                        {isBalanced ? "Balanced" : isShort ? "Short" : "Excess"}
                       </span>
                     </div>
                     <span
-                      className={`text-sm font-semibold ${
-                        isProfitable ? "text-green-400" : "text-red-400"
+                      className={`text-lg font-bold ${
+                        isBalanced
+                          ? "text-blue-400"
+                          : isShort
+                          ? "text-red-400"
+                          : "text-green-400"
                       }`}
                     >
-                      {isProfitable ? "+" : ""}₦{profitLoss.toLocaleString()}
+                      {isBalanced
+                        ? "₦0"
+                        : `${isShort ? "-" : "+"}₦${Math.abs(
+                            difference
+                          ).toLocaleString()}`}
                     </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Production Status */}
-              <div className="rounded-xl bg-neutral-950/40 border border-white/10 p-6">
-                <h2 className="text-base font-semibold tracking-tight text-white mb-4">
-                  Production Status
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div
-                    className={`rounded-lg p-4 ${
-                      break_even
-                        ? "bg-green-500/10 ring-1 ring-green-500/20"
-                        : "bg-red-500/10 ring-1 ring-red-500/20"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      {break_even ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-400" />
-                      ) : (
-                        <AlertTriangle className="h-4 w-4 text-red-400" />
-                      )}
-                      <span
-                        className={`text-xs font-medium ${
-                          break_even ? "text-green-400" : "text-red-400"
-                        }`}
-                      >
-                        Break Even Status
-                      </span>
-                    </div>
-                    <p className="text-lg font-semibold text-white">
-                      {break_even ? "Achieved" : "Not Achieved"}
-                    </p>
-                  </div>
-
-                  <div
-                    className={`rounded-lg p-4 ${
-                      short_or_excess
-                        ? "bg-amber-500/10 ring-1 ring-amber-500/20"
-                        : "bg-blue-500/10 ring-1 ring-blue-500/20"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <Package className="h-4 w-4 text-amber-400" />
-                      <span className="text-xs font-medium text-amber-400">
-                        Inventory Status
-                      </span>
-                    </div>
-                    <p className="text-lg font-semibold text-white">
-                      {/* {short_or_excess
-                        ? short_amount > 0
-                          ? "Shortage"
-                          : "Excess"
-                        : "Balanced"} */}
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg bg-indigo-500/10 ring-1 ring-indigo-500/20 p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Factory className="h-4 w-4 text-indigo-400" />
-                      <span className="text-xs font-medium text-indigo-400">
-                        Production Efficiency
-                      </span>
-                    </div>
-                    <p className="text-lg font-semibold text-white">
-                      {((cash / total) * 100).toFixed(1)}%
-                    </p>
                   </div>
                 </div>
               </div>

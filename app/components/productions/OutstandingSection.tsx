@@ -1,20 +1,24 @@
-import {
-  getProductionOutstanding,
-  getProductionPaidOutstanding,
-} from "@/app/services/productions";
 import { OutstandingDropdown } from "./OutstandingDropdown";
 
-interface OutstandingSectionProps {
-  productionId: string;
+interface OutstandingItem {
+  customer_name: string;
+  outstanding: number;
+  paid: boolean;
+}
+interface POItem {
+  customer_name: string;
+  amount: number;
 }
 
-export const OutstandingSection = async ({
-  productionId,
-}: OutstandingSectionProps) => {
-  const outstanding = (await getProductionOutstanding(productionId)) || [];
-  const paidOutstanding =
-    (await getProductionPaidOutstanding(productionId)) || [];
+interface OutstandingSectionProps {
+  outstanding: OutstandingItem[];
+  paidOutstanding: POItem[];
+}
 
+export const OutstandingSection = ({
+  outstanding,
+  paidOutstanding,
+}: OutstandingSectionProps) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <OutstandingDropdown title="Outstanding" data={outstanding} />
