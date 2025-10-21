@@ -253,3 +253,28 @@ export const toggleProdStatus = async (productionId: string) => {
     return { status: "ERROR", error: String(error) };
   }
 };
+
+export const updateProduction = async (
+  productionId: string,
+  payload: Partial<Production>
+) => {
+  try {
+    const { data: updatedProduction, error } = await supabase
+      .from("productions")
+      .update(payload)
+      .eq("id", productionId)
+      .select();
+
+    if (error) {
+      console.error("Error updating production:", error);
+      throw new Error("Failed to update production");
+    }
+
+    revalidateTag("productions");
+
+    return { status: "SUCCESS", data: updatedProduction[0] };
+  } catch (error) {
+    console.error("Unexpected error in updateProduction:", error);
+    return { status: "ERROR", error: String(error) };
+  }
+};

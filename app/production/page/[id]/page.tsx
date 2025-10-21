@@ -7,6 +7,7 @@ import { OutstandingSection } from "@/app/components/productions/OutstandingSect
 import { ProductionToggle } from "@/app/components/productions/ProductionToggle";
 import { ExpenseDropdown } from "@/app/components/productions/ExpenseDropdown";
 import { ExpenseModal } from "@/app/components/productions/ExpenseModal";
+import { CashInput } from "@/app/components/productions/CashInput";
 import { getExpensesByProdId } from "@/app/services/expenses";
 import { formatDate, formatDateTime } from "@/app/services/utils";
 import {
@@ -213,6 +214,10 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                     <dd className="mt-1 text-sm text-white font-semibold">
                       ₦{total.toLocaleString()}
                     </dd>
+                  </div>
+                  {/* Cash Collected */}
+                  <div className="mt-6">
+                    <CashInput productionId={id} initialCash={cash} />
                   </div>
                 </dl>
               </div>

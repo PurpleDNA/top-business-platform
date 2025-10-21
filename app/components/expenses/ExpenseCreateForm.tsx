@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { createExpense } from "@/app/services/expenses";
 import React, { useActionState, useState } from "react";
@@ -28,8 +29,14 @@ interface Props {
 
 const ExpenseCreateForm = ({ productions, production }: Props) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [selectedProduction, setSelectedProduction] = useState<Production | undefined>(
-    production ? production : productions && productions[0] ? productions[0] : undefined
+  const [selectedProduction, setSelectedProduction] = useState<
+    Production | undefined
+  >(
+    production
+      ? production
+      : productions && productions[0]
+      ? productions[0]
+      : undefined
   );
   const [payload, setPayload] = useState({
     production_id: selectedProduction?.id || "",
