@@ -166,6 +166,7 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
         await addPayment({
           customerId: payload.customer_id,
           amountPaid: Number(payload.amount),
+          productionId: null,
         });
       } else {
         // If partially paid, add the amount paid to payments and update debt
@@ -173,6 +174,7 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
           await addPayment({
             customerId: payload.customer_id,
             amountPaid: Number(amountPaid),
+            productionId: null,
           });
         }
         // Update debt status with remaining amount
