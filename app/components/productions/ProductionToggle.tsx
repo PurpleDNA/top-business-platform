@@ -30,8 +30,14 @@ export const ProductionToggle = ({
       const result = await toggleProdStatus(productionId);
 
       if (result.status === "SUCCESS") {
-        // Optimistically update the UI
-        setIsOpen(result.newStatus);
+        // Optimistically update the UI (only if newStatus is defined)
+        if (typeof result.newStatus === "boolean") {
+          setIsOpen(result.newStatus);
+        } else {
+          console.warn(
+            "toggleProdStatus returned undefined newStatus, skipping optimistic update."
+          );
+        }
 
         // Refresh the page data
         startTransition(() => {
