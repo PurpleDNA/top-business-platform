@@ -80,7 +80,7 @@ const AllProductionsPage = async () => {
               <div className="text-2xl font-bold">
                 ₦
                 {productions
-                  .reduce((sum, prod) => sum + prod.outstanding, 0)
+                  .reduce((sum, prod) => sum + prod.expenses_total, 0)
                   .toLocaleString()}
               </div>
             </CardContent>

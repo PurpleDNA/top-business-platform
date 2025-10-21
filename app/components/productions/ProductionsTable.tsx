@@ -112,9 +112,9 @@ const ProductionsTable = ({ productions }: { productions: Production[] }) => {
                     ₦{Math.abs(profit).toLocaleString()}
                   </div>
                 </TableCell>
-                <TableCell className="font-medium">
+                {/* <TableCell className="font-medium">
                   ₦{production.outstanding.toLocaleString()}
-                </TableCell>
+                </TableCell> */}
                 <TableCell>
                   <Badge variant={getBreakEvenVariant(production.break_even)}>
                     {production.break_even ? "Break Even" : "Not Break Even"}

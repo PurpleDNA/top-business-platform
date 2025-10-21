@@ -13,14 +13,11 @@ export interface Production {
   total: number;
   break_even: boolean;
   short_or_excess: boolean;
-  short_amount: number;
-  excess_amount: number;
   expenses_total: number;
   cash: number;
-  outstanding: number;
   created_at: string;
   updated_at: string;
-  paid_outstanding: number;
+  open: boolean;
 }
 
 interface Create {
@@ -49,6 +46,7 @@ export const createProduction = async (payload: Create) => {
         total: Number(payload.total),
         expenses_total: Number(payload.expenses_total || 0),
         outstanding: Number(payload.outstanding || 0),
+        production: true,
       })
       .select();
 
@@ -148,7 +146,7 @@ export const getProductionOutstanding = async (productionId: string) => {
         `
         outstanding,
         paid,
-        customers (
+        customers!customer_id (
           name
         )
       `
@@ -174,5 +172,84 @@ export const getProductionOutstanding = async (productionId: string) => {
   } catch (error) {
     console.error("Unexpected error in getProductionOutstanding:", error);
     return null;
+  }
+};
+
+interface PaymentWithCustomer {
+  amount_paid: number;
+  customers: {
+    name: string;
+  } | null;
+}
+
+export const getProductionPaidOutstanding = async (productionId: string) => {
+  try {
+    const { data: payments, error } = await supabase
+      .from("payments")
+      .select(
+        `
+        amount_paid,
+        customers!customer_id (
+          name
+        )
+      `
+      )
+      .eq("production_id", productionId)
+      .order("paid_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching production paid outstanding:", error);
+      return null;
+    }
+
+    // Transform the data to return a cleaner structure
+    const transformed =
+      (payments as unknown as PaymentWithCustomer[])?.map((payment) => ({
+        customer_name: payment.customers?.name || "Unknown",
+        amount: payment.amount_paid,
+      })) || [];
+
+    return transformed;
+  } catch (error) {
+    console.error("Unexpected error in getProductionPaidOutstanding:", error);
+    return null;
+  }
+};
+
+export const toggleProdStatus = async (productionId: string) => {
+  try {
+    // First, get the current status
+    const { data: production, error: fetchError } = await supabase
+      .from("productions")
+      .select("open")
+      .eq("id", productionId)
+      .single();
+
+    if (fetchError) {
+      console.error("Error fetching production status:", fetchError);
+      throw new Error("Failed to fetch production status");
+    }
+
+    // Toggle the open status
+    const newStatus = !production.open;
+
+    // Update the production with the new status
+    const { data: updatedProduction, error: updateError } = await supabase
+      .from("productions")
+      .update({ open: newStatus })
+      .eq("id", productionId)
+      .select();
+
+    if (updateError) {
+      console.error("Error updating production status:", updateError);
+      throw new Error("Failed to update production status");
+    }
+
+    revalidateTag("productions");
+
+    return { status: "SUCCESS", data: updatedProduction, newStatus };
+  } catch (error) {
+    console.error("Unexpected error in toggleProdStatus:", error);
+    return { status: "ERROR", error: String(error) };
   }
 };

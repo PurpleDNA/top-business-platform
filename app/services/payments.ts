@@ -13,6 +13,7 @@ export interface Create {
   customerId: string;
   amountPaid: number;
   saleId?: string;
+  productionId: string | null;
 }
 
 export async function getPaymentsByCustomerID(
@@ -50,6 +51,7 @@ export async function addPayment(payload: Create) {
       .insert({
         amount_paid: payload.amountPaid,
         customer_id: payload.customerId,
+        production_id: payload.productionId,
       })
       .select();
 
@@ -86,7 +88,8 @@ export interface DistributePaymentResult {
  */
 export async function distributePaymentAcrossSales(
   customerId: string,
-  amountPaid: number
+  amountPaid: number,
+  productionId: string | null = null
 ): Promise<{ status: string; error: string; data?: DistributePaymentResult }> {
   try {
     // Call the Supabase function
@@ -107,6 +110,7 @@ export async function distributePaymentAcrossSales(
     await addPayment({
       customerId,
       amountPaid,
+      productionId,
     });
 
     await updateDebtStatus(customerId, amountPaid, "addPayment");

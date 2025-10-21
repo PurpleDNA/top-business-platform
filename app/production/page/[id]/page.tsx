@@ -3,6 +3,8 @@ import {
   getProductionById,
   getProductionOutstanding,
 } from "@/app/services/productions";
+import { OutstandingSection } from "@/app/components/productions/OutstandingSection";
+import { ProductionToggle } from "@/app/components/productions/ProductionToggle";
 import { formatDate, formatDateTime } from "@/app/services/utils";
 import {
   Factory,
@@ -50,13 +52,9 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
     total,
     break_even,
     short_or_excess,
-    short_amount,
-    excess_amount,
     expenses_total,
     cash,
-    outstanding,
     created_at,
-    paid_outstanding,
   } = production;
 
   // Calculate profit/loss
@@ -91,9 +89,17 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                 </div>
               </div>
               <div className="hidden md:flex items-center gap-3">
+                <ProductionToggle productionId={id} initialOpenStatus={production.open} />
                 <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-neutral-900/70 border border-white/10 hover:bg-neutral-900 hover:border-white/20 transition">
                   Export
                 </button>
+                <Link
+                  href={{ pathname: "/sale/new", query: { production_id: id } }}
+                >
+                  <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-indigo-500 hover:bg-indigo-400 text-neutral-900 transition">
+                    New Sale
+                  </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -128,7 +134,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                         )}
                         {break_even ? "Break Even" : "Loss"}
                       </span>
-                      {short_or_excess && (
+                      {/* {short_or_excess && (
                         <span
                           className={`inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-md ${
                             short_amount > 0
@@ -138,7 +144,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                         >
                           {short_amount > 0 ? "Shortage" : "Excess"}
                         </span>
-                      )}
+                      )} */}
                     </div>
                     <h2>{formatDateTime(created_at)}</h2>
                   </div>
@@ -200,106 +206,15 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                       ₦{total.toLocaleString()}
                     </dd>
                   </div>
-                  <div className="rounded-lg bg-neutral-900/50 ring-1 ring-white/10 p-4">
-                    <dt className="text-xs text-neutral-400 flex items-center gap-2">
-                      <Wallet className="h-3 w-3" />
-                      Expenses
-                    </dt>
-                    <dd className="mt-1 text-sm text-white font-semibold">
-                      ₦{expenses_total.toLocaleString()}
-                    </dd>
-                  </div>
-                  <div className="rounded-lg bg-neutral-900/50 ring-1 ring-white/10 p-4">
-                    <dt className="text-xs text-neutral-400 flex items-center gap-2">
-                      <Factory className="h-3 w-3" />
-                      Production Date
-                    </dt>
-                    <dd className="mt-1 text-sm text-white font-semibold">
-                      {formatDate(created_at)}
-                    </dd>
-                  </div>
                 </dl>
               </div>
             </section>
 
             {/* Metrics Section */}
             <section className="xl:col-span-2 space-y-6">
-              {/* KPI Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="rounded-xl bg-neutral-950/40 border border-white/10 p-4 hover:border-white/20 transition">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-neutral-400 flex items-center gap-2">
-                      {isProfitable ? (
-                        <TrendingUp className="h-3 w-3" />
-                      ) : (
-                        <TrendingDown className="h-3 w-3" />
-                      )}
-                      Profit/Loss
-                    </p>
-                  </div>
-                  <div
-                    className={`mt-2 text-2xl tracking-tight font-semibold ${
-                      isProfitable ? "text-green-400" : "text-red-400"
-                    }`}
-                  >
-                    {isProfitable ? "+" : ""}₦{profitLoss.toLocaleString()}
-                  </div>
-                  <div className="mt-1 text-xs text-neutral-400">
-                    {((profitLoss / total) * 100).toFixed(1)}% margin
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-neutral-950/40 border border-white/10 p-4 hover:border-white/20 transition">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-neutral-400 flex items-center gap-2">
-                      <DollarSign className="h-3 w-3" />
-                      Cash Received
-                    </p>
-                  </div>
-                  <div className="mt-2 text-2xl tracking-tight font-semibold text-white">
-                    ₦{cash.toLocaleString()}
-                  </div>
-                  <div className="mt-1 text-xs text-neutral-400">
-                    {((cash / total) * 100).toFixed(1)}% of total
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-neutral-950/40 border border-white/10 p-4 hover:border-white/20 transition">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-neutral-400 flex items-center gap-2">
-                      <AlertTriangle className="h-3 w-3" />
-                      Outstanding
-                    </p>
-                  </div>
-                  <div className="mt-2 text-2xl tracking-tight font-semibold text-amber-400">
-                    ₦{outstanding.toLocaleString()}
-                  </div>
-                  <div className="mt-1 text-xs text-green-400">
-                    ₦{paid_outstanding.toLocaleString()} paid
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-neutral-950/40 border border-white/10 p-4 hover:border-white/20 transition">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-neutral-400 flex items-center gap-2">
-                      <Package className="h-3 w-3" />
-                      {short_amount > 0 ? "Shortage" : "Excess"}
-                    </p>
-                  </div>
-                  <div
-                    className={`mt-2 text-2xl tracking-tight font-semibold ${
-                      short_amount > 0 ? "text-amber-400" : "text-blue-400"
-                    }`}
-                  >
-                    ₦
-                    {short_amount > 0
-                      ? short_amount.toLocaleString()
-                      : excess_amount.toLocaleString()}
-                  </div>
-                  <div className="mt-1 text-xs text-neutral-400">
-                    {short_or_excess ? "Active" : "Balanced"}
-                  </div>
-                </div>
+              {/* Outstanding Section */}
+              <div className="mt-6">
+                <OutstandingSection productionId={id} />
               </div>
 
               {/* Financial Summary */}
@@ -378,7 +293,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                         Still Outstanding
                       </p>
                       <p className="text-lg font-semibold text-white">
-                        ₦{(outstanding - paid_outstanding).toLocaleString()}
+                        {/* ₦{(outstanding - paid_outstanding).toLocaleString()} */}
                       </p>
                     </div>
                   </div>
@@ -431,11 +346,11 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                       </span>
                     </div>
                     <p className="text-lg font-semibold text-white">
-                      {short_or_excess
+                      {/* {short_or_excess
                         ? short_amount > 0
                           ? "Shortage"
                           : "Excess"
-                        : "Balanced"}
+                        : "Balanced"} */}
                     </p>
                   </div>
 

@@ -25,9 +25,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { updateSale, fetchSaleById } from "@/app/services/sales";
+import { Production } from "@/app/services/productions";
 
 interface Props {
   customer?: Customer;
+  latestProd: Production;
 }
 
 const validate = z.object({
@@ -36,7 +38,7 @@ const validate = z.object({
   saleId: z.string(),
 });
 
-const PaymentCreateForm = ({ customer }: Props) => {
+const PaymentCreateForm = ({ customer, latestProd }: Props) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selected, setSelected] = useState({
     customer: customer || undefined,
@@ -193,7 +195,8 @@ const PaymentCreateForm = ({ customer }: Props) => {
       if (!payload.saleId || payload.saleId === "") {
         const result = await distributePaymentAcrossSales(
           payload.customerId,
-          Number(payload.amountPaid)
+          Number(payload.amountPaid),
+          latestProd.open ? latestProd.id : null
         );
 
         if (result.status === "SUCCESS") {
@@ -226,6 +229,7 @@ const PaymentCreateForm = ({ customer }: Props) => {
           customerId: payload.customerId,
           amountPaid: Number(payload.amountPaid),
           saleId: payload?.saleId,
+          productionId: latestProd.open ? latestProd.id : null,
         }),
         await updateDebtStatus(
           payload.customerId,

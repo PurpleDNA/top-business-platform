@@ -132,7 +132,7 @@ export const getUnpaidSalesByCustomerId = async (customerId: string) => {
   }
 };
 
-export const updateSale = async (saleId: string, payload: Sale) => {
+export const updateSale = async (saleId: string, payload: Partial<Sale>) => {
   try {
     const { data: updatedSale, error } = await supabase
       .from("sales")
