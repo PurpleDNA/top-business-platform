@@ -5,6 +5,9 @@ import {
 } from "@/app/services/productions";
 import { OutstandingSection } from "@/app/components/productions/OutstandingSection";
 import { ProductionToggle } from "@/app/components/productions/ProductionToggle";
+import { ExpenseDropdown } from "@/app/components/productions/ExpenseDropdown";
+import { ExpenseModal } from "@/app/components/productions/ExpenseModal";
+import { getExpensesByProdId } from "@/app/services/expenses";
 import { formatDate, formatDateTime } from "@/app/services/utils";
 import {
   Factory,
@@ -23,6 +26,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
   const production = await getProductionById(id);
   const outstandingList = await getProductionOutstanding(id);
+  const expenses = await getExpensesByProdId(id);
 
   console.log(outstandingList);
 
@@ -89,7 +93,11 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                 </div>
               </div>
               <div className="hidden md:flex items-center gap-3">
-                <ProductionToggle productionId={id} initialOpenStatus={production.open} />
+                <ProductionToggle
+                  productionId={id}
+                  initialOpenStatus={production.open}
+                />
+                <ExpenseModal productionId={id} />
                 <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-neutral-900/70 border border-white/10 hover:bg-neutral-900 hover:border-white/20 transition">
                   Export
                 </button>
@@ -217,6 +225,11 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                 <OutstandingSection productionId={id} />
               </div>
 
+              {/* Expenses Section */}
+              <div className="mt-6">
+                <ExpenseDropdown data={expenses} />
+              </div>
+
               {/* Financial Summary */}
               <div className="rounded-xl bg-neutral-950/40 border border-white/10 p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -276,26 +289,6 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                     >
                       {isProfitable ? "+" : ""}₦{profitLoss.toLocaleString()}
                     </span>
-                  </div>
-
-                  {/* Cash vs Outstanding */}
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                    <div className="rounded-lg bg-green-500/10 ring-1 ring-green-500/20 p-3">
-                      <p className="text-xs text-green-400 mb-1">
-                        Cash Collected
-                      </p>
-                      <p className="text-lg font-semibold text-white">
-                        ₦{cash.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="rounded-lg bg-amber-500/10 ring-1 ring-amber-500/20 p-3">
-                      <p className="text-xs text-amber-400 mb-1">
-                        Still Outstanding
-                      </p>
-                      <p className="text-lg font-semibold text-white">
-                        {/* ₦{(outstanding - paid_outstanding).toLocaleString()} */}
-                      </p>
-                    </div>
                   </div>
                 </div>
               </div>
