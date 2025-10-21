@@ -131,3 +131,48 @@ export const fetchAllProductions = async (): Promise<Production[] | []> => {
     return [];
   }
 };
+
+interface SaleWithCustomer {
+  outstanding: number;
+  paid: boolean;
+  customers: {
+    name: string;
+  };
+}
+
+export const getProductionOutstanding = async (productionId: string) => {
+  try {
+    const { data: outstanding, error } = await supabase
+      .from("sales")
+      .select(
+        `
+        outstanding,
+        paid,
+        customers (
+          name
+        )
+      `
+      )
+      .eq("production_id", productionId)
+      .gt("outstanding", 0)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching production outstanding:", error);
+      return null;
+    }
+
+    // Transform the data to return a cleaner structure
+    const transformed =
+      (outstanding as unknown as SaleWithCustomer[])?.map((sale) => ({
+        customer_name: sale.customers?.name || "Unknown",
+        outstanding: sale.outstanding,
+        paid: sale.paid,
+      })) || [];
+
+    return transformed;
+  } catch (error) {
+    console.error("Unexpected error in getProductionOutstanding:", error);
+    return null;
+  }
+};

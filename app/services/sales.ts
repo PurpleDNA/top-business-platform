@@ -9,11 +9,12 @@ interface CreateSale {
 }
 
 interface Sale {
-  customer_id?: string;
-  production_id?: string;
-  amount?: number;
-  paid?: boolean;
-  remaining?: number;
+  customer_id: string;
+  production_id: string;
+  amount: number;
+  paid: boolean;
+  remaining: number;
+  outstanding?: number;
 }
 
 export const fetchAllSales = async () => {
@@ -98,6 +99,7 @@ export const createNewSale = async (payload: CreateSale) => {
         amount: Number(payload.amount),
         paid: payload.paid,
         remaining: payload.remaining,
+        outstanding: payload.remaining,
       })
       .select();
 

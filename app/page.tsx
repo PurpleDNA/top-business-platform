@@ -1,6 +1,7 @@
 // import { SalesChart } from "./components/dashboard/SalesChart";
 import { MetricsCard } from "./components/dashboard/MetricsCard";
 import { CustomersTable } from "./components/dashboard/CustomersTable";
+import { ProductionsTable } from "./components/dashboard/ProductionsTable";
 import { QuickActions } from "./components/dashboard/QuickActions";
 import {
   DollarSign,
@@ -42,15 +43,6 @@ const Index = async () => {
             description="Outstanding customer payments"
           />
 
-          <MetricsCard
-            title="Weekly Sales"
-            value="$127,400"
-            change="+18% from last week"
-            changeType="positive"
-            icon={TrendingUp}
-            description="Revenue this week"
-          />
-
           <ProductionCard
             title={`Latest Production - ${date}`}
             value={{
@@ -62,39 +54,13 @@ const Index = async () => {
             icon={Factory}
             description="Manufacturing output"
           />
-
-          <MetricsCard
-            title="Active Customers"
-            value={String(customerCount)}
-            change="+23 this week"
-            changeType="positive"
-            icon={Users}
-            description="Current customer base"
-          />
-
-          <MetricsCard
-            title="New Customers"
-            value="47"
-            change="+8 today"
-            changeType="positive"
-            icon={UserPlus}
-            description="Recently added customers"
-          />
-
-          <MetricsCard
-            title="Overdue Payments"
-            value="$12,450"
-            change="-$2,100 this week"
-            changeType="positive"
-            icon={TrendingDown}
-            description="Pending collections"
-          />
         </div>
 
         {/* Charts and Tables Section */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3 space-y-6">
             {/* <SalesChart /> */}
+            <ProductionsTable />
             <CustomersTable />
           </div>
 

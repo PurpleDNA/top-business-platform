@@ -20,13 +20,13 @@ export const QuickActions = () => {
       variant: "default" as const,
       to: "/customers/new",
     },
-    {
-      icon: Users,
-      label: "View All Customers",
-      description: "See complete customer list",
-      variant: "outline" as const,
-      to: "/customers/all",
-    },
+    // {
+    //   icon: Users,
+    //   label: "View All Customers",
+    //   description: "See complete customer list",
+    //   variant: "outline" as const,
+    //   to: "/customers/all",
+    // },
     {
       icon: FileText,
       label: "New Production",
@@ -34,13 +34,13 @@ export const QuickActions = () => {
       variant: "outline" as const,
       to: "/production/new",
     },
-    {
-      icon: Factory,
-      label: "View All Productions",
-      description: "See production history",
-      variant: "outline" as const,
-      to: "/productions/all",
-    },
+    // {
+    //   icon: Factory,
+    //   label: "View All Productions",
+    //   description: "See production history",
+    //   variant: "outline" as const,
+    //   to: "/productions/all",
+    // },
     {
       icon: BriefcaseBusiness,
       label: "New Sale",
