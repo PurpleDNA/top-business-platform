@@ -3,7 +3,6 @@ import { BreadPriceList } from "./BreadPriceList";
 
 export default async function ChangePricePage() {
   const breadPrices = await fetchAllBreadPrices();
-  console.log(breadPrices);
 
   return (
     <div className="container mx-auto px-4 py-8">

@@ -5,6 +5,7 @@ import {
   getProductionById,
 } from "@/app/services/productions";
 import { fetchCustomerById } from "@/app/services/customers";
+import { getBreadPriceMultipliers } from "@/app/services/bread_price";
 import { unstable_cache } from "next/cache";
 
 interface Props {
@@ -27,6 +28,8 @@ const page = async ({ searchParams }: Props) => {
   let customer;
   let production;
   const productions = await getProductions();
+  const multipliers = await getBreadPriceMultipliers();
+
   if (customer_id) {
     customer = await fetchCustomerById(customer_id);
   }
@@ -44,6 +47,7 @@ const page = async ({ searchParams }: Props) => {
           productions={productions ?? undefined}
           customer={customer}
           production={production}
+          multipliers={multipliers}
         />
       </div>
     </div>

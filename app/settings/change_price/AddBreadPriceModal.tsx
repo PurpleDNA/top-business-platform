@@ -24,9 +24,8 @@ interface Props {
 export const AddBreadPriceModal = ({ open, onOpenChange, onSuccess }: Props) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    orange: "",
-    blue: "",
-    green: "",
+    color: "",
+    price: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -41,14 +40,11 @@ export const AddBreadPriceModal = ({ open, onOpenChange, onSuccess }: Props) => 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.orange || Number(formData.orange) <= 0) {
-      newErrors.orange = "Orange price must be greater than 0";
+    if (!formData.color || formData.color.trim() === "") {
+      newErrors.color = "Color is required";
     }
-    if (!formData.blue || Number(formData.blue) <= 0) {
-      newErrors.blue = "Blue price must be greater than 0";
-    }
-    if (!formData.green || Number(formData.green) <= 0) {
-      newErrors.green = "Green price must be greater than 0";
+    if (!formData.price || Number(formData.price) <= 0) {
+      newErrors.price = "Price must be greater than 0";
     }
 
     setErrors(newErrors);
@@ -66,16 +62,15 @@ export const AddBreadPriceModal = ({ open, onOpenChange, onSuccess }: Props) => 
     setIsSubmitting(true);
     try {
       const result = await createBreadPrice({
-        orange: Number(formData.orange),
-        blue: Number(formData.blue),
-        green: Number(formData.green),
+        color: formData.color,
+        price: Number(formData.price),
       });
 
       toast.success("Bread price added successfully");
       onSuccess(result.data);
 
       // Reset form
-      setFormData({ orange: "", blue: "", green: "" });
+      setFormData({ color: "", price: "" });
       setErrors({});
     } catch (error) {
       console.error("Error creating bread price:", error);
@@ -87,7 +82,7 @@ export const AddBreadPriceModal = ({ open, onOpenChange, onSuccess }: Props) => 
 
   const handleClose = () => {
     if (!isSubmitting) {
-      setFormData({ orange: "", blue: "", green: "" });
+      setFormData({ color: "", price: "" });
       setErrors({});
       onOpenChange(false);
     }
@@ -99,63 +94,44 @@ export const AddBreadPriceModal = ({ open, onOpenChange, onSuccess }: Props) => 
         <DialogHeader>
           <DialogTitle>Add New Bread Price</DialogTitle>
           <DialogDescription>
-            Set prices for all bread varieties. All prices are required.
+            Set the color and price for a new bread variety.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div>
-              <label htmlFor="orange" className="text-sm font-medium mb-2 block">
-                Orange Bread Price
+              <label htmlFor="color" className="text-sm font-medium mb-2 block">
+                Bread Color
               </label>
               <Input
-                id="orange"
-                type="number"
-                placeholder="Enter price"
-                value={formData.orange}
-                onChange={(e) => handleChange("orange", e.target.value)}
-                className="no-spinners"
+                id="color"
+                type="text"
+                placeholder="Enter color (e.g., orange, blue, green)"
+                value={formData.color}
+                onChange={(e) => handleChange("color", e.target.value)}
                 disabled={isSubmitting}
               />
-              {errors.orange && (
-                <p className="text-xs text-destructive mt-1">{errors.orange}</p>
+              {errors.color && (
+                <p className="text-xs text-destructive mt-1">{errors.color}</p>
               )}
             </div>
 
             <div>
-              <label htmlFor="blue" className="text-sm font-medium mb-2 block">
-                Blue Bread Price
+              <label htmlFor="price" className="text-sm font-medium mb-2 block">
+                Price
               </label>
               <Input
-                id="blue"
+                id="price"
                 type="number"
                 placeholder="Enter price"
-                value={formData.blue}
-                onChange={(e) => handleChange("blue", e.target.value)}
+                value={formData.price}
+                onChange={(e) => handleChange("price", e.target.value)}
                 className="no-spinners"
                 disabled={isSubmitting}
               />
-              {errors.blue && (
-                <p className="text-xs text-destructive mt-1">{errors.blue}</p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="green" className="text-sm font-medium mb-2 block">
-                Green Bread Price
-              </label>
-              <Input
-                id="green"
-                type="number"
-                placeholder="Enter price"
-                value={formData.green}
-                onChange={(e) => handleChange("green", e.target.value)}
-                className="no-spinners"
-                disabled={isSubmitting}
-              />
-              {errors.green && (
-                <p className="text-xs text-destructive mt-1">{errors.green}</p>
+              {errors.price && (
+                <p className="text-xs text-destructive mt-1">{errors.price}</p>
               )}
             </div>
           </div>

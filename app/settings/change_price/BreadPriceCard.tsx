@@ -78,7 +78,7 @@ export const BreadPriceCard = ({
         <CardContent>
           <div className="space-y-3">
             <div
-              className={`flex justify-between items-center p-3 rounded-md bg-${color}-100 dark:bg-orange-900/20`}
+              className={`flex justify-between items-center p-3 rounded-md bg-${color}-200 dark:bg-${color}-900/20`}
             >
               <span className="font-medium">{color}</span>
               <span className="font-bold">{price}</span>

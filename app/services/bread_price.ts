@@ -189,3 +189,32 @@ export const getBreadPriceCount = async (): Promise<number> => {
     return 0;
   }
 };
+
+/**
+ * Get bread prices as multipliers mapped by color
+ * Returns a Record object like { orange: 1200, blue: 1000, green: 650 }
+ */
+export const getBreadPriceMultipliers = async (): Promise<
+  Record<string, number>
+> => {
+  try {
+    const breadPrices = await fetchAllBreadPrices();
+
+    // Convert array of bread prices to a Record<color, price>
+    const multipliers: Record<string, number> = {};
+
+    breadPrices.forEach((breadPrice) => {
+      multipliers[breadPrice.color.toLowerCase()] = breadPrice.price;
+    });
+
+    return multipliers;
+  } catch (error) {
+    console.error("Unexpected error in getBreadPriceMultipliers:", error);
+    // Return default fallback values if database fetch fails
+    return {
+      orange: 1200,
+      blue: 1000,
+      green: 650,
+    };
+  }
+};

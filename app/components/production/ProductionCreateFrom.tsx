@@ -32,13 +32,11 @@ const validateCreate = z.object({
   outstanding: z.coerce.number().min(1, "Outstanding is required"),
 });
 
-const multipliers: Record<string, number> = {
-  orange: 1200,
-  blue: 1000,
-  green: 650,
-};
+interface Props {
+  multipliers?: Record<string, number>;
+}
 
-const ProductionFrom = () => {
+const ProductionFrom = ({ multipliers = { orange: 1200, blue: 1000, green: 650 } }: Props) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [payload, setPayload] = useState({
     quantity: {

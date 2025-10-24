@@ -32,19 +32,14 @@ const validate = z.object({
   remaining: z.coerce.number(),
 });
 
-const multipliers: Record<string, number> = {
-  orange: 1200,
-  blue: 1000,
-  green: 650,
-};
-
 interface Props {
   productions?: Production[];
   customer?: Customer;
   production?: Production;
+  multipliers?: Record<string, number>;
 }
 
-const SalesCreateForm = ({ productions, customer, production }: Props) => {
+const SalesCreateForm = ({ productions, customer, production, multipliers = { orange: 1200, blue: 1000, green: 650 } }: Props) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selected, setSelected] = useState({
     production: production
