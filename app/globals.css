@@ -121,6 +121,12 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Add bottom padding on mobile to prevent content overlap with bottom bar */
+  @media (max-width: 768px) {
+    body {
+      padding-bottom: 80px;
+    }
+  }
 }
 @layer utilities {
   .no-spinners::-webkit-outer-spin-button,

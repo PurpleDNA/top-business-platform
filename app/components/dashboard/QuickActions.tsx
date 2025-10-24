@@ -58,7 +58,7 @@ export const QuickActions = () => {
   ];
 
   return (
-    <Card>
+    <Card className="hidden lg:block">
       <CardHeader>
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
           <Plus className="h-5 w-5" />

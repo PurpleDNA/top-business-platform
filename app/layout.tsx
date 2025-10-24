@@ -3,6 +3,7 @@ import { Rubik, Bungee } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./components/theme-provider";
 import { DashboardHeader } from "./components/dashboard/DashboardHeader";
+import { MobileBottomBar } from "./components/dashboard/MobileBottomBar";
 import { AuthProvider } from "./providers/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
@@ -45,6 +46,7 @@ export default function RootLayout({
             <DashboardHeader />
             <Toaster />
             {children}
+            <MobileBottomBar />
             <Analytics />
           </ThemeProvider>
         </AuthProvider>
