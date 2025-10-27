@@ -34,17 +34,17 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
   if (!production) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-2">
+          <h1 className="text-2xl font-bold text-foreground mb-2">
             Production Not Found
           </h1>
-          <p className="text-neutral-400 mb-4">
+          <p className="text-muted-foreground mb-4">
             The production record you&apos;re looking for doesn&apos;t exist.
           </p>
           <Link
             href="/productions/all"
-            className="text-indigo-400 hover:text-indigo-300"
+            className="text-primary hover:text-primary/80"
           >
             Back to Productions
           </Link>
@@ -91,23 +91,23 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const shortId = id.substring(0, 8).toUpperCase();
 
   return (
-    <div className="bg-neutral-950 text-neutral-100 antialiased selection:bg-indigo-500/30 selection:text-indigo-200 scrollbar-hide">
+    <div className="bg-background text-foreground antialiased selection:bg-primary/20 scrollbar-hide">
       <div className="min-h-screen">
         {/* Header */}
-        <header className="sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-neutral-950/60 bg-neutral-950/80 border-b border-white/10">
+        <header className="sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-background/60 bg-background/80 border-b border-border">
           <div className="max-w-7xl mx-auto px-6">
             <div className="h-16 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Link
                   href="/productions/all"
-                  className="h-8 w-8 rounded-md bg-neutral-900 border border-white/10 flex items-center justify-center hover:bg-neutral-800 transition"
+                  className="h-8 w-8 rounded-md bg-muted border border-border flex items-center justify-center hover:bg-accent transition"
                 >
-                  <ArrowLeft className="h-4 w-4 text-neutral-200" />
+                  <ArrowLeft className="h-4 w-4 text-foreground" />
                 </Link>
-                <div className="h-8 w-8 rounded-md bg-neutral-900 border border-white/10 flex items-center justify-center">
-                  <Factory className="h-4 w-4 text-neutral-200" />
+                <div className="h-8 w-8 rounded-md bg-muted border border-border flex items-center justify-center">
+                  <Factory className="h-4 w-4 text-foreground" />
                 </div>
-                <div className="text-sm text-neutral-400">
+                <div className="text-sm text-muted-foreground">
                   Production Dashboard
                 </div>
               </div>
@@ -117,13 +117,13 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                   initialOpenStatus={production.open}
                 />
                 <ExpenseModal productionId={id} />
-                <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-neutral-900/70 border border-white/10 hover:bg-neutral-900 hover:border-white/20 transition">
+                <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-muted border border-border hover:bg-accent transition">
                   Export
                 </button>
                 <Link
                   href={{ pathname: "/sale/new", query: { production_id: id } }}
                 >
-                  <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-indigo-500 hover:bg-indigo-400 text-neutral-900 transition">
+                  <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground transition">
                     New Sale
                   </button>
                 </Link>
@@ -136,15 +136,15 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
         <main className="max-w-7xl mx-auto px-6 py-8">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             {/* Production Overview */}
-            <section className="xl:col-span-1 rounded-xl border border-white/10 bg-neutral-950/40">
-              <div className="p-5 border-b border-white/10">
+            <section className="xl:col-span-1 rounded-xl border border-border bg-card">
+              <div className="p-5 border-b border-border">
                 <div className="flex items-start gap-4">
-                  <div className="h-14 w-14 rounded-lg ring-1 ring-white/10 bg-gradient-to-br from-blue-500 via-green-500 to-orange-500 flex items-center justify-center text-white font-semibold text-lg">
+                  <div className="h-14 w-14 rounded-lg ring-1 ring-border bg-gradient-to-br from-blue-500 via-green-500 to-orange-500 flex items-center justify-center text-white font-semibold text-lg">
                     <Factory className="h-7 w-7" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h1 className="text-xl tracking-tight font-semibold text-white">
+                      <h1 className="text-xl tracking-tight font-semibold text-foreground">
                         Production #{shortId}
                       </h1>
                       <span
@@ -180,56 +180,56 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
               <div className="p-5">
                 {/* Product Quantities Breakdown */}
-                <div className="mb-4 rounded-lg bg-neutral-900/50 ring-1 ring-white/10 p-4">
-                  <dt className="text-xs text-neutral-400 mb-3">
+                <div className="mb-4 rounded-lg bg-muted/50 ring-1 ring-border p-4">
+                  <dt className="text-xs text-muted-foreground mb-3">
                     Product Breakdown
                   </dt>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-                        <span className="text-sm text-neutral-300">Blue</span>
+                        <span className="text-sm text-foreground">Blue</span>
                       </div>
-                      <span className="text-sm font-semibold text-white">
+                      <span className="text-sm font-semibold text-foreground">
                         {quantity.blue.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                        <span className="text-sm text-neutral-300">Green</span>
+                        <span className="text-sm text-foreground">Green</span>
                       </div>
-                      <span className="text-sm font-semibold text-white">
+                      <span className="text-sm font-semibold text-foreground">
                         {quantity.green.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="h-3 w-3 rounded-full bg-orange-500"></div>
-                        <span className="text-sm text-neutral-300">Orange</span>
+                        <span className="text-sm text-foreground">Orange</span>
                       </div>
-                      <span className="text-sm font-semibold text-white">
+                      <span className="text-sm font-semibold text-foreground">
                         {quantity.orange.toLocaleString()}
                       </span>
                     </div>
                   </div>
                 </div>
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="rounded-lg bg-neutral-900/50 ring-1 ring-white/10 p-4">
-                    <dt className="text-xs text-neutral-400 flex items-center gap-2">
+                  <div className="rounded-lg bg-muted/50 ring-1 ring-border p-4">
+                    <dt className="text-xs text-muted-foreground flex items-center gap-2">
                       <Package className="h-3 w-3" />
                       Total Units
                     </dt>
-                    <dd className="mt-1 text-sm text-white font-semibold">
+                    <dd className="mt-1 text-sm text-foreground font-semibold">
                       {totalQuantity.toLocaleString()}
                     </dd>
                   </div>
-                  <div className="rounded-lg bg-neutral-900/50 ring-1 ring-white/10 p-4">
-                    <dt className="text-xs text-neutral-400 flex items-center gap-2">
+                  <div className="rounded-lg bg-muted/50 ring-1 ring-border p-4">
+                    <dt className="text-xs text-muted-foreground flex items-center gap-2">
                       <DollarSign className="h-3 w-3" />
                       Total Value
                     </dt>
-                    <dd className="mt-1 text-sm text-white font-semibold">
+                    <dd className="mt-1 text-sm text-foreground font-semibold">
                       ₦{total.toLocaleString()}
                     </dd>
                   </div>
@@ -257,13 +257,13 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
               </div>
 
               {/* Financial Summary */}
-              <div className="rounded-xl bg-neutral-950/40 border border-white/10 p-6">
+              <div className="rounded-xl bg-card border border-border p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h2 className="text-base font-semibold tracking-tight text-white">
+                    <h2 className="text-base font-semibold tracking-tight text-foreground">
                       Financial Summary
                     </h2>
-                    <p className="text-xs text-neutral-400">
+                    <p className="text-xs text-muted-foreground">
                       Production financials overview
                     </p>
                   </div>
@@ -271,76 +271,76 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
                 <div className="space-y-4">
                   {/* Cash Collected */}
-                  <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                  <div className="flex items-center justify-between pb-3 border-b border-border">
                     <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-green-400" />
-                      <span className="text-sm text-neutral-300">
+                      <DollarSign className="h-4 w-4 text-green-500" />
+                      <span className="text-sm text-foreground">
                         Cash Collected
                       </span>
                     </div>
-                    <span className="text-sm font-semibold text-white">
+                    <span className="text-sm font-semibold text-foreground">
                       ₦{cash.toLocaleString()}
                     </span>
                   </div>
 
                   {/* Expenses */}
-                  <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                  <div className="flex items-center justify-between pb-3 border-b border-border">
                     <div className="flex items-center gap-2">
-                      <Wallet className="h-4 w-4 text-amber-400" />
-                      <span className="text-sm text-neutral-300">
+                      <Wallet className="h-4 w-4 text-amber-500" />
+                      <span className="text-sm text-foreground">
                         Total Expenses
                       </span>
                     </div>
-                    <span className="text-sm font-semibold text-white">
+                    <span className="text-sm font-semibold text-foreground">
                       ₦{totalExpenses.toLocaleString()}
                     </span>
                   </div>
 
                   {/* Outstanding */}
-                  <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                  <div className="flex items-center justify-between pb-3 border-b border-border">
                     <div className="flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4 text-orange-400" />
-                      <span className="text-sm text-neutral-300">
+                      <AlertTriangle className="h-4 w-4 text-orange-500" />
+                      <span className="text-sm text-foreground">
                         Outstanding
                       </span>
                     </div>
-                    <span className="text-sm font-semibold text-white">
+                    <span className="text-sm font-semibold text-foreground">
                       ₦{totalOutstanding.toLocaleString()}
                     </span>
                   </div>
 
                   {/* Paid Outstanding */}
-                  <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                  <div className="flex items-center justify-between pb-3 border-b border-border">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-400" />
-                      <span className="text-sm text-neutral-300">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      <span className="text-sm text-foreground">
                         Paid Outstanding
                       </span>
                     </div>
-                    <span className="text-sm font-semibold text-white">
+                    <span className="text-sm font-semibold text-foreground">
                       -₦{totalPaidOutstanding.toLocaleString()}
                     </span>
                   </div>
 
                   {/* Subtotal */}
-                  <div className="flex items-center justify-between pb-3 border-b border-white/5 bg-neutral-900/30 px-3 py-2 rounded-lg">
-                    <span className="text-sm font-semibold text-neutral-200">
+                  <div className="flex items-center justify-between pb-3 border-b border-border bg-muted/50 px-3 py-2 rounded-lg">
+                    <span className="text-sm font-semibold text-foreground">
                       Subtotal (Cash + Expenses + Outstanding - Paid)
                     </span>
-                    <span className="text-sm font-bold text-white">
+                    <span className="text-sm font-bold text-foreground">
                       ₦{adjustedTotal.toLocaleString()}
                     </span>
                   </div>
 
                   {/* Revenue */}
-                  <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                  <div className="flex items-center justify-between pb-3 border-b border-border">
                     <div className="flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-blue-400" />
-                      <span className="text-sm text-neutral-300">
+                      <TrendingUp className="h-4 w-4 text-blue-500" />
+                      <span className="text-sm text-foreground">
                         Total Revenue
                       </span>
                     </div>
-                    <span className="text-sm font-semibold text-white">
+                    <span className="text-sm font-semibold text-foreground">
                       -₦{total.toLocaleString()}
                     </span>
                   </div>
@@ -397,7 +397,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
           </div>
         </main>
 
-        <footer className="max-w-7xl mx-auto px-6 py-8 text-xs text-neutral-500">
+        <footer className="max-w-7xl mx-auto px-6 py-8 text-xs text-muted-foreground">
           © 2025 Top Business Platform — Production Management
         </footer>
       </div>

@@ -32,21 +32,21 @@ const PaymentHistory = ({
 
   return (
     <div>
-      <section className="mt-6 rounded-xl bg-neutral-950/40 border border-white/10">
+      <section className="mt-6 rounded-xl bg-background border border-foreground/20">
         <div className="p-4 flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold tracking-tight text-white">
+            <h3 className="text-base font-semibold tracking-tight text-foreground">
               Payment History
             </h3>
-            <p className="text-xs text-neutral-400">Recent payments</p>
+            <p className="text-xs text-foreground">Recent payments</p>
           </div>
         </div>
-        <div className="border-t border-white/10"></div>
+        <div className="border-t border-foreground/10"></div>
 
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="text-left text-neutral-400">
+              <tr className="text-left text-foreground">
                 <th className="font-medium px-3 py-3">Date</th>
                 <th className="font-medium px-3 py-3">Amount</th>
               </tr>
@@ -58,11 +58,14 @@ const PaymentHistory = ({
                     payment: { paid_at: string; amount_paid: number },
                     index: number
                   ) => (
-                    <tr className="hover:bg-white/5 transition" key={index}>
-                      <td className="px-3 py-3 text-neutral-400">
+                    <tr
+                      className="hover:bg-foreground/5 transition rounded-md"
+                      key={index}
+                    >
+                      <td className="px-3 py-3 text-foreground">
                         {payment?.paid_at}
                       </td>
-                      <td className="px-3 py-3 text-neutral-100">
+                      <td className="px-3 py-3 text-foreground">
                         ₦{payment?.amount_paid}
                       </td>
                     </tr>
@@ -72,7 +75,7 @@ const PaymentHistory = ({
                 <tr>
                   <td
                     colSpan={2}
-                    className="px-3 py-8 text-center text-neutral-400"
+                    className="px-3 py-8 text-center text-foreground"
                   >
                     No payment history available
                   </td>
@@ -84,8 +87,8 @@ const PaymentHistory = ({
 
         {/* Pagination Controls */}
         {payments.length > itemsPerPage && (
-          <div className="border-t border-white/10 px-4 py-3 flex items-center justify-between">
-            <div className="text-xs text-neutral-400">
+          <div className="border-t border-foreground/10 px-4 py-3 flex items-center justify-between">
+            <div className="text-xs text-foreground-400">
               Showing {startIndex + 1} to {Math.min(endIndex, payments.length)}{" "}
               of {payments.length} payments
             </div>

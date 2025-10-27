@@ -88,7 +88,7 @@ export const CashInput = ({ productionId, initialCash }: CashInputProps) => {
             onChange={(e) => setInputValue(e.target.value)}
             onBlur={handleSave}
             onKeyDown={handleKeyDown}
-            className="w-full text-lg font-semibold text-white bg-transparent border-b border-green-400 outline-none focus:border-green-300 no-spinners"
+            className="w-full text-lg font-semibold text-foreground bg-transparent border-b border-green-400 outline-none focus:border-green-300 no-spinners"
             disabled={isLoading}
           />
           {isLoading && (
@@ -97,7 +97,7 @@ export const CashInput = ({ productionId, initialCash }: CashInputProps) => {
         </div>
       ) : (
         <p
-          className="text-lg font-semibold text-white cursor-pointer hover:text-green-400 transition-colors"
+          className="text-lg font-semibold text-foreground cursor-pointer hover:text-green-400 transition-colors"
           onClick={() => setIsEditing(true)}
         >
           ₦{cash.toLocaleString()}

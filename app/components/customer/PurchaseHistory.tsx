@@ -28,21 +28,21 @@ const PurchaseHistory = ({ sales }: { sales: any[] }) => {
 
   return (
     <div>
-      <section className="mt-6 rounded-xl bg-neutral-950/40 border border-white/10">
+      <section className="mt-6 rounded-xl bg-background border border-foreground/20">
         <div className="p-4 flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold tracking-tight text-white">
+            <h3 className="text-base font-semibold tracking-tight text-foreground">
               Purchase History
             </h3>
-            <p className="text-xs text-neutral-400">Recent purchases</p>
+            <p className="text-xs text-foreground">Recent purchases</p>
           </div>
         </div>
-        <div className="border-t border-white/10"></div>
+        <div className="border-t border-foreground/10"></div>
 
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="text-left text-neutral-400">
+              <tr className="text-left text-foreground">
                 <th className="font-medium px-3 py-3">Date</th>
                 <th className="font-medium px-3 py-3">Amount</th>
                 <th className="font-medium px-3 py-3">Remaining</th>
@@ -61,15 +61,15 @@ const PurchaseHistory = ({ sales }: { sales: any[] }) => {
                     },
                     index: number
                   ) => (
-                    <tr className="hover:bg-white/5 transition" key={index}>
-                      <td className="px-3 py-3 text-neutral-400">
+                    <tr className="hover:bg-foreground/5 transition rounded-md" key={index}>
+                      <td className="px-3 py-3 text-foreground">
                         {formatDate(sale.created_at)}
                       </td>
-                      <td className="px-3 py-3 text-neutral-100">
+                      <td className="px-3 py-3 text-foreground">
                         ₦{sale.amount}
                       </td>
-                      <td>{sale.remaining}</td>
-                      <td className=" px-5 py-3 text-neutral-100 text-right">
+                      <td className="px-3 py-3 text-foreground">{sale.remaining}</td>
+                      <td className="px-5 py-3 text-foreground text-right">
                         {sale.paid ? (
                           <Check
                             size={20}
@@ -90,8 +90,8 @@ const PurchaseHistory = ({ sales }: { sales: any[] }) => {
               ) : (
                 <tr>
                   <td
-                    colSpan={3}
-                    className="px-3 py-8 text-center text-neutral-400"
+                    colSpan={4}
+                    className="px-3 py-8 text-center text-foreground"
                   >
                     No purchase history available
                   </td>
@@ -103,8 +103,8 @@ const PurchaseHistory = ({ sales }: { sales: any[] }) => {
 
         {/* Pagination Controls */}
         {sales.length > itemsPerPage && (
-          <div className="border-t border-white/10 px-4 py-3 flex items-center justify-between">
-            <div className="text-xs text-neutral-400">
+          <div className="border-t border-foreground/10 px-4 py-3 flex items-center justify-between">
+            <div className="text-xs text-foreground-400">
               Showing {startIndex + 1} to {Math.min(endIndex, sales.length)} of{" "}
               {sales.length} purchases
             </div>

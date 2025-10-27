@@ -198,7 +198,7 @@ const SignupForm: React.FC = () => {
   );
 
   return (
-    <div className="w-[90%] lg:w-96 p-6 border border-primary rounded-lg shadow-lg flex flex-col">
+    <div className="w-[90%] lg:w-96 p-6 border border-primary rounded-lg shadow-lg flex flex-col bg-card">
       <div className="flex items-center gap-2 mb-4">
         <UserPlus2 className="h-6 w-6 text-primary" />
         <h3 className="text-xl font-bold text-primary">Sign Up</h3>
@@ -207,64 +207,64 @@ const SignupForm: React.FC = () => {
         <input
           type="text"
           placeholder="First Name"
-          className="px-3 py-2 border border-gray-200 rounded-md text-sm shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-primary"
+          className="px-3 py-2 border border-border rounded-md text-sm shadow-sm w-full bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           onChange={handleChange}
           name="firstName"
         />
         {errors.firstName && (
-          <span className="error text-xs text-red-400">{errors.firstName}</span>
+          <span className="error text-xs text-destructive">{errors.firstName}</span>
         )}
         <input
           type="text"
           placeholder="Last Name"
-          className="px-3 py-2 border border-gray-200 rounded-md text-sm shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-primary"
+          className="px-3 py-2 border border-border rounded-md text-sm shadow-sm w-full bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           onChange={handleChange}
           name="lastName"
         />
         {errors.lastName && (
-          <span className="error text-xs text-red-400">{errors.lastName}</span>
+          <span className="error text-xs text-destructive">{errors.lastName}</span>
         )}
 
         <input
           type="email"
           placeholder="Email"
-          className="px-3 py-2 border border-gray-200 rounded-md text-sm shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-primary"
+          className="px-3 py-2 border border-border rounded-md text-sm shadow-sm w-full bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           value={payload.email}
           onChange={handleChange}
           name="email"
         />
         {errors.email && (
-          <span className="error text-xs text-red-400">{errors.email}</span>
+          <span className="error text-xs text-destructive">{errors.email}</span>
         )}
 
         <input
           type="password"
           placeholder="Password"
-          className="px-3 py-2 border border-gray-200 rounded-md text-sm shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-primary"
+          className="px-3 py-2 border border-border rounded-md text-sm shadow-sm w-full bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           value={payload.password}
           onChange={handleChange}
           name="password"
         />
         {errors.password && (
-          <span className="error text-xs text-red-400">{errors.password}</span>
+          <span className="error text-xs text-destructive">{errors.password}</span>
         )}
 
         <input
           type="password"
           placeholder="Confirm Password"
-          className="px-3 py-2 border border-gray-200 rounded-md text-sm shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-primary"
+          className="px-3 py-2 border border-border rounded-md text-sm shadow-sm w-full bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           name="confirmPassword"
           onChange={handleChange}
         />
         {errors.confirmPassword && (
-          <span className="error text-xs text-red-400">
+          <span className="error text-xs text-destructive">
             {errors.confirmPassword}
           </span>
         )}
       </form>
       <button
         onClick={signUp}
-        className={`px-4 py-2  text-white rounded-md font-semibold shadow hover:brightness-95 transition mt-4 flex justify-center items-center gap-3 ${
+        className={`px-4 py-2 text-primary-foreground rounded-md font-semibold shadow hover:bg-primary/90 transition mt-4 flex justify-center items-center gap-3 ${
           hasErrors
             ? "cursor-not-allowed bg-primary/45"
             : "bg-primary cursor-pointer"

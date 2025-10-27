@@ -62,7 +62,7 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="w-[90%] lg:w-96 p-6 border border-primary rounded-lg shadow-xl flex flex-col">
+    <div className="w-[90%] lg:w-96 p-6 border border-primary rounded-lg shadow-xl flex flex-col bg-card">
       <div className="flex items-center gap-2 mb-4">
         <LogIn className="h-6 w-6 text-primary" />
         <h3 className="text-xl font-bold text-primary">Log In</h3>
@@ -71,7 +71,7 @@ const LoginForm = () => {
       <button
         type="button"
         onClick={handleGoogle}
-        className="flex items-center justify-center gap-3 mb-4 px-4 py-2 rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-r from-white to-gray-50 cursor-pointer"
+        className="flex items-center justify-center gap-3 mb-4 px-4 py-2 rounded-md border border-border shadow-sm hover:shadow-md transition-shadow bg-muted hover:bg-accent cursor-pointer"
       >
         <svg
           className={`h-5 w-5 ${googleLoading ? "animate-spin" : ""}`}
@@ -95,13 +95,13 @@ const LoginForm = () => {
             d="M24 46c6.8 0 12.6-2.2 16.8-6l-8-6.1c-2.3 1.5-5.3 2.5-8.8 2.5-6.1 0-11.2-3.5-13.9-8.6L3 36c3.9 8.2 11.7 13.5 21 13.5z"
           />
         </svg>
-        <span className="text-sm font-medium">Continue with Google</span>
+        <span className="text-sm font-medium text-foreground">Continue with Google</span>
       </button>
 
       <div className="flex items-center my-3">
-        <div className="flex-1 h-px bg-gray-200" />
-        <span className="px-3 text-xs text-gray-400">or</span>
-        <div className="flex-1 h-px bg-gray-200" />
+        <div className="flex-1 h-px bg-border" />
+        <span className="px-3 text-xs text-muted-foreground">or</span>
+        <div className="flex-1 h-px bg-border" />
       </div>
 
       <form className="flex flex-col gap-3">
@@ -109,7 +109,7 @@ const LoginForm = () => {
           name="email"
           type="email"
           placeholder="Email"
-          className="px-3 py-2 border border-gray-200 rounded-md text-sm shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-primary"
+          className="px-3 py-2 border border-border rounded-md text-sm shadow-sm w-full bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           required
           onChange={(e) =>
             setPayload((prev) => ({ ...prev, email: e.target.value }))
@@ -120,7 +120,7 @@ const LoginForm = () => {
           name="password"
           type="password"
           placeholder="Password"
-          className="px-3 py-2 border border-gray-200 rounded-md text-sm shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-primary"
+          className="px-3 py-2 border border-border rounded-md text-sm shadow-sm w-full bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           required
           value={payload.password}
           onChange={(e) =>
@@ -131,7 +131,7 @@ const LoginForm = () => {
       <div className="flex flex-col mt-4">
         <button
           onClick={signIn}
-          className="px-4 py-2 bg-primary text-white rounded-md font-semibold shadow hover:brightness-95 transition cursor-pointer flex justify-center items-center gap-3"
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md font-semibold shadow hover:bg-primary/90 transition cursor-pointer flex justify-center items-center gap-3"
         >
           Log in{" "}
           <LoaderCircle
@@ -143,7 +143,7 @@ const LoginForm = () => {
         <button
           type="button"
           onClick={handleForgot}
-          className="text-sm text-primary/90 hover:underline w-max cursor-pointer mt-2"
+          className="text-sm text-primary hover:underline w-max cursor-pointer mt-2"
         >
           Forgot password?
         </button>
