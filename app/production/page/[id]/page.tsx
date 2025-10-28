@@ -58,7 +58,6 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const {
     quantity,
     total,
-    break_even,
     cash,
     created_at,
     old_bread,
@@ -94,8 +93,8 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   );
 
   // Financial calculations
-  // Money we have: cash + expenses + outstanding
-  const totalMoneyIn = cash + totalExpenses + totalOutstanding;
+  // Money we have: cash + expenses + outstanding + remaining bread value
+  const totalMoneyIn = cash + totalExpenses + totalOutstanding + remainingBreadTotal;
 
   // Subtract paid outstanding (money that was paid back)
   const adjustedTotal = totalMoneyIn - totalPaidOutstanding;
@@ -106,6 +105,32 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const isShort = difference < 0;
   const isExcess = difference > 0;
   const isBalanced = difference === 0;
+
+  // Determine status badge configuration
+  const getStatusConfig = () => {
+    if (isBalanced) {
+      return {
+        label: "Balanced",
+        icon: CheckCircle2,
+        className: "bg-blue-500/10 text-blue-500 ring-1 ring-blue-300/20",
+      };
+    } else if (isShort) {
+      return {
+        label: "Short",
+        icon: TrendingDown,
+        className: "bg-red-500/10 text-red-500 ring-1 ring-red-300/20",
+      };
+    } else {
+      return {
+        label: "Excess",
+        icon: TrendingUp,
+        className: "bg-green-500/10 text-green-500 ring-1 ring-green-300/20",
+      };
+    }
+  };
+
+  const statusConfig = getStatusConfig();
+  const StatusIcon = statusConfig.icon;
 
   // Calculate total quantity
   const totalQuantity =
@@ -177,30 +202,11 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                         Production #{shortId}
                       </h1>
                       <span
-                        className={`inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-md ${
-                          break_even
-                            ? "bg-green-500/10 text-green-500 ring-1 ring-green-300/20"
-                            : "bg-red-500/10 text-red-500 ring-1 ring-red-300/20"
-                        }`}
+                        className={`inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-md ${statusConfig.className}`}
                       >
-                        {break_even ? (
-                          <CheckCircle2 size={12} />
-                        ) : (
-                          <AlertTriangle size={12} />
-                        )}
-                        {break_even ? "Break Even" : "Loss"}
+                        <StatusIcon size={12} />
+                        {statusConfig.label}
                       </span>
-                      {/* {short_or_excess && (
-                        <span
-                          className={`inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-md ${
-                            short_amount > 0
-                              ? "bg-amber-500/10 text-amber-500 ring-1 ring-amber-300/20"
-                              : "bg-blue-500/10 text-blue-500 ring-1 ring-blue-300/20"
-                          }`}
-                        >
-                          {short_amount > 0 ? "Shortage" : "Excess"}
-                        </span>
-                      )} */}
                     </div>
                     <h2>{formatDateTime(created_at)}</h2>
                   </div>
@@ -392,6 +398,19 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                     </span>
                   </div>
 
+                  {/* Remaining Bread */}
+                  <div className="flex items-center justify-between pb-3 border-b border-border">
+                    <div className="flex items-center gap-2">
+                      <Package className="h-4 w-4 text-purple-500" />
+                      <span className="text-sm text-foreground">
+                        Remaining Bread
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-foreground">
+                      ₦{remainingBreadTotal.toLocaleString()}
+                    </span>
+                  </div>
+
                   {/* Paid Outstanding */}
                   <div className="flex items-center justify-between pb-3 border-b border-border">
                     <div className="flex items-center gap-2">
@@ -408,7 +427,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                   {/* Subtotal */}
                   <div className="flex items-center justify-between pb-3 border-b border-border bg-muted/50 px-3 py-2 rounded-lg">
                     <span className="text-sm font-semibold text-foreground">
-                      Subtotal (Cash + Expenses + Outstanding - Paid)
+                      Subtotal (Cash + Expenses + Outstanding + Remaining Bread - Paid)
                     </span>
                     <span className="text-sm font-bold text-foreground">
                       ₦{adjustedTotal.toLocaleString()}
