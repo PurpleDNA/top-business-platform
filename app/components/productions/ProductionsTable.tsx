@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Eye, TrendingUp, TrendingDown } from "lucide-react";
+import { Eye } from "lucide-react";
 import { Production } from "@/app/services/productions";
 
 const formatDate = (dateString: string) => {
@@ -28,10 +28,6 @@ const getBreakEvenVariant = (breakEven: boolean) => {
   return breakEven ? "default" : "destructive";
 };
 
-const calculateProfit = (production: Production) => {
-  return production.total - production.expenses_total;
-};
-
 const ProductionsTable = ({ productions }: { productions: Production[] }) => {
   return (
     <div className="overflow-x-auto">
@@ -41,18 +37,12 @@ const ProductionsTable = ({ productions }: { productions: Production[] }) => {
             <TableHead>Date</TableHead>
             <TableHead>Quantities</TableHead>
             <TableHead>Total Value</TableHead>
-            <TableHead>Expenses</TableHead>
-            <TableHead>Profit/Loss</TableHead>
-            <TableHead>Outstanding</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {productions.map((production) => {
-            const profit = calculateProfit(production);
-            const isProfit = profit >= 0;
-
             return (
               <TableRow
                 key={production.id}
@@ -95,26 +85,6 @@ const ProductionsTable = ({ productions }: { productions: Production[] }) => {
                 <TableCell className="font-semibold">
                   ₦{production.total.toLocaleString()}
                 </TableCell>
-                <TableCell className="text-muted-foreground">
-                  ₦{production.expenses_total.toLocaleString()}
-                </TableCell>
-                <TableCell>
-                  <div
-                    className={`flex items-center gap-1 font-semibold ${
-                      isProfit ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    {isProfit ? (
-                      <TrendingUp className="h-4 w-4" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4" />
-                    )}
-                    ₦{Math.abs(profit).toLocaleString()}
-                  </div>
-                </TableCell>
-                {/* <TableCell className="font-medium">
-                  ₦{production.outstanding.toLocaleString()}
-                </TableCell> */}
                 <TableCell>
                   <Badge variant={getBreakEvenVariant(production.break_even)}>
                     {production.break_even ? "Break Even" : "Not Break Even"}

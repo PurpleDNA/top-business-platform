@@ -37,7 +37,7 @@ const AllProductionsPage = async () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -57,31 +57,12 @@ const AllProductionsPage = async () => {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Expenses
+                Total Productions
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ₦
-                {productions
-                  .reduce((sum, prod) => sum + prod.expenses_total, 0)
-                  .toLocaleString()}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Outstanding
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ₦
-                {productions
-                  .reduce((sum, prod) => sum + prod.expenses_total, 0)
-                  .toLocaleString()}
+                {productions.length}
               </div>
             </CardContent>
           </Card>

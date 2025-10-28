@@ -2,11 +2,13 @@
 "use client";
 import React, { useActionState, useState } from "react";
 import { createProduction } from "@/app/services/productions";
-import z from "zod";
+import z, { set } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoaderCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const validateCreate = z.object({
   quantity: z
@@ -28,16 +30,24 @@ const validateCreate = z.object({
       }
     ),
   total: z.coerce.number().min(1, "total is required"),
-  expenses_total: z.coerce.number().min(1, "Expenses Total is required"),
-  outstanding: z.coerce.number().min(1, "Outstanding is required"),
+  old_bread: z
+    .object({
+      orange: z.coerce.number().optional(),
+      blue: z.coerce.number().optional(),
+      green: z.coerce.number().optional(),
+    })
+    .optional(),
 });
 
 interface Props {
   multipliers?: Record<string, number>;
 }
 
-const ProductionFrom = ({ multipliers = { orange: 1200, blue: 1000, green: 650 } }: Props) => {
+const ProductionFrom = ({
+  multipliers = { orange: 1200, blue: 1000, green: 650 },
+}: Props) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showOldBread, setShowOldBread] = useState(false);
   const [payload, setPayload] = useState({
     quantity: {
       orange: "",
@@ -45,8 +55,11 @@ const ProductionFrom = ({ multipliers = { orange: 1200, blue: 1000, green: 650 }
       green: "",
     },
     total: "",
-    expenses_total: "",
-    outstanding: "",
+    old_bread: {
+      orange: "",
+      blue: "",
+      green: "",
+    },
   });
 
   function handleQuantityChange(name: string, value: string) {
@@ -73,6 +86,16 @@ const ProductionFrom = ({ multipliers = { orange: 1200, blue: 1000, green: 650 }
     });
   }
 
+  function handleOldBreadChange(name: string, value: string) {
+    setPayload((prev) => ({
+      ...prev,
+      old_bread: {
+        ...prev.old_bread,
+        [name]: value,
+      },
+    }));
+  }
+
   async function handleSubmit(prevState: any, formData: FormData) {
     const values = {
       quantity: {
@@ -81,8 +104,11 @@ const ProductionFrom = ({ multipliers = { orange: 1200, blue: 1000, green: 650 }
         green: String(formData.get("green") || ""),
       },
       total: formData.get("total") as string,
-      expenses_total: formData.get("expenses_total") as string,
-      outstanding: formData.get("outstanding") as string,
+      old_bread: {
+        orange: String(formData.get("old_bread_orange") || ""),
+        blue: String(formData.get("old_bread_blue") || ""),
+        green: String(formData.get("old_bread_green") || ""),
+      },
     };
 
     setErrors({});
@@ -99,9 +125,13 @@ const ProductionFrom = ({ multipliers = { orange: 1200, blue: 1000, green: 650 }
             green: "",
           },
           total: "",
-          expenses_total: "",
-          outstanding: "",
+          old_bread: {
+            orange: "",
+            blue: "",
+            green: "",
+          },
         });
+        setShowOldBread(false);
       }
       return response;
     } catch (error) {
@@ -164,6 +194,7 @@ const ProductionFrom = ({ multipliers = { orange: 1200, blue: 1000, green: 650 }
           <p className="text-red-500 text-xs mt-1">{errors.quantity}</p>
         )}
       </div>
+
       <div className="w-full">
         <label htmlFor="total" className="mb-1 text-sm">
           Production Total
@@ -181,47 +212,76 @@ const ProductionFrom = ({ multipliers = { orange: 1200, blue: 1000, green: 650 }
           <p className="text-red-500 text-xs mt-1">{errors.total}</p>
         )}
       </div>
-      <div className="w-full">
-        <label htmlFor="expenses_total" className="text-sm">
-          Expenses Total
-        </label>
-        <Input
-          type="number"
-          placeholder="expenses total"
-          name="expenses_total"
-          className="w-full mt-1 no-spinners"
-          onChange={(e) =>
+
+      {/* Old Bread Quantity Inputs */}
+      {showOldBread && (
+        <div className="w-full animate-in slide-in-from-top-2 duration-200">
+          <div className="flex justify-around items-center">
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-sm">orange</span>
+              <Input
+                className="w-[60px] h-[60px] bg-orange-200 text-center no-spinners dark:bg-orange-500 opacity-75"
+                name="old_bread_orange"
+                type="number"
+                onChange={(e) =>
+                  handleOldBreadChange(
+                    e.target.name.replace("old_bread_", ""),
+                    e.target.value
+                  )
+                }
+                value={payload.old_bread.orange}
+              />
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-sm">blue</span>
+              <Input
+                className="w-[60px] h-[60px] bg-blue-200 text-center no-spinners dark:bg-blue-500 opacity-75"
+                name="old_bread_blue"
+                type="number"
+                onChange={(e) =>
+                  handleOldBreadChange(
+                    e.target.name.replace("old_bread_", ""),
+                    e.target.value
+                  )
+                }
+                value={payload.old_bread.blue}
+              />
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-sm">green</span>
+              <Input
+                className="w-[60px] h-[60px] bg-green-200 text-center no-spinners dark:bg-green-500 opacity-75"
+                name="old_bread_green"
+                type="number"
+                onChange={(e) =>
+                  handleOldBreadChange(
+                    e.target.name.replace("old_bread_", ""),
+                    e.target.value
+                  )
+                }
+                value={payload.old_bread.green}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Old Bread Toggle */}
+      <div className="w-full flex items-center justify-between border rounded-lg p-3 bg-muted/50">
+        <Label htmlFor="old-bread-toggle" className="text-sm font-medium">
+          Old Bread
+        </Label>
+        <Switch
+          id="old-bread-toggle"
+          checked={showOldBread}
+          onCheckedChange={() => {
+            setShowOldBread((prev) => !prev);
             setPayload((prev) => ({
               ...prev,
-              expenses_total: e.target.value,
-            }))
-          }
-          value={payload.expenses_total}
+              old_bread: { orange: "", blue: "", green: "" },
+            }));
+          }}
         />
-        {errors.expenses_total && (
-          <p className="text-red-500 text-xs mt-1">{errors.expenses_total}</p>
-        )}
-      </div>
-      <div className="w-full transition-all animate-collapsible-down">
-        <label htmlFor="outstanding" className="text-sm">
-          Outstanding
-        </label>
-        <Input
-          type="number"
-          placeholder="amount"
-          name="outstanding"
-          className="w-full mt-1 no-spinners"
-          onChange={(e) =>
-            setPayload((prev) => ({
-              ...prev,
-              outstanding: e.target.value,
-            }))
-          }
-          value={payload.outstanding}
-        />
-        {errors.outstanding && (
-          <p className="text-red-500 text-xs mt-1">{errors.outstanding}</p>
-        )}
       </div>
 
       <Button

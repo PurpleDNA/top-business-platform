@@ -4,10 +4,12 @@ import {
   getProductionById,
   getProductionOutstanding,
   getProductionPaidOutstanding,
+  calculateBreadTotal,
 } from "@/app/services/productions";
 import { OutstandingSection } from "@/app/components/productions/OutstandingSection";
 import { ProductionToggle } from "@/app/components/productions/ProductionToggle";
 import { ExpenseDropdown } from "@/app/components/productions/ExpenseDropdown";
+import { RemainingBreadDropdown } from "@/app/components/productions/RemainingBreadDropdown";
 import { ExpenseModal } from "@/app/components/productions/ExpenseModal";
 import { CashInput } from "@/app/components/productions/CashInput";
 import { getExpensesByProdId } from "@/app/services/expenses";
@@ -53,7 +55,28 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
     );
   }
 
-  const { quantity, total, break_even, cash, created_at } = production;
+  const {
+    quantity,
+    total,
+    break_even,
+    cash,
+    created_at,
+    old_bread,
+    remaining_bread,
+  } = production;
+
+  // Calculate old_bread & remaining_bread monetary value
+  const oldBreadTotal = await calculateBreadTotal(old_bread);
+  const remainingBreadTotal = await calculateBreadTotal(remaining_bread);
+
+  const isOldBread = Object.values(old_bread).some((color) => {
+    return color != 0;
+  });
+
+  console.log(isOldBread);
+
+  // Calculate total value (production total + old_bread value)
+  const totalValue = total + oldBreadTotal;
 
   // Calculate total expenses from expenses table
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -85,7 +108,13 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const isBalanced = difference === 0;
 
   // Calculate total quantity
-  const totalQuantity = quantity.blue + quantity.green + quantity.orange;
+  const totalQuantity =
+    quantity.blue +
+    quantity.green +
+    quantity.orange +
+    old_bread.blue +
+    old_bread.green +
+    old_bread.orange;
 
   // Format production ID (show first 8 chars)
   const shortId = id.substring(0, 8).toUpperCase();
@@ -180,39 +209,89 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
               <div className="p-5">
                 {/* Product Quantities Breakdown */}
-                <div className="mb-4 rounded-lg bg-muted/50 ring-1 ring-border p-4">
-                  <dt className="text-xs text-muted-foreground mb-3">
-                    Product Breakdown
-                  </dt>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-                        <span className="text-sm text-foreground">Blue</span>
+                <div
+                  className={`grid grid-cols-1 ${
+                    isOldBread && "md:grid-cols-2"
+                  } gap-4`}
+                >
+                  <div className="mb-4 rounded-lg bg-muted/50 ring-1 ring-border p-4">
+                    <dt className="text-xs text-muted-foreground mb-3">
+                      Production
+                    </dt>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="h-3 w-3 rounded-full bg-blue-500"></div>
+                          <span className="text-sm text-foreground">Blue</span>
+                        </div>
+                        <span className="text-sm font-semibold text-foreground">
+                          {quantity.blue.toLocaleString()}
+                        </span>
                       </div>
-                      <span className="text-sm font-semibold text-foreground">
-                        {quantity.blue.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                        <span className="text-sm text-foreground">Green</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                          <span className="text-sm text-foreground">Green</span>
+                        </div>
+                        <span className="text-sm font-semibold text-foreground">
+                          {quantity.green.toLocaleString()}
+                        </span>
                       </div>
-                      <span className="text-sm font-semibold text-foreground">
-                        {quantity.green.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full bg-orange-500"></div>
-                        <span className="text-sm text-foreground">Orange</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="h-3 w-3 rounded-full bg-orange-500"></div>
+                          <span className="text-sm text-foreground">
+                            Orange
+                          </span>
+                        </div>
+                        <span className="text-sm font-semibold text-foreground">
+                          {quantity.orange.toLocaleString()}
+                        </span>
                       </div>
-                      <span className="text-sm font-semibold text-foreground">
-                        {quantity.orange.toLocaleString()}
-                      </span>
                     </div>
                   </div>
+                  {isOldBread && (
+                    <div className="mb-4 rounded-lg bg-muted/50 ring-1 ring-border p-4">
+                      <dt className="text-xs text-muted-foreground mb-3">
+                        Old Bread
+                      </dt>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="h-3 w-3 rounded-full bg-blue-500"></div>
+                            <span className="text-sm text-foreground">
+                              Blue
+                            </span>
+                          </div>
+                          <span className="text-sm font-semibold text-foreground">
+                            {old_bread.blue.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                            <span className="text-sm text-foreground">
+                              Green
+                            </span>
+                          </div>
+                          <span className="text-sm font-semibold text-foreground">
+                            {old_bread.green.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="h-3 w-3 rounded-full bg-orange-500"></div>
+                            <span className="text-sm text-foreground">
+                              Orange
+                            </span>
+                          </div>
+                          <span className="text-sm font-semibold text-foreground">
+                            {old_bread.orange.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="rounded-lg bg-muted/50 ring-1 ring-border p-4">
@@ -230,7 +309,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                       Total Value
                     </dt>
                     <dd className="mt-1 text-sm text-foreground font-semibold">
-                      ₦{total.toLocaleString()}
+                      ₦{totalValue.toLocaleString()}
                     </dd>
                   </div>
                   {/* Cash Collected */}
@@ -252,8 +331,12 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
               </div>
 
               {/* Expenses Section */}
-              <div className="mt-6">
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <ExpenseDropdown data={expenses} />
+                <RemainingBreadDropdown
+                  remainingBread={remaining_bread}
+                  remainingBreadTotal={remainingBreadTotal}
+                />
               </div>
 
               {/* Financial Summary */}

@@ -1,4 +1,5 @@
 import supabase from "@/client";
+import { updateRemainingBread } from "./productions";
 
 interface CreateSale {
   customer_id: string;
@@ -6,6 +7,11 @@ interface CreateSale {
   amount: string;
   paid: boolean;
   remaining: number;
+  quantity?: {
+    orange?: number;
+    blue?: number;
+    green?: number;
+  };
 }
 
 interface Sale {
@@ -91,6 +97,7 @@ export const fetchSalesByProductionId = async (productionId: string) => {
 
 export const createNewSale = async (payload: CreateSale) => {
   try {
+    // 1. Create the sale record
     const { data: saleData, error } = await supabase
       .from("sales")
       .insert({
@@ -104,8 +111,23 @@ export const createNewSale = async (payload: CreateSale) => {
       .select();
 
     if (error) {
-      throw new Error("Create Customer Error");
+      throw new Error("Create Sale Error");
     }
+
+    // 2. Update remaining_bread if quantity is provided
+    if (payload.quantity && payload.production_id) {
+      const updateResult = await updateRemainingBread(
+        payload.production_id,
+        payload.quantity
+      );
+
+      if (updateResult.status === "ERROR") {
+        console.error("Failed to update remaining_bread:", updateResult.error);
+        // Note: Sale was created but remaining_bread update failed
+        // You could implement rollback logic here if needed
+      }
+    }
+
     return { status: "SUCCESS", error: "", res: saleData[0] };
   } catch (error) {
     console.log("create sale error>>>>>>", error);

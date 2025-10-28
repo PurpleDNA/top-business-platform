@@ -1,6 +1,7 @@
 "use server";
 import supabase from "@/client";
 import { revalidateTag } from "next/cache";
+import { getBreadPriceMultipliers } from "./bread_price";
 
 export interface Production {
   id: string;
@@ -10,10 +11,19 @@ export interface Production {
     orange: number;
     [key: string]: number; // allows future extensions
   };
+  old_bread: {
+    blue: number;
+    green: number;
+    orange: number;
+    [key: string]: number; // allows future extensions
+  };
+  remaining_bread: {
+    blue: number;
+    green: number;
+    orange: number;
+    [key: string]: number; // allows future extensions
+  };
   total: number;
-  break_even: boolean;
-  short_or_excess: boolean;
-  expenses_total: number;
   cash: number;
   created_at: string;
   updated_at: string;
@@ -27,8 +37,11 @@ interface Create {
     green: string;
   };
   total: string;
-  expenses_total?: string;
-  outstanding?: string;
+  old_bread: {
+    orange: string;
+    blue: string;
+    green: string;
+  };
 }
 
 export const createProduction = async (payload: Create) => {
@@ -39,14 +52,28 @@ export const createProduction = async (payload: Create) => {
         Number(value),
       ])
     );
+
+    const old_bread = Object.fromEntries(
+      Object.entries(payload.old_bread).map(([key, value]) => [
+        key,
+        Number(value),
+      ])
+    );
+
+    // Calculate remaining_bread: sum of quantity and old_bread for each property
+    const remaining_bread: { [key: string]: number } = {};
+    Object.keys(quantity).forEach((key) => {
+      remaining_bread[key] = (quantity[key] || 0) + (old_bread[key] || 0);
+    });
+
     const { data: ProductionData, error } = await supabase
       .from("productions")
       .insert({
         quantity: quantity,
         total: Number(payload.total),
-        expenses_total: Number(payload.expenses_total || 0),
-        outstanding: Number(payload.outstanding || 0),
-        production: true,
+        old_bread: old_bread,
+        remaining_bread: remaining_bread,
+        open: true,
       })
       .select();
 
@@ -276,5 +303,79 @@ export const updateProduction = async (
   } catch (error) {
     console.error("Unexpected error in updateProduction:", error);
     return { status: "ERROR", error: String(error) };
+  }
+};
+
+export const updateRemainingBread = async (
+  productionId: string,
+  soldQuantity: { orange?: number; blue?: number; green?: number }
+) => {
+  try {
+    const production = await getProductionById(productionId);
+
+    if (!production || !production.remaining_bread) {
+      console.error("Production not found or has no remaining_bread");
+      return { status: "ERROR", error: "Production not found" };
+    }
+
+    const currentRemaining = production.remaining_bread;
+    const newRemaining: { [key: string]: number } = {};
+
+    Object.keys(currentRemaining).forEach((key) => {
+      const current = currentRemaining[key] || 0;
+      const sold = soldQuantity[key as keyof typeof soldQuantity] || 0;
+      newRemaining[key] = Math.max(0, current - sold); // Ensure never negative
+    });
+
+    const { data: updatedProduction, error } = await supabase
+      .from("productions")
+      .update({ remaining_bread: newRemaining })
+      .eq("id", productionId)
+      .select();
+
+    if (error) {
+      console.error("Error updating remaining_bread:", error);
+      throw new Error("Failed to update remaining_bread");
+    }
+
+    revalidateTag("productions");
+
+    return {
+      status: "SUCCESS",
+      data: updatedProduction[0],
+      previousRemaining: currentRemaining,
+      newRemaining,
+    };
+  } catch (error) {
+    console.error("Unexpected error in updateRemainingBread:", error);
+    return { status: "ERROR", error: String(error) };
+  }
+};
+
+/**
+ * Calculate the total monetary value of bread quantities based on current bread prices
+ * @param breadQuantities - Object containing quantities by color (e.g., { orange: 10, blue: 5, green: 3 })
+ * @returns Total monetary value
+ */
+export const calculateBreadTotal = async (
+  breadQuantities: { [key: string]: number } | null | undefined
+): Promise<number> => {
+  try {
+    if (!breadQuantities) return 0;
+
+    // Get current bread prices
+    const breadPrices = await getBreadPriceMultipliers();
+
+    // Calculate total by multiplying each quantity by its price
+    let total = 0;
+    Object.entries(breadQuantities).forEach(([color, quantity]) => {
+      const price = breadPrices[color.toLowerCase()] || 0;
+      total += quantity * price;
+    });
+
+    return total;
+  } catch (error) {
+    console.error("Error calculating bread total:", error);
+    return 0;
   }
 };

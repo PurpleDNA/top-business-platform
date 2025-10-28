@@ -5,6 +5,8 @@ import { createNewSale } from "@/app/services/sales";
 import React, { useActionState, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { LoaderCircle, UserRoundX } from "lucide-react";
 import z from "zod";
 import { toast } from "sonner";
@@ -39,7 +41,12 @@ interface Props {
   multipliers?: Record<string, number>;
 }
 
-const SalesCreateForm = ({ productions, customer, production, multipliers = { orange: 1200, blue: 1000, green: 650 } }: Props) => {
+const SalesCreateForm = ({
+  productions,
+  customer,
+  production,
+  multipliers = { orange: 1200, blue: 1000, green: 650 },
+}: Props) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selected, setSelected] = useState({
     production: production
@@ -55,6 +62,11 @@ const SalesCreateForm = ({ productions, customer, production, multipliers = { or
     amount: "",
     paid: false,
     remaining: 0,
+    quantity: {
+      orange: 0,
+      blue: 0,
+      green: 0,
+    },
   });
   const [amountPaid, setAmountPaid] = useState<number | undefined>(undefined);
   const [quantity, setQuantity] = useState<{
@@ -70,8 +82,6 @@ const SalesCreateForm = ({ productions, customer, production, multipliers = { or
   const [customerSearchValue, setCustomerSearchValue] = useState(
     selected?.customer?.name || ""
   );
-
-  console.log(payload);
 
   // Debounced search effect
   useEffect(() => {
@@ -189,6 +199,11 @@ const SalesCreateForm = ({ productions, customer, production, multipliers = { or
           amount: "",
           paid: false,
           remaining: 0,
+          quantity: {
+            orange: 0,
+            blue: 0,
+            green: 0,
+          },
         });
         setAmountPaid(undefined);
         setQuantity({
@@ -234,6 +249,11 @@ const SalesCreateForm = ({ productions, customer, production, multipliers = { or
       setPayload((prev) => ({
         ...prev,
         amount: String(total),
+        quantity: {
+          orange: Number(updatedQty.orange) || 0,
+          blue: Number(updatedQty.blue) || 0,
+          green: Number(updatedQty.green) || 0,
+        },
       }));
 
       return updatedQty;
@@ -304,22 +324,8 @@ const SalesCreateForm = ({ productions, customer, production, multipliers = { or
           placeholder="amount"
           name="amount"
           className="w-full mt-1 no-spinners"
-          onChange={(e) => {
-            setPayload((prev) => ({
-              ...prev,
-              amount: e.target.value,
-              remaining:
-                Number(e.target.value) -
-                (prev.paid
-                  ? Number(e.target.value)
-                  : amountPaid
-                  ? amountPaid
-                  : 0),
-            }));
-            // clear quantities when typing manually into amount
-            setQuantity({ orange: 0, blue: 0, green: 0 });
-          }}
           value={payload.amount}
+          readOnly
         />
         {errors.amount && (
           <p className="text-red-500 text-xs mt-1">{errors.amount}</p>
@@ -398,16 +404,14 @@ const SalesCreateForm = ({ productions, customer, production, multipliers = { or
           <p className="text-red-500 text-xs mt-1">{errors.production_id}</p>
         )}
       </div>
-      <div className="mr-auto">
-        <label htmlFor="paid" className="text-sm">
+      <div className="w-full flex items-center justify-between border rounded-lg p-3 bg-muted/50">
+        <Label htmlFor="paid-switch" className="text-sm font-medium">
           Paid in Full
-        </label>
-        <Input
-          type="checkbox"
-          name="paid"
-          className="h-8 w-8 mt-1"
-          onChange={(e) => {
-            const isPaid = e.target.checked;
+        </Label>
+        <Switch
+          id="paid-switch"
+          checked={payload.paid}
+          onCheckedChange={(isPaid) => {
             setPayload((prev) => ({
               ...prev,
               paid: isPaid,
@@ -417,7 +421,6 @@ const SalesCreateForm = ({ productions, customer, production, multipliers = { or
               setAmountPaid(0);
             }
           }}
-          checked={payload.paid}
         />
         {errors.paid && (
           <p className="text-red-500 text-xs mt-1">{errors.paid}</p>

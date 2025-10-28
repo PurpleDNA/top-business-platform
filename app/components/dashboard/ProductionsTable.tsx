@@ -15,7 +15,7 @@ export const ProductionsTable = async () => {
         <CardTitle className="text-lg font-semibold">
           Recent Productions
         </CardTitle>
-        <Link href="/production/all">
+        <Link href="/productions/all">
           <Button variant="outline" size="sm">
             View All
           </Button>
