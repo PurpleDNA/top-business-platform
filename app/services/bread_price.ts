@@ -108,7 +108,7 @@ export const createBreadPrice = async (payload: CreateBreadPrice) => {
       throw new Error("Failed to create bread price");
     }
 
-    revalidateTag("bread_price");
+    await revalidateTag("bread_price", {});
 
     return { status: "SUCCESS", error: "", data: breadPriceData[0] };
   } catch (error) {
@@ -136,7 +136,7 @@ export const updateBreadPrice = async (
       throw new Error("Failed to update bread price");
     }
 
-    revalidateTag("bread_price");
+    await revalidateTag("bread_price", {});
 
     return { status: "SUCCESS", error: "", data: updatedBreadPrice[0] };
   } catch (error) {
@@ -160,7 +160,7 @@ export const deleteBreadPrice = async (breadPriceId: number) => {
       throw new Error("Failed to delete bread price");
     }
 
-    revalidateTag("bread_price");
+    await revalidateTag("bread_price", {});
 
     return { status: "SUCCESS", error: "" };
   } catch (error) {

@@ -80,7 +80,7 @@ export const createProduction = async (payload: Create) => {
     if (error) {
       throw new Error("Create Production Error");
     }
-    revalidateTag("last10");
+    await revalidateTag("last10", {});
 
     return { status: "SUCCESS", error: "", res: ProductionData[0] };
   } catch (error) {
@@ -272,7 +272,7 @@ export const toggleProdStatus = async (productionId: string) => {
       throw new Error("Failed to update production status");
     }
 
-    revalidateTag("productions");
+    await revalidateTag("productions", {});
 
     return { status: "SUCCESS", data: updatedProduction, newStatus };
   } catch (error) {
@@ -297,7 +297,7 @@ export const updateProduction = async (
       throw new Error("Failed to update production");
     }
 
-    revalidateTag("productions");
+    await revalidateTag("productions", {});
 
     return { status: "SUCCESS", data: updatedProduction[0] };
   } catch (error) {
@@ -338,7 +338,7 @@ export const updateRemainingBread = async (
       throw new Error("Failed to update remaining_bread");
     }
 
-    revalidateTag("productions");
+    await revalidateTag("productions", {});
 
     return {
       status: "SUCCESS",

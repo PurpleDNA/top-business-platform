@@ -33,7 +33,7 @@ export const createExpense = async (payload: CreateExpense) => {
       throw new Error("Failed to create expense");
     }
 
-    revalidateTag("expenses");
+    await revalidateTag("expenses", {});
 
     return { status: "SUCCESS", error: "", data: expenseData[0] };
   } catch (error) {
@@ -58,7 +58,7 @@ export const updateExpense = async (
       throw new Error("Failed to update expense");
     }
 
-    revalidateTag("expenses");
+    await revalidateTag("expenses", {});
 
     return { status: "SUCCESS", error: "", data: updatedExpense[0] };
   } catch (error) {
@@ -76,7 +76,7 @@ export const deleteExpense = async (expenseId: string) => {
       throw new Error("Failed to delete expense");
     }
 
-    revalidateTag("expenses");
+    await revalidateTag("expenses", {});
 
     return { status: "SUCCESS", error: "" };
   } catch (error) {

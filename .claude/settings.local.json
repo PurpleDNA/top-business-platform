@@ -8,7 +8,9 @@
       "Bash(npm run build:*)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(dir)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []
