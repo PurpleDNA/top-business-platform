@@ -31,9 +31,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={bungee.variable}>
+    <html lang="en" className={`${rubik.variable} ${bungee.variable}`}>
       <body
-        className={`${rubik.className}  antialiased`}
+        className={`${rubik.className} antialiased`}
         suppressHydrationWarning={true}
       >
         <AuthProvider>

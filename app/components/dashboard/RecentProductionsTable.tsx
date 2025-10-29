@@ -17,17 +17,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
 import React from "react";
-import { Badge } from "@/components/ui/badge";
 import { Production } from "@/app/services/productions";
 import Link from "next/link";
-
-const getBreakEvenVariant = (breakEven: boolean) => {
-  return breakEven ? "default" : "destructive";
-};
-
-const getBreakEvenText = (breakEven: boolean) => {
-  return breakEven ? "Break Even" : "Loss";
-};
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -52,7 +43,6 @@ const RecentProductionsTable = ({
           <TableHead>Blue</TableHead>
           <TableHead>Green</TableHead>
           <TableHead>Total</TableHead>
-          <TableHead>Status</TableHead>
           <TableHead className="w-[50px]"></TableHead>
         </TableRow>
       </TableHeader>
@@ -79,11 +69,6 @@ const RecentProductionsTable = ({
             </TableCell>
             <TableCell className="font-semibold">
               ₦{production.total.toLocaleString()}
-            </TableCell>
-            <TableCell>
-              <Badge variant={getBreakEvenVariant(production.break_even)}>
-                {getBreakEvenText(production.break_even)}
-              </Badge>
             </TableCell>
             <TableCell>
               <DropdownMenu>

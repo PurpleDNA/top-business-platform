@@ -1,20 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { createExpense } from "@/app/services/expenses";
-import React, { useActionState, useState } from "react";
+import React, { useActionState, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoaderCircle } from "lucide-react";
 import z from "zod";
 import { toast } from "sonner";
 import { formatDateTime, getTimeFrame } from "@/app/services/utils";
-import { Production } from "@/app/services/productions";
+import { Production, getLast10Productions, getProductionById } from "@/app/services/productions";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSearchParams } from "next/navigation";
+import { ExpenseCreateFormSkeleton } from "./ExpenseCreateFormSkeleton";
 
 const validate = z.object({
   production_id: z.string().min(1, "Production ID is required"),
@@ -22,27 +24,56 @@ const validate = z.object({
   amount: z.coerce.number().min(1, "Amount must be greater than 0"),
 });
 
-interface Props {
-  productions?: Production[];
-  production?: Production;
-}
+const ExpenseCreateForm = () => {
+  const searchParams = useSearchParams();
+  const production_id = searchParams.get("production_id");
 
-const ExpenseCreateForm = ({ productions, production }: Props) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [selectedProduction, setSelectedProduction] = useState<
-    Production | undefined
-  >(
-    production
-      ? production
-      : productions && productions[0]
-      ? productions[0]
-      : undefined
-  );
+  const [productions, setProductions] = useState<Production[]>([]);
+  const [selectedProduction, setSelectedProduction] = useState<Production | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
   const [payload, setPayload] = useState({
-    production_id: selectedProduction?.id || "",
+    production_id: "",
     expense: "",
     amount: "",
   });
+
+  // Fetch productions and specific production on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+
+        // Fetch last 10 productions
+        const productionsList = await getLast10Productions();
+        setProductions(productionsList);
+
+        // If production_id is in URL, fetch that specific production
+        if (production_id) {
+          const specificProduction = await getProductionById(production_id);
+          setSelectedProduction(specificProduction);
+          setPayload(prev => ({
+            ...prev,
+            production_id: specificProduction.id,
+          }));
+        } else if (productionsList.length > 0) {
+          // Otherwise, select the first production
+          setSelectedProduction(productionsList[0]);
+          setPayload(prev => ({
+            ...prev,
+            production_id: productionsList[0].id,
+          }));
+        }
+      } catch (error) {
+        toast.error("Failed to load productions");
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [production_id]);
 
   async function handleSubmit(prevState: any, formData: FormData) {
     const values = {
@@ -87,6 +118,10 @@ const ExpenseCreateForm = ({ productions, production }: Props) => {
     status: "",
     error: "",
   });
+
+  if (isLoading) {
+    return <ExpenseCreateFormSkeleton />;
+  }
 
   return (
     <form action={formAction} className="flex flex-col gap-4 items-center my-5">
