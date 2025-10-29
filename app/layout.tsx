@@ -7,6 +7,7 @@ import { MobileBottomBar } from "./components/dashboard/MobileBottomBar";
 import { AuthProvider } from "./providers/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
+import { Sidebar } from "./components/dashboard/Sidebar";
 
 const rubik = Rubik({
   variable: "--font-rubik",
@@ -45,7 +46,12 @@ export default function RootLayout({
           >
             <DashboardHeader />
             <Toaster />
-            {children}
+            <div className="flex h-screen scrollbar-hide">
+              <Sidebar />
+              <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
+                {children}
+              </main>
+            </div>
             <MobileBottomBar />
             <Analytics />
           </ThemeProvider>

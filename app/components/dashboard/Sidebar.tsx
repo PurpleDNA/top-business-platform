@@ -74,14 +74,14 @@ export const Sidebar = () => {
       {/* Sidebar for desktop only */}
       <aside
         className={cn(
-          "hidden md:flex flex-col relative left-0 top-16 bottom-0 bg-background border-r border-border transition-all duration-300 z-30 h-screen",
+          "hidden md:flex flex-col relative bg-background border-r border-border transition-all duration-300 z-30 h-screen flex-shrink-0 pt-16 md:pt-20",
           isCollapsed ? "w-16" : "w-64"
         )}
       >
         {/* Collapse/Expand Button */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3 top-6 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition"
+          className="absolute -right-3 top-16 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition z-50"
         >
           {isCollapsed ? (
             <ChevronRight className="h-4 w-4" />
@@ -91,7 +91,7 @@ export const Sidebar = () => {
         </button>
 
         {/* Navigation Items */}
-        <nav className="flex-1 overflow-y-auto py-4">
+        <nav className="flex-1 overflow-y-auto py-4 pb-4">
           <ul className="space-y-1 px-2">
             {navigationItems.map((item) => {
               const Icon = item.icon;
@@ -102,7 +102,7 @@ export const Sidebar = () => {
                   <Link
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group",
+                      "flex relative items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group",
                       isActive
                         ? "bg-primary text-primary-foreground"
                         : "text-foreground hover:bg-accent hover:text-accent-foreground"
@@ -126,6 +126,7 @@ export const Sidebar = () => {
               );
             })}
           </ul>
+          {/* Collapse/Expand Button */}
         </nav>
 
         {/* Footer */}
@@ -139,12 +140,12 @@ export const Sidebar = () => {
       </aside>
 
       {/* Spacer for content */}
-      <div
+      {/* <div
         className={cn(
           "hidden md:block transition-all duration-300",
           isCollapsed ? "w-16" : "w-64"
         )}
-      />
+      /> */}
     </>
   );
 };
