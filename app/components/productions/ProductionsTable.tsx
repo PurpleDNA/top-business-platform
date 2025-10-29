@@ -24,10 +24,6 @@ const formatDate = (dateString: string) => {
   });
 };
 
-const getBreakEvenVariant = (breakEven: boolean) => {
-  return breakEven ? "default" : "destructive";
-};
-
 const ProductionsTable = ({ productions }: { productions: Production[] }) => {
   return (
     <div className="overflow-x-auto">
@@ -37,7 +33,6 @@ const ProductionsTable = ({ productions }: { productions: Production[] }) => {
             <TableHead>Date</TableHead>
             <TableHead>Quantities</TableHead>
             <TableHead>Total Value</TableHead>
-            <TableHead>Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -84,11 +79,6 @@ const ProductionsTable = ({ productions }: { productions: Production[] }) => {
                 </TableCell>
                 <TableCell className="font-semibold">
                   ₦{production.total.toLocaleString()}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={getBreakEvenVariant(production.break_even)}>
-                    {production.break_even ? "Break Even" : "Not Break Even"}
-                  </Badge>
                 </TableCell>
                 <TableCell className="text-right">
                   <Button

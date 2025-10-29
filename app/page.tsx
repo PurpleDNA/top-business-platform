@@ -57,16 +57,9 @@ const Index = async () => {
         </div>
 
         {/* Charts and Tables Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3 space-y-6">
-            {/* <SalesChart /> */}
-            <ProductionsTable />
-            <CustomersTable />
-          </div>
-
-          <div className="space-y-6 cursor-pointer">
-            <QuickActions />
-          </div>
+        <div className="lg:col-span-3 space-y-6 lg:px-6">
+          <ProductionsTable />
+          <CustomersTable />
         </div>
       </main>
     </div>

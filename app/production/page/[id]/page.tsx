@@ -55,14 +55,8 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
     );
   }
 
-  const {
-    quantity,
-    total,
-    cash,
-    created_at,
-    old_bread,
-    remaining_bread,
-  } = production;
+  const { quantity, total, cash, created_at, old_bread, remaining_bread } =
+    production;
 
   // Calculate old_bread & remaining_bread monetary value
   const oldBreadTotal = await calculateBreadTotal(old_bread);
@@ -94,7 +88,8 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
   // Financial calculations
   // Money we have: cash + expenses + outstanding + remaining bread value
-  const totalMoneyIn = cash + totalExpenses + totalOutstanding + remainingBreadTotal;
+  const totalMoneyIn =
+    cash + totalExpenses + totalOutstanding + remainingBreadTotal;
 
   // Subtract paid outstanding (money that was paid back)
   const adjustedTotal = totalMoneyIn - totalPaidOutstanding;
@@ -427,7 +422,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                   {/* Subtotal */}
                   <div className="flex items-center justify-between pb-3 border-b border-border bg-muted/50 px-3 py-2 rounded-lg">
                     <span className="text-sm font-semibold text-foreground">
-                      Subtotal (Cash + Expenses + Outstanding + Remaining Bread - Paid)
+                      Subtotal
                     </span>
                     <span className="text-sm font-bold text-foreground">
                       ₦{adjustedTotal.toLocaleString()}
