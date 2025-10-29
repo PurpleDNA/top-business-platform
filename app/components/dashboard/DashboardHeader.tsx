@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import {
   Bell,
   LoaderCircle,
@@ -214,9 +215,11 @@ export const DashboardHeader = () => {
               <DropdownMenuItem className="cursor-pointer">
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                Settings
-              </DropdownMenuItem>
+              <Link href="/settings">
+                <DropdownMenuItem className="cursor-pointer">
+                  Settings
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={signOut} className="cursor-pointer">
                 Sign out
