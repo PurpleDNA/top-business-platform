@@ -8,7 +8,11 @@ import { LoaderCircle } from "lucide-react";
 import z from "zod";
 import { toast } from "sonner";
 import { formatDateTime, getTimeFrame } from "@/app/services/utils";
-import { Production, getLast10Productions, getProductionById } from "@/app/services/productions";
+import {
+  Production,
+  getLast10Productions,
+  getProductionById,
+} from "@/app/services/productions";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,7 +34,9 @@ const ExpenseCreateForm = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [productions, setProductions] = useState<Production[]>([]);
-  const [selectedProduction, setSelectedProduction] = useState<Production | undefined>(undefined);
+  const [selectedProduction, setSelectedProduction] = useState<
+    Production | undefined
+  >(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [payload, setPayload] = useState({
     production_id: "",
@@ -45,21 +51,21 @@ const ExpenseCreateForm = () => {
         setIsLoading(true);
 
         // Fetch last 10 productions
-        const productionsList = await getLast10Productions();
+        const productionsList = (await getLast10Productions()) ?? [];
         setProductions(productionsList);
 
         // If production_id is in URL, fetch that specific production
         if (production_id) {
           const specificProduction = await getProductionById(production_id);
           setSelectedProduction(specificProduction);
-          setPayload(prev => ({
+          setPayload((prev) => ({
             ...prev,
             production_id: specificProduction.id,
           }));
         } else if (productionsList.length > 0) {
           // Otherwise, select the first production
           setSelectedProduction(productionsList[0]);
-          setPayload(prev => ({
+          setPayload((prev) => ({
             ...prev,
             production_id: productionsList[0].id,
           }));
