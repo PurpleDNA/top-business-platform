@@ -56,10 +56,10 @@ const RecentsTable = ({ customers }: { customers: Customer[] }) => {
       <TableHeader>
         <TableRow>
           <TableHead>Customer</TableHead>
-          <TableHead>Phone</TableHead>
-          <TableHead>Debt</TableHead>
+          <TableHead className="hidden lg:table-cell">Phone</TableHead>
+          <TableHead className="hidden lg:table-cell">Debt</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead>Created</TableHead>
+          <TableHead className="hidden lg:table-cell">Created</TableHead>
           <TableHead className="w-[50px]"></TableHead>
         </TableRow>
       </TableHeader>
@@ -73,10 +73,10 @@ const RecentsTable = ({ customers }: { customers: Customer[] }) => {
             }
           >
             <TableCell className="font-medium">{customer.name}</TableCell>
-            <TableCell className="text-muted-foreground">
+            <TableCell className="text-muted-foreground hidden lg:table-cell">
               {customer.phone_number}
             </TableCell>
-            <TableCell className="font-semibold">
+            <TableCell className="font-semibold hidden lg:table-cell">
               ₦{customer.total_debt.toLocaleString()}
             </TableCell>
             <TableCell>
@@ -89,7 +89,7 @@ const RecentsTable = ({ customers }: { customers: Customer[] }) => {
                 {getStatusText(customer.has_debt, customer.total_debt)}
               </Badge>
             </TableCell>
-            <TableCell className="text-muted-foreground">
+            <TableCell className="text-muted-foreground hidden lg:table-cell">
               {formatDate(customer.created_at)}
             </TableCell>
             <TableCell>

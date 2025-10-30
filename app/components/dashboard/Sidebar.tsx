@@ -24,6 +24,16 @@ const navigationItems = [
     icon: Home,
   },
   {
+    title: "All Productions",
+    href: "/productions/all",
+    icon: Factory,
+  },
+  {
+    title: "All Customers",
+    href: "/customers/all",
+    icon: Users,
+  },
+  {
     title: "New Production",
     href: "/production/new",
     icon: FileText,
@@ -42,16 +52,6 @@ const navigationItems = [
     title: "New Customer",
     href: "/customers/new",
     icon: UserPlus,
-  },
-  {
-    title: "All Productions",
-    href: "/productions/all",
-    icon: Factory,
-  },
-  {
-    title: "All Customers",
-    href: "/customers/all",
-    icon: Users,
   },
   {
     title: "Bread Calculator",

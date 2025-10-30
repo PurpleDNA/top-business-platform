@@ -6,7 +6,7 @@ const Hero = () => {
   const { profile } = useAuth();
   return (
     <div className="space-y-2">
-      <h1 className="text-3xl font-bold text-foreground">
+      <h1 className="text-xl lg:text-3xl font-bold text-foreground">
         Welcome back, {profile?.profile?.first_name || "User"} 👋
       </h1>
       <p className="text-muted-foreground">

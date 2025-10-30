@@ -9,6 +9,7 @@ import {
   Search,
   User,
   UserRoundX,
+  Menu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ import { useAuth } from "@/app/providers/auth-provider";
 import { Bungee } from "next/font/google";
 import { useState, useEffect } from "react";
 import { Customer, searchCustomers } from "@/app/services/customers";
+import { MobileSideMenu } from "./MobileSideMenu";
 
 export const bungee = Bungee({
   subsets: ["latin"],
@@ -179,18 +181,23 @@ export const DashboardHeader = () => {
 
           <DarkModeToggle />
 
-          <Button variant="ghost" size="icon" className="relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative hidden md:flex"
+          >
             <Bell className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-primary text-[10px] flex items-center justify-center text-primary-foreground">
               3
             </span>
           </Button>
 
+          {/* Desktop Avatar Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="relative h-9 w-9 rounded-full cursor-pointer"
+                className="relative h-9 w-9 rounded-full cursor-pointer hidden md:flex"
               >
                 <Avatar className="h-9 w-9">
                   <AvatarImage src="/placeholder-avatar.jpg" alt="User" />
@@ -226,6 +233,15 @@ export const DashboardHeader = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Mobile Hamburger Menu */}
+          <div className="md:hidden">
+            <MobileSideMenu>
+              <Button variant="ghost" size="icon">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </MobileSideMenu>
+          </div>
         </div>
       </div>
     </header>

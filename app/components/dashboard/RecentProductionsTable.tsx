@@ -39,9 +39,9 @@ const RecentProductionsTable = ({
       <TableHeader>
         <TableRow>
           <TableHead>Date</TableHead>
-          <TableHead>Orange</TableHead>
-          <TableHead>Blue</TableHead>
-          <TableHead>Green</TableHead>
+          <TableHead className="hidden lg:table-cell">Orange</TableHead>
+          <TableHead className="hidden lg:table-cell">Blue</TableHead>
+          <TableHead className="hidden lg:table-cell">Green</TableHead>
           <TableHead>Total</TableHead>
           <TableHead className="w-[50px]"></TableHead>
         </TableRow>
@@ -58,13 +58,13 @@ const RecentProductionsTable = ({
             <TableCell className="font-medium">
               {formatDate(production.created_at)}
             </TableCell>
-            <TableCell className="text-muted-foreground">
+            <TableCell className="text-muted-foreground hidden lg:table-cell">
               {production.quantity.orange.toLocaleString()}
             </TableCell>
-            <TableCell className="text-muted-foreground">
+            <TableCell className="text-muted-foreground hidden lg:table-cell">
               {production.quantity.blue.toLocaleString()}
             </TableCell>
-            <TableCell className="text-muted-foreground">
+            <TableCell className="text-muted-foreground hidden lg:table-cell">
               {production.quantity.green.toLocaleString()}
             </TableCell>
             <TableCell className="font-semibold">

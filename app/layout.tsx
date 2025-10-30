@@ -46,7 +46,7 @@ export default function RootLayout({
           >
             <DashboardHeader />
             <Toaster />
-            <div className="flex h-screen scrollbar-hide">
+            <div className="flex lg:h-screen scrollbar-hide">
               <Sidebar />
               <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
                 {children}

@@ -1,10 +1,9 @@
 "use client";
 
 import {
-  UserPlus,
-  FileText,
-  CircleDollarSign,
-  BriefcaseBusiness,
+  Users,
+  Factory,
+  Home,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -19,24 +18,19 @@ export const MobileBottomBar = () => {
 
   const actions = [
     {
-      icon: UserPlus,
-      label: "Customer",
-      to: "/customers/new",
+      icon: Home,
+      label: "Dashboard",
+      to: "/",
     },
     {
-      icon: FileText,
-      label: "Production",
-      to: "/production/new",
+      icon: Users,
+      label: "Customers",
+      to: "/customers/all",
     },
     {
-      icon: BriefcaseBusiness,
-      label: "Sale",
-      to: "/sale/new",
-    },
-    {
-      icon: CircleDollarSign,
-      label: "Payment",
-      to: "/payment/new",
+      icon: Factory,
+      label: "Productions",
+      to: "/productions/all",
     },
   ];
 

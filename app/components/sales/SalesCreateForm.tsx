@@ -68,13 +68,13 @@ const SalesCreateForm = ({
       green: 0,
     },
   });
-  const [amountPaid, setAmountPaid] = useState<number | undefined>(undefined);
+  const [amountPaid, setAmountPaid] = useState<string>("");
   const [quantity, setQuantity] = useState<{
-    [key: string]: number | undefined;
+    [key: string]: string;
   }>({
-    orange: undefined,
-    blue: undefined,
-    green: undefined,
+    orange: "",
+    blue: "",
+    green: "",
   });
   const [searchResults, setSearchResuls] = useState<Customer[]>([]);
   const [searching, setSearching] = useState(false);
@@ -205,11 +205,11 @@ const SalesCreateForm = ({
             green: 0,
           },
         });
-        setAmountPaid(undefined);
+        setAmountPaid("");
         setQuantity({
-          orange: 0,
-          blue: 0,
-          green: 0,
+          orange: "",
+          blue: "",
+          green: "",
         });
         setCustomerSearchValue("");
         setSelected((prev) => ({
@@ -231,14 +231,11 @@ const SalesCreateForm = ({
   }
 
   function handleQuantityChange(name: string, value: string) {
-    // ensure numeric quantity
-    const num = Number(value) || 0;
-
     // update quantity state and compute total from the updated quantities
     setQuantity((prevQty) => {
       const updatedQty = {
         ...prevQty,
-        [name]: num,
+        [name]: value,
       };
 
       const total = Object.entries(updatedQty).reduce((sum, [key, val]) => {
@@ -250,9 +247,9 @@ const SalesCreateForm = ({
         ...prev,
         amount: String(total),
         quantity: {
-          orange: Number(updatedQty.orange) || 0,
-          blue: Number(updatedQty.blue) || 0,
-          green: Number(updatedQty.green) || 0,
+          orange: Number(updatedQty.orange || 0),
+          blue: Number(updatedQty.blue || 0),
+          green: Number(updatedQty.green || 0),
         },
       }));
 
@@ -283,7 +280,7 @@ const SalesCreateForm = ({
               className="w-[60px] h-[60px] bg-orange-200 text-center no-spinners dark:bg-orange-500"
               name="orange"
               type="number"
-              value={String(quantity.orange)}
+              value={quantity.orange}
               onChange={(e) =>
                 handleQuantityChange(e.target.name, e.target.value)
               }
@@ -295,7 +292,7 @@ const SalesCreateForm = ({
               className="w-[60px] h-[60px] bg-blue-200 text-center no-spinners dark:bg-blue-500"
               name="blue"
               type="number"
-              value={String(quantity.blue)}
+              value={quantity.blue}
               onChange={(e) =>
                 handleQuantityChange(e.target.name, e.target.value)
               }
@@ -307,7 +304,7 @@ const SalesCreateForm = ({
               className="w-[60px] h-[60px] bg-green-200 text-center no-spinners dark:bg-green-500"
               name="green"
               type="number"
-              value={String(quantity.green)}
+              value={quantity.green}
               onChange={(e) =>
                 handleQuantityChange(e.target.name, e.target.value)
               }
@@ -418,7 +415,7 @@ const SalesCreateForm = ({
               remaining: isPaid ? 0 : Number(prev.amount) - Number(amountPaid),
             }));
             if (isPaid) {
-              setAmountPaid(0);
+              setAmountPaid("");
             }
           }}
         />
@@ -440,8 +437,8 @@ const SalesCreateForm = ({
             className="w-full mt-1 no-spinners"
             onChange={(e) => {
               const paidAmount = e.target.value;
-              setAmountPaid(Number(paidAmount));
-              const remaining = Number(payload.amount) - Number(paidAmount);
+              setAmountPaid(paidAmount);
+              const remaining = Number(payload.amount) - Number(paidAmount || 0);
               setPayload((prev) => ({
                 ...prev,
                 remaining: remaining >= 0 ? remaining : 0,
