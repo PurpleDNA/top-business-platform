@@ -16,15 +16,13 @@ const page = async ({ searchParams }: Props) => {
   const searchQuery = await searchParams;
   const customer_id = searchQuery.customer_id;
   const production_id = searchQuery.production_id;
-  const getProductions = unstable_cache(
-    async () => {
-      return getLast10Productions();
-    },
-    [],
-    {
-      tags: ["last10"],
-    }
-  );
+  const getProductions = async () => {
+    return getLast10Productions();
+  };
+  // [],
+  // {
+  //   tags: ["last10"],
+  // }
   let customer;
   let production;
   const productions = await getProductions();

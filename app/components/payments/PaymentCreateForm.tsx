@@ -55,8 +55,15 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
   const [customerSearchValue, setCustomerSearchValue] = useState(
     selected?.customer?.name || ""
   );
+  const [shouldSearch, setShouldSearch] = useState(false);
   const [unpaidSales, setUnpaidSales] = useState<any[]>([]);
   const [loadingSales, setLoadingSales] = useState(false);
+  const isOverpayment =
+    Number(payload.amountPaid) > 0 && selected.sale
+      ? Number(payload.amountPaid) > selected.sale.remaining
+      : Number(payload.amountPaid) > 0 && selected.customer
+      ? Number(payload.amountPaid) > (selected.customer?.total_debt ?? 0)
+      : false;
 
   // Fetch unpaid sales when customer is selected
   useEffect(() => {
@@ -82,6 +89,11 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
 
   // Debounced search effect
   useEffect(() => {
+    // Don't search if customer was selected from dropdown or preloaded
+    if (!shouldSearch) {
+      return;
+    }
+
     // If search is too short, clear results immediately
     if (customerSearchValue.length < 3) {
       setSearchResuls([]);
@@ -114,7 +126,7 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
       clearTimeout(timeoutId);
       setSearching(false);
     };
-  }, [customerSearchValue]);
+  }, [customerSearchValue, shouldSearch]);
 
   // Format date as dd/mm/yy
   const formatShortDate = (timestamp: any) => {
@@ -133,6 +145,7 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
     setSelected((prev) => ({
       ...prev,
       customer: customer,
+      sale: undefined,
     }));
     setPayload((prev) => ({
       ...prev,
@@ -153,7 +166,10 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
   }
 
   const handleClick = (customer: Customer) => {
+    console.log("Selected customer:", customer); // Debug: check customer data
+    console.log("Customer total_debt:", customer.total_debt); // Debug: check total_debt
     handleSelected(customer);
+    setShouldSearch(false); // Prevent search when selecting from dropdown
     setCustomerSearchValue(customer.name);
     setSearchResuls([]);
     setShowResults(false);
@@ -174,10 +190,6 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
       await updateSale(selected.sale?.id, { remaining: newRemaining });
     }
   };
-
-  // useEffect(() => {
-  //   updateSaleStatus("90026b33-2e21-44ca-aa97-fb60a161c3c8", 200);
-  // }, []);
 
   async function handleSubmit(prevState: any, formData: FormData) {
     const values = {
@@ -212,6 +224,7 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
             saleId: "",
           });
           setCustomerSearchValue("");
+          setShouldSearch(false);
           setSelected({
             customer: undefined,
             sale: undefined,
@@ -251,6 +264,7 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
           saleId: "",
         });
         setCustomerSearchValue("");
+        setShouldSearch(false);
         setSelected({
           customer: undefined,
           sale: undefined,
@@ -288,7 +302,9 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
             type="number"
             placeholder="amount"
             name="amount"
-            className="w-full mt-1 no-spinners"
+            className={`w-full mt-1 no-spinners ${
+              isOverpayment ? "border-red-500 focus-visible:ring-red-500" : ""
+            }`}
             onChange={(e) => {
               setPayload((prev) => ({
                 ...prev,
@@ -297,7 +313,14 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
             }}
             value={payload.amountPaid}
           />
-          {errors.amountPaid && (
+          {isOverpayment && (
+            <p className="text-red-500 text-xs mt-1">
+              {selected.sale
+                ? `Amount cannot exceed remaining balance: ₦${selected.sale.remaining?.toLocaleString()}`
+                : `Amount cannot exceed customer debt: ₦${selected.customer?.total_debt?.toLocaleString()}`}
+            </p>
+          )}
+          {errors.amountPaid && !isOverpayment && (
             <p className="text-red-500 text-xs mt-1">{errors.amountPaid}</p>
           )}
         </div>
@@ -313,6 +336,7 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
             name="customer"
             className="w-full mt-1 py-6 rounded-lg text-center ring  font-semibold"
             onChange={(e) => {
+              setShouldSearch(true); // Enable search when user types
               setCustomerSearchValue(e.target.value);
             }}
             value={customerSearchValue}
@@ -330,7 +354,7 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
           )}
         </div>
         {showResults && (
-          <div className="max-h-32 min-h-20 overflow-y-auto w-max p-3 shadow border rounded-md mt-4 border-primary absolute z-20 bg-white justify-self-center flex items-center flex-col justify-center">
+          <div className="max-h-32 min-h-20 overflow-y-auto w-max p-3 shadow border rounded-md mt-4 border-primary absolute z-20 bg-background text-foreground justify-self-center flex items-center flex-col justify-center">
             {searchResults.length > 0 ? (
               searchResults?.map((result) => (
                 <div
@@ -402,7 +426,7 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
 
       <Button
         className="bg-primary font-bungee cursor-pointer"
-        disabled={isPending}
+        disabled={isPending || isOverpayment}
         type="submit"
       >
         Create{isPending && <LoaderCircle size={15} className="animate-spin" />}

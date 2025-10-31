@@ -113,8 +113,6 @@ export async function distributePaymentAcrossSales(
       productionId,
     });
 
-    await updateDebtStatus(customerId, amountPaid, "addPayment");
-
     return {
       status: "SUCCESS",
       error: "",

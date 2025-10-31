@@ -144,7 +144,7 @@ export const DashboardHeader = () => {
 
             {/* Search Results Dropdown */}
             {showResults && (
-              <div className="absolute top-full mt-2 w-full max-h-64 overflow-y-auto bg-background border border-border rounded-md shadow-lg z-50">
+              <div className="absolute top-full mt-2 w-full max-h-64 overflow-y-auto bg-background text-foreground border border-border rounded-md shadow-lg z-50">
                 {searchResults.length > 0 ? (
                   <div className="py-1">
                     {searchResults.map((customer) => (

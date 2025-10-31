@@ -160,7 +160,9 @@ export const fetchAllProductions = async (): Promise<Production[] | []> => {
 interface SaleWithCustomer {
   outstanding: number;
   paid: boolean;
+  customer_id: string;
   customers: {
+    id: string;
     name: string;
   };
 }
@@ -173,7 +175,9 @@ export const getProductionOutstanding = async (productionId: string) => {
         `
         outstanding,
         paid,
+        customer_id,
         customers!customer_id (
+          id,
           name
         )
       `
@@ -190,6 +194,7 @@ export const getProductionOutstanding = async (productionId: string) => {
     // Transform the data to return a cleaner structure
     const transformed =
       (outstanding as unknown as SaleWithCustomer[])?.map((sale) => ({
+        customer_id: sale.customer_id,
         customer_name: sale.customers?.name || "Unknown",
         outstanding: sale.outstanding,
         paid: sale.paid,
@@ -204,7 +209,9 @@ export const getProductionOutstanding = async (productionId: string) => {
 
 interface PaymentWithCustomer {
   amount_paid: number;
+  customer_id: string;
   customers: {
+    id: string;
     name: string;
   } | null;
 }
@@ -216,7 +223,9 @@ export const getProductionPaidOutstanding = async (productionId: string) => {
       .select(
         `
         amount_paid,
+        customer_id,
         customers!customer_id (
+          id,
           name
         )
       `
@@ -232,6 +241,7 @@ export const getProductionPaidOutstanding = async (productionId: string) => {
     // Transform the data to return a cleaner structure
     const transformed =
       (payments as unknown as PaymentWithCustomer[])?.map((payment) => ({
+        customer_id: payment.customer_id,
         customer_name: payment.customers?.name || "Unknown",
         amount: payment.amount_paid,
       })) || [];

@@ -82,9 +82,16 @@ const SalesCreateForm = ({
   const [customerSearchValue, setCustomerSearchValue] = useState(
     selected?.customer?.name || ""
   );
+  const [shouldSearch, setShouldSearch] = useState(false);
+  const [isOverpayment, setIsOverpayment] = useState(false);
 
   // Debounced search effect
   useEffect(() => {
+    // Don't search if customer was selected from dropdown or preloaded
+    if (!shouldSearch) {
+      return;
+    }
+
     // If search is too short, clear results immediately
     if (customerSearchValue.length < 3) {
       setSearchResuls([]);
@@ -117,10 +124,11 @@ const SalesCreateForm = ({
       clearTimeout(timeoutId);
       setSearching(false);
     };
-  }, [customerSearchValue]);
+  }, [customerSearchValue, shouldSearch]);
 
   const handleClick = (customer: Customer) => {
     handleSelected("customer", null, customer);
+    setShouldSearch(false); // Prevent search when selecting from dropdown
     setCustomerSearchValue(customer.name);
     setSearchResuls([]);
     setShowResults(false);
@@ -212,6 +220,8 @@ const SalesCreateForm = ({
           green: "",
         });
         setCustomerSearchValue("");
+        setShouldSearch(false);
+        setIsOverpayment(false);
         setSelected((prev) => ({
           ...prev,
           customer: undefined,
@@ -251,6 +261,9 @@ const SalesCreateForm = ({
           blue: Number(updatedQty.blue || 0),
           green: Number(updatedQty.green || 0),
         },
+        remaining: prev.paid
+          ? 0
+          : total - (amountPaid ? Number(amountPaid) : 0),
       }));
 
       return updatedQty;
@@ -339,6 +352,7 @@ const SalesCreateForm = ({
             name="customer"
             className="w-full mt-1 py-6 rounded-lg text-center ring  font-semibold"
             onChange={(e) => {
+              setShouldSearch(true); // Enable search when user types
               setCustomerSearchValue(e.target.value);
             }}
             value={customerSearchValue}
@@ -353,7 +367,7 @@ const SalesCreateForm = ({
           )}
         </div>
         {showResults && (
-          <div className="max-h-32 min-h-20 overflow-y-auto w-max p-3 shadow border rounded-md mt-4 border-primary absolute z-20 bg-white justify-self-center flex items-center flex-col justify-center">
+          <div className="max-h-32 min-h-20 overflow-y-auto w-max p-3 shadow border rounded-md mt-4 border-primary absolute z-20 bg-background justify-self-center flex items-center flex-col justify-center text-foreground">
             {searchResults.length > 0 ? (
               searchResults?.map((result) => (
                 <div
@@ -365,7 +379,7 @@ const SalesCreateForm = ({
                 </div>
               ))
             ) : (
-              <div className="w-2xs rounded-md flex gap-2 justify-center items-center ">
+              <div className="w-2xs rounded-md flex gap-2 justify-center items-center bg-background">
                 No customers found <UserRoundX size={18} />
               </div>
             )}
@@ -416,6 +430,7 @@ const SalesCreateForm = ({
             }));
             if (isPaid) {
               setAmountPaid("");
+              setIsOverpayment(false);
             }
           }}
         />
@@ -434,11 +449,16 @@ const SalesCreateForm = ({
             type="number"
             placeholder="Amount paid"
             name="amountPaid"
-            className="w-full mt-1 no-spinners"
+            className={`w-full mt-1 no-spinners ${
+              isOverpayment ? "border-red-500 focus-visible:ring-red-500" : ""
+            }`}
             onChange={(e) => {
               const paidAmount = e.target.value;
+              const isOver = Number(paidAmount) > Number(payload.amount);
+              setIsOverpayment(isOver);
               setAmountPaid(paidAmount);
-              const remaining = Number(payload.amount) - Number(paidAmount || 0);
+              const remaining =
+                Number(payload.amount) - Number(paidAmount || 0);
               setPayload((prev) => ({
                 ...prev,
                 remaining: remaining >= 0 ? remaining : 0,
@@ -446,7 +466,12 @@ const SalesCreateForm = ({
             }}
             value={amountPaid}
           />
-          {payload.remaining > 1 && (
+          {isOverpayment && (
+            <p className="text-red-500 text-xs mt-1">
+              Amount paid cannot exceed total amount
+            </p>
+          )}
+          {!isOverpayment && payload.remaining > 1 && (
             <p className="text-xs mt-1 text-muted-foreground">
               Remaining: ₦{payload.remaining}
             </p>
@@ -456,7 +481,7 @@ const SalesCreateForm = ({
 
       <Button
         className="bg-primary font-bungee cursor-pointer"
-        disabled={isPending}
+        disabled={isPending || isOverpayment}
         type="submit"
       >
         Create{isPending && <LoaderCircle size={15} className="animate-spin" />}

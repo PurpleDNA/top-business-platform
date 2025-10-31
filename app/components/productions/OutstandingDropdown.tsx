@@ -9,8 +9,10 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
 
 interface OutstandingItem {
+  customer_id: string;
   customer_name: string;
   outstanding?: number;
   paid?: boolean;
@@ -80,22 +82,26 @@ export const OutstandingDropdown = ({
             <>
               <div className="space-y-2">
                 {currentItems.map((item, index) => (
-                  <div
+                  <Link
+                    href={`/customers/page/${item.customer_id}`}
                     key={startIndex + index}
-                    className="flex justify-between items-center p-3 rounded-lg hover:bg-muted/50 border"
                   >
-                    <span className="font-medium">{item.customer_name}</span>
-                    <span
-                      className={`font-semibold ${
-                        item.paid && "text-green-500"
-                      }`}
-                    >
-                      ₦
-                      {item.amount
-                        ? item.amount
-                        : item.outstanding?.toLocaleString()}
-                    </span>
-                  </div>
+                    <div className="flex justify-between items-center p-3 rounded-lg hover:bg-muted/50 border transition-colors cursor-pointer">
+                      <span className="font-medium hover:text-primary">
+                        {item.customer_name}
+                      </span>
+                      <span
+                        className={`font-semibold ${
+                          item.paid && "text-green-500"
+                        }`}
+                      >
+                        ₦
+                        {item.amount
+                          ? item.amount.toLocaleString()
+                          : item.outstanding?.toLocaleString()}
+                      </span>
+                    </div>
+                  </Link>
                 ))}
               </div>
               {totalPages > 1 && (

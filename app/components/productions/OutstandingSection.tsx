@@ -1,11 +1,13 @@
 import { OutstandingDropdown } from "./OutstandingDropdown";
 
 interface OutstandingItem {
+  customer_id: string;
   customer_name: string;
   outstanding: number;
   paid: boolean;
 }
 interface POItem {
+  customer_id: string;
   customer_name: string;
   amount: number;
 }
