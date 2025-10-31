@@ -99,17 +99,15 @@ const PaymentHistory = ({
                 className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md bg-neutral-900 border border-white/10 hover:bg-neutral-800 hover:border-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-neutral-900"
               >
                 <ChevronLeft size={14} />
-                Previous
               </button>
               <div className="text-xs text-neutral-400">
-                Page {currentPage} of {totalPages}
+                {currentPage} / {totalPages}
               </div>
               <button
                 onClick={goToNextPage}
                 disabled={currentPage === totalPages}
                 className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md bg-neutral-900 border border-white/10 hover:bg-neutral-800 hover:border-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-neutral-900"
               >
-                Next
                 <ChevronRight size={14} />
               </button>
             </div>

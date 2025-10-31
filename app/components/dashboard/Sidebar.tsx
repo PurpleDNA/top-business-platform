@@ -14,6 +14,7 @@ import {
   CircleDollarSign,
   Calculator,
   Home,
+  AppWindow,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -52,6 +53,11 @@ const navigationItems = [
     title: "New Customer",
     href: "/customers/new",
     icon: UserPlus,
+  },
+  {
+    title: "New Expense",
+    href: "/expense/new",
+    icon: AppWindow,
   },
   {
     title: "Bread Calculator",
