@@ -56,7 +56,7 @@ const navigationItems = [
   },
   {
     title: "New Expense",
-    href: "/expense/new",
+    href: "/expenses/new",
     icon: AppWindow,
   },
   {
