@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import PaymentCreateForm from "@/app/components/payments/PaymentCreateForm";
 import { fetchCustomerById } from "@/app/services/customers";
 import { getLatestProduction, Production } from "@/app/services/productions";
@@ -28,7 +28,9 @@ const page = async ({ searchParams }: Props) => {
         <h1 className="font-semibold text-2xl text-center font-bungee mb-10">
           Create New Payment
         </h1>
-        <PaymentCreateForm customer={customer} latestProd={latestProdItem} />
+        <Suspense>
+          <PaymentCreateForm customer={customer} latestProd={latestProdItem} />
+        </Suspense>
       </div>
     </div>
   );
