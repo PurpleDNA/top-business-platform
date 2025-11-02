@@ -42,30 +42,6 @@ export const fetchAllBreadPrices = async (): Promise<BreadPrice[]> => {
 };
 
 /**
- * Fetch the latest/current bread price
- */
-export const fetchCurrentBreadPrice = async (): Promise<BreadPrice | null> => {
-  try {
-    const { data: breadPrice, error } = await supabase
-      .from("bread_price")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
-
-    if (error) {
-      console.error("Error fetching current bread price:", error);
-      return null;
-    }
-
-    return breadPrice;
-  } catch (error) {
-    console.error("Unexpected error in fetchCurrentBreadPrice:", error);
-    return null;
-  }
-};
-
-/**
  * Fetch bread price by ID
  */
 export const fetchBreadPriceById = async (

@@ -7,11 +7,10 @@ import {
   calculateBreadTotal,
 } from "@/app/services/productions";
 import { OutstandingSection } from "@/app/components/productions/OutstandingSection";
-import { ProductionToggle } from "@/app/components/productions/ProductionToggle";
 import { ExpenseDropdown } from "@/app/components/productions/ExpenseDropdown";
 import { RemainingBreadDropdown } from "@/app/components/productions/RemainingBreadDropdown";
-import { ExpenseModal } from "@/app/components/productions/ExpenseModal";
 import { CashInput } from "@/app/components/productions/CashInput";
+import { ProductionActions } from "@/app/components/productions/ProductionActions";
 import { getExpensesByProdId } from "@/app/services/expenses";
 import { formatDate, formatDateTime } from "@/app/services/utils";
 import {
@@ -153,30 +152,18 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                 >
                   <ArrowLeft className="h-4 w-4 text-foreground" />
                 </Link>
-                <div className="h-8 w-8 rounded-md bg-muted border border-border flex items-center justify-center">
+                <div className="h-8 w-8 rounded-md bg-muted border border-border items-center justify-center hidden lg:flex">
                   <Factory className="h-4 w-4 text-foreground" />
                 </div>
                 <div className="text-sm text-muted-foreground">
                   Production Dashboard
                 </div>
               </div>
-              <div className="hidden md:flex items-center gap-3">
-                <ProductionToggle
-                  productionId={id}
-                  initialOpenStatus={production.open}
-                />
-                <ExpenseModal productionId={id} />
-                <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-muted border border-border hover:bg-accent transition">
-                  Export
-                </button>
-                <Link
-                  href={{ pathname: "/sale/new", query: { production_id: id } }}
-                >
-                  <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground transition">
-                    New Sale
-                  </button>
-                </Link>
-              </div>
+              <ProductionActions
+                productionId={id}
+                initialOpenStatus={production.open}
+                production={production}
+              />
             </div>
           </div>
         </header>

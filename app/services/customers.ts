@@ -215,3 +215,20 @@ export const updateDebtStatus = async (
     throw error;
   }
 };
+
+export const deleteCustomer = async (customerId: string) => {
+  try {
+    const { error } = await supabase
+      .from("customers")
+      .delete()
+      .eq("id", customerId);
+
+    if (error) {
+      throw new Error("Delete Customer Error");
+    }
+    return { status: "SUCCESS", error: "" };
+  } catch (error) {
+    console.log("delete customer error>>>>>>>>:", error);
+    throw new Error("Unexpected Error Occured");
+  }
+};

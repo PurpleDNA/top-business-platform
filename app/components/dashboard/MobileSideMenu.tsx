@@ -11,6 +11,7 @@ import {
   Settings,
   User,
   LogOut,
+  AppWindow,
 } from "lucide-react";
 import {
   Sheet,
@@ -45,6 +46,11 @@ const navigationItems = [
     title: "New Customer",
     href: "/customers/new",
     icon: UserPlus,
+  },
+  {
+    title: "New Expense",
+    href: "/expenses/new",
+    icon: AppWindow,
   },
   {
     title: "Bread Calculator",

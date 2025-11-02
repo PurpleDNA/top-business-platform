@@ -1,7 +1,14 @@
 import { fetchAllProductions, Production } from "@/app/services/productions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Factory, ArrowLeft, Plus, LockOpen, Lock } from "lucide-react";
+import {
+  Factory,
+  ArrowLeft,
+  Plus,
+  LockOpen,
+  Lock,
+  MoreHorizontal,
+} from "lucide-react";
 import Link from "next/link";
 import ProductionsTable from "@/app/components/productions/ProductionsTable";
 
@@ -18,7 +25,7 @@ const AllProductionsPage = async () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-background p-4">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">
@@ -135,7 +142,7 @@ const AllProductionsPage = async () => {
                 >
                   <div
                     key={production.id}
-                    className="border-b border-muted py-4 flex items-center justify-between"
+                    className="border-b border-muted py-4 flex items-center justify-between focus:bg-accent/50  hover:bg-accent/50 cursor-pointer transition "
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
@@ -154,9 +161,12 @@ const AllProductionsPage = async () => {
                         {production.quantity.green}
                       </p>
                     </div>
-                    <h3 className="font-semibold text-lg">
-                      ₦{production.total.toLocaleString()}
-                    </h3>
+                    <div className="flex flex-col justify-between items-end h-full">
+                      <MoreHorizontal />
+                      <h3 className="font-semibold text-lg">
+                        ₦{production.total.toLocaleString()}
+                      </h3>
+                    </div>
                   </div>
                 </Link>
               ))}

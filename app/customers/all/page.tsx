@@ -81,7 +81,7 @@ const AllCustomersPage = async () => {
                 <Link href={`/customers/page/${customer.id}`} key={customer.id}>
                   <div
                     key={customer.id}
-                    className="border-b border-muted py-4 flex items-center justify-between"
+                    className="border-b border-muted py-4 flex items-center justify-between focus:bg-accent/50 hover:bg-accent/50 cursor-pointer transition "
                   >
                     <div>
                       <h3 className="text-lg font-medium">{customer.name}</h3>

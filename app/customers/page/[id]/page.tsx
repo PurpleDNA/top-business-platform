@@ -8,13 +8,13 @@ import { formatDate } from "@/app/services/utils";
 import PaymentHistory from "@/app/components/customer/PaymentHistory";
 import { AlertTriangle } from "lucide-react";
 import PurchaseHistory from "@/app/components/customer/PurchaseHistory";
-import Link from "next/link";
 import { getPaymentsByCustomerID } from "@/app/services/payments";
+import { CustomerActions } from "@/app/components/customer/CustomerActions";
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
-  const { name, email, phone_number, created_at, has_debt, total_debt } =
-    await fetchCustomerById(id);
+  const customer = await fetchCustomerById(id);
+  const { name, email, phone_number, created_at, has_debt, total_debt } = customer;
   const sales = await fetchSalesByCustomerId(id);
   const total_spent = await fetchCustomerTotalSpent(id);
   // Fetch all payment history (using a high limit to get all records)
@@ -48,39 +48,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                   Customer Dashboard
                 </div>
               </div>
-              <div className="hidden md:flex items-center gap-3">
-                <div className="relative group">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center text-muted-foreground">
-                    {/* search icon */}
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Search customers"
-                    className="w-72 pl-9 pr-3 py-2 text-sm rounded-md bg-muted border border-border outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 placeholder:text-muted-foreground transition"
-                  />
-                </div>
-                <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-muted border border-border hover:bg-accent transition">
-                  {/* download icon */}
-                  Export
-                </button>
-                <Link
-                  href={{ pathname: "/sale/new", query: { customer_id: id } }}
-                >
-                  <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground transition">
-                    New Sale
-                  </button>
-                </Link>
-                <Link
-                  href={{
-                    pathname: "/payment/new",
-                    query: { customer_id: id },
-                  }}
-                >
-                  <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-green-600 hover:bg-green-700 text-white transition">
-                    New Payment
-                  </button>
-                </Link>
-              </div>
+              <CustomerActions customerId={id} customer={customer} />
             </div>
           </div>
         </header>

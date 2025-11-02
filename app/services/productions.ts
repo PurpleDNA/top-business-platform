@@ -31,17 +31,9 @@ export interface Production {
 }
 
 interface Create {
-  quantity: {
-    orange: string;
-    blue: string;
-    green: string;
-  };
+  quantity: Record<string, string>;
   total: string;
-  old_bread: {
-    orange: string;
-    blue: string;
-    green: string;
-  };
+  old_bread: Record<string, string>;
 }
 
 export const createProduction = async (payload: Create) => {
@@ -387,5 +379,25 @@ export const calculateBreadTotal = async (
   } catch (error) {
     console.error("Error calculating bread total:", error);
     return 0;
+  }
+};
+
+export const deleteProduction = async (productionId: string) => {
+  try {
+    const { error } = await supabase
+      .from("productions")
+      .delete()
+      .eq("id", productionId);
+
+    if (error) {
+      throw new Error("Delete Production Error");
+    }
+
+    await revalidateTag("productions", {});
+
+    return { status: "SUCCESS", error: "" };
+  } catch (error) {
+    console.log("delete production error>>>>>>>>:", error);
+    throw new Error("Unexpected Error Occured");
   }
 };

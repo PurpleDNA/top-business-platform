@@ -63,8 +63,8 @@ export const ProductionToggle = ({
       variant={isOpen ? "default" : "outline"}
       className={`inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md transition ${
         isOpen
-          ? "bg-green-500 hover:bg-green-400 text-white"
-          : "bg-neutral-900/70 border border-white/10 hover:bg-neutral-900 hover:border-white/20"
+          ? "bg-green-500 hover:bg-green-400 text-white cursor-pointer"
+          : "bg-neutral-900/70 border border-white/10 hover:bg-neutral-900 hover:border-white/20 cursor-pointer"
       }`}
     >
       {isDisabled ? (
