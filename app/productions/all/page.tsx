@@ -1,14 +1,7 @@
 import { fetchAllProductions, Production } from "@/app/services/productions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Factory,
-  ArrowLeft,
-  Plus,
-  LockOpen,
-  Lock,
-  MoreHorizontal,
-} from "lucide-react";
+import { Factory, ArrowLeft, Plus, LockOpen, Lock } from "lucide-react";
 import Link from "next/link";
 import ProductionsTable from "@/app/components/productions/ProductionsTable";
 
@@ -161,12 +154,9 @@ const AllProductionsPage = async () => {
                         {production.quantity.green}
                       </p>
                     </div>
-                    <div className="flex flex-col justify-between items-end h-full">
-                      <MoreHorizontal />
-                      <h3 className="font-semibold text-lg">
-                        ₦{production.total.toLocaleString()}
-                      </h3>
-                    </div>
+                    <h3 className="font-semibold text-lg">
+                      ₦{production.total.toLocaleString()}
+                    </h3>
                   </div>
                 </Link>
               ))}

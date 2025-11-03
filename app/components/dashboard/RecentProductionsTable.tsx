@@ -19,6 +19,7 @@ import { MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
 import React, { useState } from "react";
 import { Production } from "@/app/services/productions";
 import Link from "next/link";
+import { EditProductionModal } from "@/app/components/productions/EditProductionModal";
 import { DeleteProductionDialog } from "@/app/components/productions/DeleteProductionDialog";
 
 const formatDate = (dateString: string) => {
@@ -128,6 +129,14 @@ const RecentProductionsTable = ({
           ))}
         </TableBody>
       </Table>
+
+      {editingProduction && (
+        <EditProductionModal
+          production={editingProduction}
+          open={!!editingProduction}
+          onOpenChange={(open) => !open && setEditingProduction(null)}
+        />
+      )}
 
       {deletingProduction && (
         <DeleteProductionDialog

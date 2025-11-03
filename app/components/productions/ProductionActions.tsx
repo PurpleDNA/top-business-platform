@@ -17,6 +17,7 @@ import { MoreVertical, ShoppingCart, X, Edit, Trash2 } from "lucide-react";
 import { ProductionToggle } from "./ProductionToggle";
 import { ExpenseModal } from "./ExpenseModal";
 import { Production } from "@/app/services/productions";
+import { EditProductionModal } from "@/app/components/productions/EditProductionModal";
 import { DeleteProductionDialog } from "@/app/components/productions/DeleteProductionDialog";
 
 interface ProductionActionsProps {
@@ -81,6 +82,12 @@ export const ProductionActions = ({
             initialOpenStatus={initialOpenStatus}
           />
         </div>
+
+        <EditProductionModal
+          production={production}
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+        />
 
         <DeleteProductionDialog
           productionId={productionId}
@@ -155,6 +162,12 @@ export const ProductionActions = ({
           </div>
         </DrawerContent>
       </Drawer>
+
+      <EditProductionModal
+        production={production}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+      />
 
       <DeleteProductionDialog
         productionId={productionId}

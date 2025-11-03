@@ -1,6 +1,5 @@
 "use server";
 import supabase from "@/client";
-import { updateDebtStatus } from "./customers";
 
 export interface Payments {
   id: string;

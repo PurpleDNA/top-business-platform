@@ -161,61 +161,6 @@ export const updateCustomer = async (
   }
 };
 
-export const updateDebtStatus = async (
-  customerId: string,
-  amount: number,
-  type: string
-) => {
-  try {
-    const { data, error } = await supabase
-      .from("customers")
-      .select("total_debt")
-      .eq("id", customerId)
-      .single();
-
-    if (!data) {
-      throw new Error("Customer not found");
-    }
-
-    const totalDebt = data.total_debt;
-
-    if (type === "addPayment") {
-      const { data: updatedData } = await supabase
-        .from("customers")
-        .update({ total_debt: totalDebt - amount })
-        .eq("id", customerId)
-        .select();
-
-      if (updatedData && updatedData[0]?.total_debt <= 0) {
-        try {
-          await updateCustomer(customerId, { has_debt: false });
-        } catch (error) {
-          throw error;
-        }
-      }
-      return { status: "SUCCESS", error: "", res: "" };
-    } else {
-      const { data: updatedData } = await supabase
-        .from("customers")
-        .update({ total_debt: totalDebt + amount })
-        .eq("id", customerId)
-        .select();
-
-      if (updatedData && updatedData[0]?.total_debt > 0) {
-        try {
-          await updateCustomer(customerId, { has_debt: true });
-        } catch (error) {
-          throw error;
-        }
-      }
-      return { status: "SUCCESS", error: "", res: "" };
-    }
-  } catch (error) {
-    console.log("UpdateDebtStatus Error>>", error);
-    throw error;
-  }
-};
-
 export const deleteCustomer = async (customerId: string) => {
   try {
     const { error } = await supabase

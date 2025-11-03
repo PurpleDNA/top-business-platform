@@ -6,28 +6,47 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 
 interface RemainingBreadDropdownProps {
-  remainingBread: {
+  quantity: {
     orange: number;
     blue: number;
     green: number;
     [key: string]: number;
-  } | null | undefined;
+  };
+  oldBread: {
+    orange: number;
+    blue: number;
+    green: number;
+    [key: string]: number;
+  };
+  soldBread: {
+    orange: number;
+    blue: number;
+    green: number;
+    [key: string]: number;
+  };
   remainingBreadTotal: number;
 }
 
 export const RemainingBreadDropdown = ({
-  remainingBread,
+  quantity,
+  oldBread,
+  soldBread,
   remainingBreadTotal,
 }: RemainingBreadDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Calculate remaining bread: quantity + old_bread - sold_bread
+  const remainingBread: { [key: string]: number } = {};
+  Object.keys(quantity).forEach((color) => {
+    remainingBread[color] =
+      (quantity[color] || 0) + (oldBread[color] || 0) - (soldBread[color] || 0);
+  });
+
   // Convert remaining_bread object to array for easier display
-  const breadItems = remainingBread
-    ? Object.entries(remainingBread).map(([color, quantity]) => ({
-        color,
-        quantity,
-      }))
-    : [];
+  const breadItems = Object.entries(remainingBread).map(([color, quantity]) => ({
+    color,
+    quantity,
+  }));
 
   // Calculate total units
   const totalUnits = breadItems.reduce((sum, item) => sum + item.quantity, 0);

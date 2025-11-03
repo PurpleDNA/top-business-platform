@@ -5,7 +5,6 @@ import {
   Customer,
   searchCustomers,
   updateCustomer,
-  updateDebtStatus,
 } from "@/app/services/customers";
 import React, { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -176,19 +175,10 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
   };
 
   const updateSaleStatus = async () => {
-    const newRemaining = selected.sale?.remaining - Number(payload.amountPaid);
-    console.log(
-      "logging arguments and important things>>>>>>>>>",
-      selected.sale?.amount,
-      payload.amountPaid,
-      newRemaining
-    );
+    const newAmountPaid =
+      selected.sale?.amount_paid + Number(payload.amountPaid);
 
-    if (newRemaining <= 0) {
-      await updateSale(selected.sale?.id, { paid: true, remaining: 0 });
-    } else {
-      await updateSale(selected.sale?.id, { remaining: newRemaining });
-    }
+    await updateSale(selected.sale?.id, { amount_paid: newAmountPaid });
   };
 
   async function handleSubmit(prevState: any, formData: FormData) {
@@ -237,25 +227,18 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
       }
 
       // If specific sale is selected, handle normally
-      const [response_1, response_2] = await Promise.all([
-        addPayment({
-          customerId: payload.customerId,
-          amountPaid: Number(payload.amountPaid),
-          saleId: payload?.saleId,
-          productionId: latestProd.open ? latestProd.id : null,
-        }),
-        await updateDebtStatus(
-          payload.customerId,
-          Number(payload.amountPaid),
-          "addPayment"
-        ),
-      ]);
+      const response_1 = await addPayment({
+        customerId: payload.customerId,
+        amountPaid: Number(payload.amountPaid),
+        saleId: payload?.saleId,
+        productionId: latestProd.open ? latestProd.id : null,
+      });
 
       if (payload.saleId) {
         await updateSaleStatus();
       }
 
-      if (response_1.status === "SUCCESS" && response_2.status === "SUCCESS") {
+      if (response_1.status === "SUCCESS") {
         toast("Payment made successfully");
         // Reset form after successful submission
         setPayload({
@@ -269,9 +252,9 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
           customer: undefined,
           sale: undefined,
         });
-        return { response_1, response_2 };
+        return response_1;
       }
-      if (response_1.status === "EROOR" || response_2.status === "ERROR") {
+      if (response_1.status === "EROOR") {
         toast("Unexpected Error Occurred");
       }
     } catch (error) {

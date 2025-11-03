@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Production, updateProduction } from "@/app/services/productions";
+import { getBreadPriceMultipliers } from "@/app/services/bread_price";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -23,53 +24,113 @@ interface EditProductionModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export const Modal = ({
+// Helper function to get color-specific CSS classes
+const getColorClasses = (color: string) => {
+  const colorMap: Record<string, { bg: string; text: string }> = {
+    orange: {
+      bg: "bg-orange-100",
+      text: "text-orange-900",
+    },
+    blue: {
+      bg: "bg-blue-100",
+      text: "text-blue-900",
+    },
+    green: {
+      bg: "bg-green-100",
+      text: "text-green-900",
+    },
+  };
+
+  return (
+    colorMap[color.toLowerCase()] || {
+      bg: "bg-gray-100",
+      text: "text-gray-900",
+    }
+  );
+};
+
+export const EditProductionModal = ({
   production,
   open,
   onOpenChange,
 }: EditProductionModalProps) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    quantity_orange: production.quantity.orange.toString(),
-    quantity_blue: production.quantity.blue.toString(),
-    quantity_green: production.quantity.green.toString(),
-    old_bread_orange: production.old_bread.orange.toString(),
-    old_bread_blue: production.old_bread.blue.toString(),
-    old_bread_green: production.old_bread.green.toString(),
-    cash: production.cash.toString(),
+  const [multipliers, setMultipliers] = useState<Record<string, number>>({
+    orange: 1200,
+    blue: 1000,
+    green: 650,
   });
+
+  // Fetch multipliers on component mount
+  useEffect(() => {
+    const fetchMultipliers = async () => {
+      const prices = await getBreadPriceMultipliers();
+      setMultipliers(prices);
+    };
+    fetchMultipliers();
+  }, []);
+
+  // Initialize form data dynamically based on multipliers
+  const initialFormData = useMemo(() => {
+    const data: Record<string, string> = {};
+    Object.keys(multipliers).forEach((color) => {
+      data[`quantity_${color}`] = (production.quantity[color] || 0).toString();
+      data[`old_bread_${color}`] = (production.old_bread[color] || 0).toString();
+    });
+    data.cash = production.cash.toString();
+    return data;
+  }, [multipliers, production]);
+
+  const [formData, setFormData] = useState(initialFormData);
+
+  // Update form data when production changes
+  useEffect(() => {
+    setFormData(initialFormData);
+  }, [initialFormData]);
+
+  const handleFieldChange = (field: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Calculate quantity
-      const quantity = {
-        orange: Number(formData.quantity_orange),
-        blue: Number(formData.quantity_blue),
-        green: Number(formData.quantity_green),
+      // Build quantity and old_bread dynamically from multipliers
+      const quantity: { [key: string]: number } & {
+        orange: number;
+        blue: number;
+        green: number;
+      } = {
+        orange: 0,
+        blue: 0,
+        green: 0,
       };
 
-      // Calculate old_bread
-      const old_bread = {
-        orange: Number(formData.old_bread_orange),
-        blue: Number(formData.old_bread_blue),
-        green: Number(formData.old_bread_green),
+      const old_bread: { [key: string]: number } & {
+        orange: number;
+        blue: number;
+        green: number;
+      } = {
+        orange: 0,
+        blue: 0,
+        green: 0,
       };
 
-      // Calculate remaining_bread: sum of quantity and old_bread for each color
-      const remaining_bread = {
-        orange: quantity.orange + old_bread.orange,
-        blue: quantity.blue + old_bread.blue,
-        green: quantity.green + old_bread.green,
-      };
+      Object.keys(multipliers).forEach((color) => {
+        quantity[color] = Number(formData[`quantity_${color}`] || 0);
+        old_bread[color] = Number(formData[`old_bread_${color}`] || 0);
+      });
 
+      // Don't include remaining_bread in the payload - it's calculated on frontend
       const payload = {
         quantity,
         old_bread,
-        remaining_bread,
         cash: Number(formData.cash),
       };
 
@@ -105,60 +166,30 @@ export const Modal = ({
             <div className="space-y-3">
               <h4 className="text-sm font-semibold">Production Quantity</h4>
               <div className="grid grid-cols-3 gap-3">
-                <div className="grid gap-2">
-                  <Label htmlFor="quantity_orange" className="text-xs">
-                    Orange
-                  </Label>
-                  <Input
-                    id="quantity_orange"
-                    type="number"
-                    value={formData.quantity_orange}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        quantity_orange: e.target.value,
-                      })
-                    }
-                    required
-                    min="0"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="quantity_blue" className="text-xs">
-                    Blue
-                  </Label>
-                  <Input
-                    id="quantity_blue"
-                    type="number"
-                    value={formData.quantity_blue}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        quantity_blue: e.target.value,
-                      })
-                    }
-                    required
-                    min="0"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="quantity_green" className="text-xs">
-                    Green
-                  </Label>
-                  <Input
-                    id="quantity_green"
-                    type="number"
-                    value={formData.quantity_green}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        quantity_green: e.target.value,
-                      })
-                    }
-                    required
-                    min="0"
-                  />
-                </div>
+                {Object.keys(multipliers).map((color) => {
+                  const colorClasses = getColorClasses(color);
+                  return (
+                    <div key={`quantity_${color}`} className="grid gap-2">
+                      <Label
+                        htmlFor={`quantity_${color}`}
+                        className="text-xs capitalize"
+                      >
+                        {color}
+                      </Label>
+                      <Input
+                        id={`quantity_${color}`}
+                        type="number"
+                        value={formData[`quantity_${color}`] || ""}
+                        onChange={(e) =>
+                          handleFieldChange(`quantity_${color}`, e.target.value)
+                        }
+                        className={`${colorClasses.bg} ${colorClasses.text}`}
+                        required
+                        min="0"
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -166,60 +197,33 @@ export const Modal = ({
             <div className="space-y-3">
               <h4 className="text-sm font-semibold">Old Bread</h4>
               <div className="grid grid-cols-3 gap-3">
-                <div className="grid gap-2">
-                  <Label htmlFor="old_bread_orange" className="text-xs">
-                    Orange
-                  </Label>
-                  <Input
-                    id="old_bread_orange"
-                    type="number"
-                    value={formData.old_bread_orange}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        old_bread_orange: e.target.value,
-                      })
-                    }
-                    required
-                    min="0"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="old_bread_blue" className="text-xs">
-                    Blue
-                  </Label>
-                  <Input
-                    id="old_bread_blue"
-                    type="number"
-                    value={formData.old_bread_blue}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        old_bread_blue: e.target.value,
-                      })
-                    }
-                    required
-                    min="0"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="old_bread_green" className="text-xs">
-                    Green
-                  </Label>
-                  <Input
-                    id="old_bread_green"
-                    type="number"
-                    value={formData.old_bread_green}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        old_bread_green: e.target.value,
-                      })
-                    }
-                    required
-                    min="0"
-                  />
-                </div>
+                {Object.keys(multipliers).map((color) => {
+                  const colorClasses = getColorClasses(color);
+                  return (
+                    <div key={`old_bread_${color}`} className="grid gap-2">
+                      <Label
+                        htmlFor={`old_bread_${color}`}
+                        className="text-xs capitalize"
+                      >
+                        {color}
+                      </Label>
+                      <Input
+                        id={`old_bread_${color}`}
+                        type="number"
+                        value={formData[`old_bread_${color}`] || ""}
+                        onChange={(e) =>
+                          handleFieldChange(
+                            `old_bread_${color}`,
+                            e.target.value
+                          )
+                        }
+                        className={`${colorClasses.bg} ${colorClasses.text} opacity-75`}
+                        required
+                        min="0"
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -230,9 +234,7 @@ export const Modal = ({
                 id="cash"
                 type="number"
                 value={formData.cash}
-                onChange={(e) =>
-                  setFormData({ ...formData, cash: e.target.value })
-                }
+                onChange={(e) => handleFieldChange("cash", e.target.value)}
                 required
                 min="0"
                 step="0.01"

@@ -17,7 +17,7 @@ export interface Production {
     orange: number;
     [key: string]: number; // allows future extensions
   };
-  remaining_bread: {
+  sold_bread: {
     blue: number;
     green: number;
     orange: number;
@@ -52,10 +52,9 @@ export const createProduction = async (payload: Create) => {
       ])
     );
 
-    // Calculate remaining_bread: sum of quantity and old_bread for each property
-    const remaining_bread: { [key: string]: number } = {};
+    const sold_bread: { [key: string]: number } = {};
     Object.keys(quantity).forEach((key) => {
-      remaining_bread[key] = (quantity[key] || 0) + (old_bread[key] || 0);
+      sold_bread[key] = 0;
     });
 
     const { data: ProductionData, error } = await supabase
@@ -64,7 +63,7 @@ export const createProduction = async (payload: Create) => {
         quantity: quantity,
         total: Number(payload.total),
         old_bread: old_bread,
-        remaining_bread: remaining_bread,
+        sold_bread: sold_bread,
         open: true,
       })
       .select();
@@ -308,36 +307,36 @@ export const updateProduction = async (
   }
 };
 
-export const updateRemainingBread = async (
+export const updateSoldBread = async (
   productionId: string,
   soldQuantity: { orange?: number; blue?: number; green?: number }
 ) => {
   try {
     const production = await getProductionById(productionId);
 
-    if (!production || !production.remaining_bread) {
-      console.error("Production not found or has no remaining_bread");
+    if (!production || !production.sold_bread) {
+      console.error("Production not found or has no sold_bread");
       return { status: "ERROR", error: "Production not found" };
     }
 
-    const currentRemaining = production.remaining_bread;
-    const newRemaining: { [key: string]: number } = {};
+    const currentSold = production.sold_bread;
+    const newSold: { [key: string]: number } = {};
 
-    Object.keys(currentRemaining).forEach((key) => {
-      const current = currentRemaining[key] || 0;
+    Object.keys(currentSold).forEach((key) => {
+      const current = currentSold[key] || 0;
       const sold = soldQuantity[key as keyof typeof soldQuantity] || 0;
-      newRemaining[key] = Math.max(0, current - sold); // Ensure never negative
+      newSold[key] = Math.max(0, current + sold);
     });
 
     const { data: updatedProduction, error } = await supabase
       .from("productions")
-      .update({ remaining_bread: newRemaining })
+      .update({ sold_bread: newSold })
       .eq("id", productionId)
       .select();
 
     if (error) {
-      console.error("Error updating remaining_bread:", error);
-      throw new Error("Failed to update remaining_bread");
+      console.error("Error updating sold_bread:", error);
+      throw new Error("Failed to update sold_bread");
     }
 
     await revalidateTag("productions", {});
@@ -345,11 +344,11 @@ export const updateRemainingBread = async (
     return {
       status: "SUCCESS",
       data: updatedProduction[0],
-      previousRemaining: currentRemaining,
-      newRemaining,
+      previousSold: currentSold,
+      newSold,
     };
   } catch (error) {
-    console.error("Unexpected error in updateRemainingBread:", error);
+    console.error("Unexpected error in updateSoldBread:", error);
     return { status: "ERROR", error: String(error) };
   }
 };

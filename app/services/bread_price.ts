@@ -1,6 +1,6 @@
 "use server";
 import supabase from "@/client";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
 
 export interface BreadPrice {
   id: number;
@@ -27,7 +27,7 @@ export const fetchAllBreadPrices = async (): Promise<BreadPrice[]> => {
     const { data: breadPrices, error } = await supabase
       .from("bread_price")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("id", { ascending: false });
 
     if (error) {
       console.error("Error fetching bread prices:", error);
@@ -84,7 +84,7 @@ export const createBreadPrice = async (payload: CreateBreadPrice) => {
       throw new Error("Failed to create bread price");
     }
 
-    await revalidateTag("bread_price", {});
+    revalidateTag("bread_prices", {});
 
     return { status: "SUCCESS", error: "", data: breadPriceData[0] };
   } catch (error) {
@@ -112,7 +112,7 @@ export const updateBreadPrice = async (
       throw new Error("Failed to update bread price");
     }
 
-    await revalidateTag("bread_price", {});
+    revalidateTag("bread_prices", {});
 
     return { status: "SUCCESS", error: "", data: updatedBreadPrice[0] };
   } catch (error) {
@@ -136,7 +136,7 @@ export const deleteBreadPrice = async (breadPriceId: number) => {
       throw new Error("Failed to delete bread price");
     }
 
-    await revalidateTag("bread_price", {});
+    revalidateTag("bread_prices", {});
 
     return { status: "SUCCESS", error: "" };
   } catch (error) {
@@ -169,28 +169,35 @@ export const getBreadPriceCount = async (): Promise<number> => {
 /**
  * Get bread prices as multipliers mapped by color
  * Returns a Record object like { orange: 1200, blue: 1000, green: 650 }
+ * Cached indefinitely until revalidation via tag: "bread_prices"
  */
-export const getBreadPriceMultipliers = async (): Promise<
-  Record<string, number>
-> => {
-  try {
-    const breadPrices = await fetchAllBreadPrices();
+export const getBreadPriceMultipliers = unstable_cache(
+  async (): Promise<Record<string, number>> => {
+    try {
+      const breadPrices = (await fetchAllBreadPrices()).sort(
+        (a, b) => b.price - a.price
+      );
+      // Convert array of bread prices to a Record<color, price>
+      const multipliers: Record<string, number> = {};
 
-    // Convert array of bread prices to a Record<color, price>
-    const multipliers: Record<string, number> = {};
+      breadPrices.forEach((breadPrice) => {
+        multipliers[breadPrice.color.toLowerCase()] = breadPrice.price;
+      });
 
-    breadPrices.forEach((breadPrice) => {
-      multipliers[breadPrice.color.toLowerCase()] = breadPrice.price;
-    });
-
-    return multipliers;
-  } catch (error) {
-    console.error("Unexpected error in getBreadPriceMultipliers:", error);
-    // Return default fallback values if database fetch fails
-    return {
-      orange: 1200,
-      blue: 1000,
-      green: 650,
-    };
+      return multipliers;
+    } catch (error) {
+      console.error("Unexpected error in getBreadPriceMultipliers:", error);
+      // Return default fallback values if database fetch fails
+      return {
+        orange: 1200,
+        blue: 1000,
+        green: 650,
+      };
+    }
+  },
+  ["bread-price-multipliers"],
+  {
+    tags: ["bread_prices"],
+    revalidate: false, // Cache indefinitely until manually revalidated
   }
-};
+);

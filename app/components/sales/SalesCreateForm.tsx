@@ -13,11 +13,11 @@ import { toast } from "sonner";
 import { formatDateTime, getTimeFrame } from "@/app/services/utils";
 import { Production } from "@/app/services/productions";
 import { addPayment } from "@/app/services/payments";
+import { getBreadPriceMultipliers } from "@/app/services/bread_price";
 import {
   Customer,
   searchCustomers,
   updateCustomer,
-  updateDebtStatus,
 } from "@/app/services/customers";
 import {
   DropdownMenu,
@@ -38,16 +38,40 @@ interface Props {
   productions?: Production[];
   customer?: Customer;
   production?: Production;
-  multipliers?: Record<string, number>;
 }
 
-const SalesCreateForm = ({
-  productions,
-  customer,
-  production,
-  multipliers = { orange: 1200, blue: 1000, green: 650 },
-}: Props) => {
+// Helper function to get color-specific CSS classes
+const getColorClasses = (color: string) => {
+  const colorMap: Record<string, { bg: string; darkBg: string }> = {
+    orange: {
+      bg: "bg-orange-200",
+      darkBg: "dark:bg-orange-500",
+    },
+    blue: {
+      bg: "bg-blue-200",
+      darkBg: "dark:bg-blue-500",
+    },
+    green: {
+      bg: "bg-green-200",
+      darkBg: "dark:bg-green-500",
+    },
+  };
+
+  return (
+    colorMap[color.toLowerCase()] || {
+      bg: "bg-gray-200",
+      darkBg: "dark:bg-gray-500",
+    }
+  );
+};
+
+const SalesCreateForm = ({ productions, customer, production }: Props) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [multipliers, setMultipliers] = useState<Record<string, number>>({
+    orange: 1200,
+    blue: 1000,
+    green: 650,
+  });
   const [selected, setSelected] = useState({
     production: production
       ? production
@@ -56,17 +80,21 @@ const SalesCreateForm = ({
       : undefined,
     customer: customer || undefined,
   });
+
+  // Initialize dynamic quantity object based on multipliers
+  const initialQuantity: { [key: string]: number } = {};
+  Object.keys(multipliers).forEach((color) => {
+    initialQuantity[color] = 0;
+  });
+
   const [payload, setPayload] = useState({
     customer_id: selected?.customer?.id || "",
     production_id: selected?.production?.id || "",
     amount: "",
+    amount_paid: "",
     paid: false,
     remaining: 0,
-    quantity: {
-      orange: 0,
-      blue: 0,
-      green: 0,
-    },
+    quantity: initialQuantity,
   });
   const [amountPaid, setAmountPaid] = useState<string>("");
   const [quantity, setQuantity] = useState<{
@@ -84,6 +112,22 @@ const SalesCreateForm = ({
   );
   const [shouldSearch, setShouldSearch] = useState(false);
   const [isOverpayment, setIsOverpayment] = useState(false);
+
+  // Fetch multipliers on component mount
+  useEffect(() => {
+    const fetchMultipliers = async () => {
+      const prices = await getBreadPriceMultipliers();
+      setMultipliers(prices);
+
+      // Initialize quantity state with dynamic colors
+      const initialQuantity: { [key: string]: string } = {};
+      Object.keys(prices).forEach((color) => {
+        initialQuantity[color] = "";
+      });
+      setQuantity(initialQuantity);
+    };
+    fetchMultipliers();
+  }, []);
 
   // Debounced search effect
   useEffect(() => {
@@ -175,31 +219,23 @@ const SalesCreateForm = ({
       await validate.parseAsync(values);
       const response = await createNewSale(payload);
 
-      if (payload.paid) {
-        await addPayment({
-          customerId: payload.customer_id,
-          amountPaid: Number(payload.amount),
-          productionId: null,
-        });
-      } else {
-        // If partially paid, add the amount paid to payments and update debt
-        if (amountPaid && Number(amountPaid) > 0) {
-          await addPayment({
-            customerId: payload.customer_id,
-            amountPaid: Number(amountPaid),
-            productionId: null,
-          });
-        }
-        // Update debt status with remaining amount
-        await updateDebtStatus(
-          payload.customer_id,
-          Number(payload.remaining),
-          "addDebt"
-        );
-      }
+      await addPayment({
+        customerId: payload.customer_id,
+        amountPaid: Number(payload.amount),
+        productionId: null,
+      });
 
       if (response.status === "SUCCESS") {
         toast("Sale has been created successfully");
+
+        // Build dynamic reset objects
+        const resetQuantity: { [key: string]: number } = {};
+        const resetQuantityStrings: { [key: string]: string } = {};
+        Object.keys(multipliers).forEach((color) => {
+          resetQuantity[color] = 0;
+          resetQuantityStrings[color] = "";
+        });
+
         // Reset form after successful submission
         setPayload({
           customer_id: "",
@@ -207,18 +243,11 @@ const SalesCreateForm = ({
           amount: "",
           paid: false,
           remaining: 0,
-          quantity: {
-            orange: 0,
-            blue: 0,
-            green: 0,
-          },
+          amount_paid: "",
+          quantity: resetQuantity,
         });
         setAmountPaid("");
-        setQuantity({
-          orange: "",
-          blue: "",
-          green: "",
-        });
+        setQuantity(resetQuantityStrings);
         setCustomerSearchValue("");
         setShouldSearch(false);
         setIsOverpayment(false);
@@ -253,14 +282,16 @@ const SalesCreateForm = ({
         return sum + Number(val || 0) * multiplier;
       }, 0);
 
+      // Build dynamic quantity object
+      const dynamicQuantity: { [key: string]: number } = {};
+      Object.keys(multipliers).forEach((color) => {
+        dynamicQuantity[color] = Number(updatedQty[color] || 0);
+      });
+
       setPayload((prev) => ({
         ...prev,
         amount: String(total),
-        quantity: {
-          orange: Number(updatedQty.orange || 0),
-          blue: Number(updatedQty.blue || 0),
-          green: Number(updatedQty.green || 0),
-        },
+        quantity: dynamicQuantity,
         remaining: prev.paid
           ? 0
           : total - (amountPaid ? Number(amountPaid) : 0),
@@ -287,42 +318,23 @@ const SalesCreateForm = ({
     <form action={formAction} className="flex flex-col gap-4 items-center my-5">
       <div className="w-full">
         <div className="flex justify-around items-center">
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-sm ">orange</span>
-            <Input
-              className="w-[60px] h-[60px] bg-orange-200 text-center no-spinners dark:bg-orange-500"
-              name="orange"
-              type="number"
-              value={quantity.orange}
-              onChange={(e) =>
-                handleQuantityChange(e.target.name, e.target.value)
-              }
-            />
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-sm ">blue</span>
-            <Input
-              className="w-[60px] h-[60px] bg-blue-200 text-center no-spinners dark:bg-blue-500"
-              name="blue"
-              type="number"
-              value={quantity.blue}
-              onChange={(e) =>
-                handleQuantityChange(e.target.name, e.target.value)
-              }
-            />
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-sm ">green</span>
-            <Input
-              className="w-[60px] h-[60px] bg-green-200 text-center no-spinners dark:bg-green-500"
-              name="green"
-              type="number"
-              value={quantity.green}
-              onChange={(e) =>
-                handleQuantityChange(e.target.name, e.target.value)
-              }
-            />
-          </div>
+          {Object.keys(multipliers).map((color) => {
+            const colorClasses = getColorClasses(color);
+            return (
+              <div key={color} className="flex flex-col items-center gap-1">
+                <span className="text-sm capitalize">{color}</span>
+                <Input
+                  className={`w-[60px] h-[60px] ${colorClasses.bg} text-center no-spinners ${colorClasses.darkBg}`}
+                  name={color}
+                  type="number"
+                  value={quantity[color] || ""}
+                  onChange={(e) =>
+                    handleQuantityChange(e.target.name, e.target.value)
+                  }
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
       <div className="w-full transition-all animate-collapsible-down">
@@ -426,6 +438,7 @@ const SalesCreateForm = ({
             setPayload((prev) => ({
               ...prev,
               paid: isPaid,
+              amount_paid: isPaid ? prev.amount : amountPaid,
               remaining: isPaid ? 0 : Number(prev.amount) - Number(amountPaid),
             }));
             if (isPaid) {
@@ -462,6 +475,7 @@ const SalesCreateForm = ({
               setPayload((prev) => ({
                 ...prev,
                 remaining: remaining >= 0 ? remaining : 0,
+                amount_paid: paidAmount,
               }));
             }}
             value={amountPaid}

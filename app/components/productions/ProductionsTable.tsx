@@ -10,9 +10,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Edit, Trash2 } from "lucide-react";
 import { Production } from "@/app/services/productions";
 import { useState } from "react";
+import { EditProductionModal } from "@/app/components/productions/EditProductionModal";
 import { DeleteProductionDialog } from "@/app/components/productions/DeleteProductionDialog";
 
 const formatDate = (dateString: string) => {
@@ -26,6 +27,7 @@ const formatDate = (dateString: string) => {
 
 const ProductionsTable = ({ productions }: { productions: Production[] }) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [editingProduction, setEditingProduction] = useState<Production | null>(null);
   const [deletingProduction, setDeletingProduction] = useState<{
     id: string;
     date: string;
@@ -106,6 +108,17 @@ const ProductionsTable = ({ productions }: { productions: Production[] }) => {
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="h-8 w-8"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingProduction(production);
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         className="h-8 w-8 text-destructive hover:text-destructive"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -159,6 +172,14 @@ const ProductionsTable = ({ productions }: { productions: Production[] }) => {
           </div>
         )}
       </div>
+
+      {editingProduction && (
+        <EditProductionModal
+          production={editingProduction}
+          open={!!editingProduction}
+          onOpenChange={(open) => !open && setEditingProduction(null)}
+        />
+      )}
 
       {deletingProduction && (
         <DeleteProductionDialog

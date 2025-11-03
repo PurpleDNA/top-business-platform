@@ -1,5 +1,5 @@
 import supabase from "@/client";
-import { updateRemainingBread } from "./productions";
+import { updateSoldBread } from "./productions";
 
 interface CreateSale {
   customer_id: string;
@@ -12,6 +12,7 @@ interface CreateSale {
     blue?: number;
     green?: number;
   };
+  amount_paid: string;
 }
 
 interface Sale {
@@ -21,6 +22,7 @@ interface Sale {
   paid: boolean;
   remaining: number;
   outstanding?: number;
+  amount_paid: number;
 }
 
 export const fetchAllSales = async () => {
@@ -95,6 +97,59 @@ export const fetchSalesByProductionId = async (productionId: string) => {
   }
 };
 
+interface SaleWithCustomer {
+  id: string;
+  amount: number;
+  paid: boolean;
+  outstanding: number;
+  created_at: string;
+  customer_id: string;
+  production_id: string;
+  customers: {
+    id: string;
+    name: string;
+  };
+}
+
+export const fetchSalesWithCustomerByProductionId = async (
+  productionId: string
+) => {
+  try {
+    const { data: sales, error } = await supabase
+      .from("sales")
+      .select(
+        `
+        id,
+        amount,
+        paid,
+        outstanding,
+        created_at,
+        customer_id,
+        production_id,
+        customers!customer_id (
+          id,
+          name
+        )
+      `
+      )
+      .eq("production_id", productionId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching sales with customer:", error);
+      return [];
+    }
+
+    return (sales as unknown as SaleWithCustomer[]) || [];
+  } catch (error) {
+    console.error(
+      "Unexpected error in fetchSalesWithCustomerByProductionId:",
+      error
+    );
+    return [];
+  }
+};
+
 export const createNewSale = async (payload: CreateSale) => {
   try {
     // 1. Create the sale record
@@ -104,28 +159,14 @@ export const createNewSale = async (payload: CreateSale) => {
         customer_id: payload.customer_id,
         production_id: payload.production_id,
         amount: Number(payload.amount),
-        paid: payload.paid,
-        remaining: payload.remaining,
+        amount_paid: payload.amount_paid || 0,
         outstanding: payload.remaining,
+        quantity_bought: payload.quantity,
       })
       .select();
 
     if (error) {
       throw new Error("Create Sale Error");
-    }
-
-    // 2. Update remaining_bread if quantity is provided
-    if (payload.quantity && payload.production_id) {
-      const updateResult = await updateRemainingBread(
-        payload.production_id,
-        payload.quantity
-      );
-
-      if (updateResult.status === "ERROR") {
-        console.error("Failed to update remaining_bread:", updateResult.error);
-        // Note: Sale was created but remaining_bread update failed
-        // You could implement rollback logic here if needed
-      }
     }
 
     return { status: "SUCCESS", error: "", res: saleData[0] };

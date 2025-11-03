@@ -12,6 +12,8 @@ import { RemainingBreadDropdown } from "@/app/components/productions/RemainingBr
 import { CashInput } from "@/app/components/productions/CashInput";
 import { ProductionActions } from "@/app/components/productions/ProductionActions";
 import { getExpensesByProdId } from "@/app/services/expenses";
+import { fetchSalesWithCustomerByProductionId } from "@/app/services/sales";
+import RecentSalesTable from "@/app/components/productions/RecentSalesTable";
 import { formatDate, formatDateTime } from "@/app/services/utils";
 import {
   Factory,
@@ -32,6 +34,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const outstandingList = (await getProductionOutstanding(id)) || [];
   const paidOutstandingList = (await getProductionPaidOutstanding(id)) || [];
   const expenses = await getExpensesByProdId(id);
+  const sales = await fetchSalesWithCustomerByProductionId(id);
 
   if (!production) {
     return (
@@ -54,8 +57,17 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
     );
   }
 
-  const { quantity, total, cash, created_at, old_bread, remaining_bread } =
+  const { quantity, total, cash, created_at, old_bread, sold_bread } =
     production;
+
+  // Calculate remaining bread: quantity + old_bread - sold_bread
+  const remaining_bread: { [key: string]: number } = {};
+  Object.keys(quantity).forEach((color) => {
+    remaining_bread[color] =
+      (quantity[color] || 0) +
+      (old_bread[color] || 0) -
+      (sold_bread[color] || 0);
+  });
 
   // Calculate old_bread & remaining_bread monetary value
   const oldBreadTotal = await calculateBreadTotal(old_bread);
@@ -94,7 +106,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const adjustedTotal = totalMoneyIn - totalPaidOutstanding;
 
   // Compare with revenue to see if we're short, excess, or balanced
-  const difference = adjustedTotal - total;
+  const difference = adjustedTotal - totalValue;
 
   const isShort = difference < 0;
   const isExcess = difference > 0;
@@ -322,7 +334,9 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
               <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <ExpenseDropdown data={expenses} />
                 <RemainingBreadDropdown
-                  remainingBread={remaining_bread}
+                  quantity={quantity}
+                  oldBread={old_bread}
+                  soldBread={sold_bread}
                   remainingBreadTotal={remainingBreadTotal}
                 />
               </div>
@@ -425,7 +439,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                       </span>
                     </div>
                     <span className="text-sm font-semibold text-foreground">
-                      -₦{total.toLocaleString()}
+                      -₦{totalValue.toLocaleString()}
                     </span>
                   </div>
 
@@ -475,6 +489,28 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                           ).toLocaleString()}`}
                     </span>
                   </div>
+                </div>
+              </div>
+              {/* Recent Sales Section */}
+              <div className="rounded-xl bg-card border border-border overflow-hidden">
+                <div className="p-4 border-b border-border flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-semibold tracking-tight text-foreground">
+                      Recent Sales
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      Latest sales for this production
+                    </p>
+                  </div>
+                  <Link
+                    href={`/sales/production/${id}`}
+                    className="text-sm text-primary hover:text-primary/80 font-medium"
+                  >
+                    View All
+                  </Link>
+                </div>
+                <div className="overflow-x-auto">
+                  <RecentSalesTable sales={sales} />
                 </div>
               </div>
             </section>
