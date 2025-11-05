@@ -1,12 +1,23 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { getAllPaymentsWithDetails, PaymentWithDetails } from "@/app/services/payments";
+import {
+  getAllPaymentsWithDetails,
+  PaymentWithDetails,
+} from "@/app/services/payments";
 import { fetchAllCustomers, Customer } from "@/app/services/customers";
 import { fetchAllProductions, Production } from "@/app/services/productions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Wallet, ArrowLeft, Plus, User, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import {
+  Wallet,
+  ArrowLeft,
+  Plus,
+  User,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { EditPaymentModal } from "@/app/components/payments/EditPaymentModal";
@@ -57,7 +68,8 @@ export default function AllPaymentsPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<string>("all");
   const [selectedProduction, setSelectedProduction] = useState<string>("all");
   const [loading, setLoading] = useState(true);
-  const [editingPayment, setEditingPayment] = useState<PaymentWithDetails | null>(null);
+  const [editingPayment, setEditingPayment] =
+    useState<PaymentWithDetails | null>(null);
   const [deletingPayment, setDeletingPayment] = useState<{
     id: string;
     customerName: string;
@@ -85,13 +97,14 @@ export default function AllPaymentsPage() {
       const customerMatch =
         selectedCustomer === "all" || payment.customer_id === selectedCustomer;
       const productionMatch =
-        selectedProduction === "all" || payment.production_id === selectedProduction;
+        selectedProduction === "all" ||
+        payment.production_id === selectedProduction;
       return customerMatch && productionMatch;
     });
   }, [payments, selectedCustomer, selectedProduction]);
 
   const totalPaymentsAmount = filteredPayments.reduce(
-    (sum, payment) => sum + payment.amount,
+    (sum, payment) => sum + payment.amount_paid,
     0
   );
   const distributedPaymentsCount = filteredPayments.filter(
@@ -144,7 +157,10 @@ export default function AllPaymentsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Filter by Customer</label>
-            <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+            <Select
+              value={selectedCustomer}
+              onValueChange={setSelectedCustomer}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="All Customers" />
               </SelectTrigger>
@@ -161,7 +177,10 @@ export default function AllPaymentsPage() {
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Filter by Production</label>
-            <Select value={selectedProduction} onValueChange={setSelectedProduction}>
+            <Select
+              value={selectedProduction}
+              onValueChange={setSelectedProduction}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="All Productions" />
               </SelectTrigger>
@@ -222,7 +241,9 @@ export default function AllPaymentsPage() {
         {/* Desktop Table View */}
         <Card className="hidden lg:block">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Payment History</CardTitle>
+            <CardTitle className="text-lg font-semibold">
+              Payment History
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {filteredPayments.length === 0 ? (
@@ -255,7 +276,7 @@ export default function AllPaymentsPage() {
                         {payment.customers?.name || "Unknown"}
                       </TableCell>
                       <TableCell className="font-semibold">
-                        ₦{payment.amount.toLocaleString()}
+                        ₦{payment.amount_paid.toLocaleString()}
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -278,11 +299,18 @@ export default function AllPaymentsPage() {
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                            >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-background">
+                          <DropdownMenuContent
+                            align="end"
+                            className="bg-background"
+                          >
                             <DropdownMenuItem
                               onClick={() => setEditingPayment(payment)}
                             >
@@ -294,8 +322,9 @@ export default function AllPaymentsPage() {
                               onClick={() =>
                                 setDeletingPayment({
                                   id: payment.id,
-                                  customerName: payment.customers?.name || "Unknown",
-                                  amount: payment.amount,
+                                  customerName:
+                                    payment.customers?.name || "Unknown",
+                                  amount: payment.amount_paid,
                                 })
                               }
                             >
@@ -340,7 +369,8 @@ export default function AllPaymentsPage() {
                       </h3>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {formatDate(payment.paid_at)} • {formatTime(payment.paid_at)}
+                      {formatDate(payment.paid_at)} •{" "}
+                      {formatTime(payment.paid_at)}
                     </p>
                     <Badge
                       className="mt-1"
@@ -352,7 +382,7 @@ export default function AllPaymentsPage() {
                   <div className="flex items-center gap-2">
                     <div className="text-right">
                       <h3 className="font-semibold text-lg">
-                        ₦{payment.amount.toLocaleString()}
+                        ₦{payment.amount_paid.toLocaleString()}
                       </h3>
                       <span className="text-xs text-muted-foreground capitalize">
                         {payment.type}
@@ -364,7 +394,10 @@ export default function AllPaymentsPage() {
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-background">
+                      <DropdownMenuContent
+                        align="end"
+                        className="bg-background"
+                      >
                         <DropdownMenuItem
                           onClick={() => setEditingPayment(payment)}
                         >
@@ -376,8 +409,9 @@ export default function AllPaymentsPage() {
                           onClick={() =>
                             setDeletingPayment({
                               id: payment.id,
-                              customerName: payment.customers?.name || "Unknown",
-                              amount: payment.amount,
+                              customerName:
+                                payment.customers?.name || "Unknown",
+                              amount: payment.amount_paid,
                             })
                           }
                         >
@@ -399,7 +433,7 @@ export default function AllPaymentsPage() {
         <EditPaymentModal
           payment={{
             id: editingPayment.id,
-            amount: editingPayment.amount,
+            amount: editingPayment.amount_paid,
             type: editingPayment.type,
           }}
           open={!!editingPayment}

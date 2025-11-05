@@ -8,7 +8,7 @@ export interface Payment {
   paid_at: string;
   customer_id: string;
   production_id: string;
-  amount: number;
+  amount_paid: number;
   sale_id: string;
   type: string;
 }
@@ -43,7 +43,7 @@ export async function getPaymentById(paymentId: string) {
 
 export interface PaymentWithDetails {
   id: string;
-  amount: number;
+  amount_paid: number;
   paid_at: string;
   customer_id: string;
   production_id: string | null;
@@ -66,7 +66,7 @@ export async function getAllPaymentsWithDetails() {
       .select(
         `
         id,
-        amount,
+        amount_paid,
         paid_at,
         customer_id,
         production_id,
@@ -89,6 +89,7 @@ export async function getAllPaymentsWithDetails() {
       return [];
     }
 
+    console.log(payments);
     return (payments as unknown as PaymentWithDetails[]) || [];
   } catch (error) {
     console.error("Unexpected error in getAllPaymentsWithDetails:", error);
@@ -226,7 +227,7 @@ export const updatePayment = async (
       throw new Error("Amount paid is required for update");
     }
 
-    const oldAmount = payment.amount;
+    const oldAmount = payment.amount_paid;
     const newAmount = payload.amountPaid;
 
     // Payment has no sale_id (distributed payment)
@@ -324,7 +325,7 @@ export const deletePayment = async (paymentId: string) => {
       // Reverse the entire payment using RPC function
       const { error: reverseError } = await supabase.rpc("reverse_payment", {
         p_customer_id: payment.customer_id,
-        p_amount_to_reverse: payment.amount,
+        p_amount_to_reverse: payment.amount_paid,
       });
 
       if (reverseError) {
@@ -343,7 +344,7 @@ export const deletePayment = async (paymentId: string) => {
       }
 
       // Deduct the payment amount from the sale's amount_paid
-      const newAmountPaid = (sale.amount_paid || 0) - payment.amount;
+      const newAmountPaid = (sale.amount_paid || 0) - payment.amount_paid;
       const newOutstanding = sale.amount - newAmountPaid;
 
       // Update the sale
