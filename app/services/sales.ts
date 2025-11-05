@@ -1,5 +1,8 @@
+"use server";
+
 import supabase from "@/client";
-import { updateSoldBread } from "./productions";
+import { revalidateTag } from "next/cache";
+import { addPayment } from "./payments";
 
 interface CreateSale {
   customer_id: string;
@@ -8,14 +11,12 @@ interface CreateSale {
   paid: boolean;
   remaining: number;
   quantity?: {
-    orange?: number;
-    blue?: number;
-    green?: number;
+    [key: string]: number;
   };
   amount_paid: string;
 }
 
-interface Sale {
+export interface Sale {
   customer_id: string;
   production_id: string;
   amount: number;
@@ -23,6 +24,9 @@ interface Sale {
   remaining: number;
   outstanding?: number;
   amount_paid: number;
+  quantity_bought: {
+    [key: string]: number;
+  };
 }
 
 export const fetchAllSales = async () => {
@@ -38,6 +42,65 @@ export const fetchAllSales = async () => {
     return sales;
   } catch (error) {
     console.error("Unexpected error in fetchAllSales:", error);
+    return [];
+  }
+};
+
+export interface SaleWithDetails {
+  id: string;
+  amount: number;
+  paid: boolean;
+  outstanding: number;
+  amount_paid: number;
+  created_at: string;
+  customer_id: string;
+  production_id: string;
+  quantity_bought: { [key: string]: number };
+  customers: {
+    id: string;
+    name: string;
+  };
+  productions: {
+    id: string;
+    created_at: string;
+  };
+}
+
+export const fetchAllSalesWithDetails = async () => {
+  try {
+    const { data: sales, error } = await supabase
+      .from("sales")
+      .select(
+        `
+        id,
+        amount,
+        paid,
+        outstanding,
+        amount_paid,
+        created_at,
+        customer_id,
+        production_id,
+        quantity_bought,
+        customers!customer_id (
+          id,
+          name
+        ),
+        productions!production_id (
+          id,
+          created_at
+        )
+      `
+      )
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching sales with details:", error);
+      return [];
+    }
+
+    return (sales as unknown as SaleWithDetails[]) || [];
+  } catch (error) {
+    console.error("Unexpected error in fetchAllSalesWithDetails:", error);
     return [];
   }
 };
@@ -67,7 +130,8 @@ export const fetchSaleById = async (saleId: string) => {
     const { data: sale, error } = await supabase
       .from("sales")
       .select("*")
-      .eq("id", saleId);
+      .eq("id", saleId)
+      .single();
 
     if (error) {
       throw new Error("Error fetching sale by ID:", error);
@@ -77,23 +141,6 @@ export const fetchSaleById = async (saleId: string) => {
   } catch (error) {
     console.error("Unexpected error in fetchSaleById:", error);
     return [];
-  }
-};
-
-export const fetchSalesByProductionId = async (productionId: string) => {
-  try {
-    const { data: sales, error } = await supabase
-      .from("sales")
-      .select("*")
-      .eq("production_id", productionId);
-
-    if (error) {
-      throw error;
-    }
-
-    return sales;
-  } catch (error) {
-    console.error("Unexpected error in fetchSalesByProductionId:", error);
   }
 };
 
@@ -109,23 +156,16 @@ interface SaleWithCustomer {
     id: string;
     name: string;
   };
+  quantity_bought: { [key: string]: number };
 }
 
-export const fetchSalesWithCustomerByProductionId = async (
-  productionId: string
-) => {
+export const fetchSalesByProductionId = async (productionId: string) => {
   try {
     const { data: sales, error } = await supabase
       .from("sales")
       .select(
         `
-        id,
-        amount,
-        paid,
-        outstanding,
-        created_at,
-        customer_id,
-        production_id,
+        *,
         customers!customer_id (
           id,
           name
@@ -142,10 +182,7 @@ export const fetchSalesWithCustomerByProductionId = async (
 
     return (sales as unknown as SaleWithCustomer[]) || [];
   } catch (error) {
-    console.error(
-      "Unexpected error in fetchSalesWithCustomerByProductionId:",
-      error
-    );
+    console.error("Unexpected error in fetchSalesByProductionId:", error);
     return [];
   }
 };
@@ -197,19 +234,68 @@ export const getUnpaidSalesByCustomerId = async (customerId: string) => {
 
 export const updateSale = async (saleId: string, payload: Partial<Sale>) => {
   try {
-    const { data: updatedSale, error } = await supabase
+    const { data: updatedSale, error: updateSaleError } = await supabase
       .from("sales")
       .update(payload)
       .eq("id", saleId)
-      .select();
+      .select("*")
+      .single();
 
-    if (error) {
+    if (updateSaleError) {
       throw new Error("update sale error");
     }
-    console.log(updateSale);
+
+    if (payload.amount_paid) {
+      const { data: updatedPayment, error: updatePaymentError } = await supabase
+        .from("payments")
+        .update({ amount_paid: payload.amount_paid })
+        .eq("sale_id", saleId)
+        .eq("type", "on_demand")
+        .select("*");
+
+      if (updatePaymentError) {
+        throw new Error("update payment error");
+      }
+
+      if (!updatedPayment || updatedPayment.length === 0) {
+        console.log("No payment found with that sale_id");
+        addPayment({
+          customerId: updatedSale.customer_id,
+          amountPaid: updatedSale.amount_paid,
+          saleId: updatedSale.id,
+          productionId: null,
+          type: "on_demand",
+        });
+        return;
+      }
+    }
+
+    revalidateTag("sales", {});
+    revalidateTag("customers", {});
+    revalidateTag("productions", {});
+
     return { status: "SUCCESS", error: "", data: updatedSale };
   } catch (error) {
     console.log("update sale error >>>>>>", error);
+    throw new Error("Unexpected Error Occured");
+  }
+};
+
+export const deleteSale = async (saleId: string) => {
+  try {
+    const { error } = await supabase.from("sales").delete().eq("id", saleId);
+
+    if (error) {
+      throw new Error("Delete Sale Error");
+    }
+
+    revalidateTag("sales", {});
+    revalidateTag("customers", {});
+    revalidateTag("productions", {});
+
+    return { status: "SUCCESS", error: "" };
+  } catch (error) {
+    console.log("delete sale error >>>>>>", error);
     throw new Error("Unexpected Error Occured");
   }
 };

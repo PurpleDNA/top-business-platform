@@ -1,4 +1,4 @@
-import { fetchSalesWithCustomerByProductionId } from "@/app/services/sales";
+import { fetchSalesByProductionId } from "@/app/services/sales";
 import { getProductionById } from "@/app/services/productions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,9 +6,13 @@ import { ShoppingCart, ArrowLeft, Plus, User } from "lucide-react";
 import Link from "next/link";
 import SalesTable from "@/app/components/productions/SalesTable";
 
-const AllSalesPage = async ({ params }: { params: Promise<{ id: string }> }) => {
+const AllSalesPage = async ({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) => {
   const { id } = await params;
-  const sales = await fetchSalesWithCustomerByProductionId(id);
+  const sales = await fetchSalesByProductionId(id);
   const production = await getProductionById(id);
 
   if (!production) {
@@ -41,6 +45,11 @@ const AllSalesPage = async ({ params }: { params: Promise<{ id: string }> }) => 
     });
   };
 
+  const formatQuantity = (quantity: { [key: string]: number }) => {
+    return Object.entries(quantity)
+      .map(([color, qty]) => `${color[0].toUpperCase()}: ${qty}`)
+      .join("| ");
+  };
   const totalSalesAmount = sales.reduce((sum, sale) => sum + sale.amount, 0);
   const totalOutstanding = sales.reduce(
     (sum, sale) => sum + sale.outstanding,
@@ -129,7 +138,9 @@ const AllSalesPage = async ({ params }: { params: Promise<{ id: string }> }) => 
         {/* Desktop Table View */}
         <Card className="hidden lg:block">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Sales History</CardTitle>
+            <CardTitle className="text-lg font-semibold">
+              Sales History
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {sales.length === 0 ? (
@@ -189,13 +200,8 @@ const AllSalesPage = async ({ params }: { params: Promise<{ id: string }> }) => 
                       </div>
                       <div className="flex items-center gap-3">
                         <p className="text-sm text-muted-foreground">
-                          {formatDate(sale.created_at)}
+                          {formatQuantity(sale.quantity_bought)}
                         </p>
-                        {sale.outstanding > 0 && (
-                          <span className="text-xs text-destructive font-medium">
-                            Outstanding: ₦{sale.outstanding.toLocaleString()}
-                          </span>
-                        )}
                       </div>
                     </div>
                     <div className="text-right">

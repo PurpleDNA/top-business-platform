@@ -14,7 +14,8 @@ import { CustomerActions } from "@/app/components/customer/CustomerActions";
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
   const customer = await fetchCustomerById(id);
-  const { name, email, phone_number, created_at, has_debt, total_debt } = customer;
+  const { name, email, phone_number, created_at, has_debt, total_debt } =
+    customer;
   const sales = await fetchSalesByCustomerId(id);
   const total_spent = await fetchCustomerTotalSpent(id);
   // Fetch all payment history (using a high limit to get all records)

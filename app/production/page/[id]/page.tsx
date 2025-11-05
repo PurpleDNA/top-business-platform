@@ -12,7 +12,7 @@ import { RemainingBreadDropdown } from "@/app/components/productions/RemainingBr
 import { CashInput } from "@/app/components/productions/CashInput";
 import { ProductionActions } from "@/app/components/productions/ProductionActions";
 import { getExpensesByProdId } from "@/app/services/expenses";
-import { fetchSalesWithCustomerByProductionId } from "@/app/services/sales";
+import { fetchSalesByProductionId } from "@/app/services/sales";
 import RecentSalesTable from "@/app/components/productions/RecentSalesTable";
 import { formatDate, formatDateTime } from "@/app/services/utils";
 import {
@@ -34,7 +34,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const outstandingList = (await getProductionOutstanding(id)) || [];
   const paidOutstandingList = (await getProductionPaidOutstanding(id)) || [];
   const expenses = await getExpensesByProdId(id);
-  const sales = await fetchSalesWithCustomerByProductionId(id);
+  const sales = await fetchSalesByProductionId(id);
 
   if (!production) {
     return (

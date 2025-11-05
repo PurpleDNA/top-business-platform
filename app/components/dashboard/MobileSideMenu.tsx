@@ -12,6 +12,10 @@ import {
   User,
   LogOut,
   AppWindow,
+  ShoppingCart,
+  Wallet,
+  Users,
+  Factory,
 } from "lucide-react";
 import {
   Sheet,
@@ -27,6 +31,26 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 
 const navigationItems = [
+  {
+    title: "All Productions",
+    href: "/productions/all",
+    icon: Factory,
+  },
+  {
+    title: "All Customers",
+    href: "/customers/all",
+    icon: Users,
+  },
+  {
+    title: "All Sales",
+    href: "/sales/all",
+    icon: ShoppingCart,
+  },
+  {
+    title: "All Payments",
+    href: "/payments/all",
+    icon: Wallet,
+  },
   {
     title: "New Sale",
     href: "/sale/new",

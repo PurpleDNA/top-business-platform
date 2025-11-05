@@ -224,38 +224,35 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
           toast.error("Error distributing payment: " + result.error);
           return result;
         }
-      }
-
-      // If specific sale is selected, handle normally
-      const response_1 = await addPayment({
-        customerId: payload.customerId,
-        amountPaid: Number(payload.amountPaid),
-        saleId: payload?.saleId,
-        productionId: latestProd.open ? latestProd.id : null,
-      });
-
-      if (payload.saleId) {
+      } else {
+        const response_1 = await addPayment({
+          customerId: payload.customerId,
+          amountPaid: Number(payload.amountPaid),
+          saleId: payload?.saleId,
+          productionId: latestProd.open ? latestProd.id : null,
+          type: "after",
+        });
         await updateSaleStatus();
-      }
 
-      if (response_1.status === "SUCCESS") {
-        toast("Payment made successfully");
-        // Reset form after successful submission
-        setPayload({
-          customerId: "",
-          amountPaid: "",
-          saleId: "",
-        });
-        setCustomerSearchValue("");
-        setShouldSearch(false);
-        setSelected({
-          customer: undefined,
-          sale: undefined,
-        });
-        return response_1;
-      }
-      if (response_1.status === "EROOR") {
-        toast("Unexpected Error Occurred");
+        if (response_1.status === "SUCCESS") {
+          toast("Payment made successfully");
+          // Reset form after successful submission
+          setPayload({
+            customerId: "",
+            amountPaid: "",
+            saleId: "",
+          });
+          setCustomerSearchValue("");
+          setShouldSearch(false);
+          setSelected({
+            customer: undefined,
+            sale: undefined,
+          });
+          return response_1;
+        }
+        if (response_1.status === "EROOR") {
+          toast("Unexpected Error Occurred");
+        }
       }
     } catch (error) {
       if (error instanceof z.ZodError) {

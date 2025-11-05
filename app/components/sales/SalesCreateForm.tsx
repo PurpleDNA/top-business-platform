@@ -223,6 +223,8 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
         customerId: payload.customer_id,
         amountPaid: Number(payload.amount),
         productionId: null,
+        saleId: response.res?.id,
+        type: "on_demand",
       });
 
       if (response.status === "SUCCESS") {

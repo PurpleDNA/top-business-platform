@@ -15,6 +15,8 @@ import {
   Calculator,
   Home,
   AppWindow,
+  ShoppingCart,
+  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +35,16 @@ const navigationItems = [
     title: "All Customers",
     href: "/customers/all",
     icon: Users,
+  },
+  {
+    title: "All Sales",
+    href: "/sales/all",
+    icon: ShoppingCart,
+  },
+  {
+    title: "All Payments",
+    href: "/payments/all",
+    icon: Wallet,
   },
   {
     title: "New Production",
