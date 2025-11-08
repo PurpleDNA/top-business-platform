@@ -26,7 +26,6 @@ const page = async ({ searchParams }: Props) => {
   let customer;
   let production;
   const productions = await getProductions();
-  const multipliers = await getBreadPriceMultipliers();
 
   if (customer_id) {
     customer = await fetchCustomerById(customer_id);
@@ -45,7 +44,6 @@ const page = async ({ searchParams }: Props) => {
           productions={productions ?? undefined}
           customer={customer}
           production={production}
-          multipliers={multipliers}
         />
       </div>
     </div>

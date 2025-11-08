@@ -1,6 +1,8 @@
 "use server";
 import supabase from "@/client";
 import { revalidateTag } from "next/cache";
+import { checkProductionClosed } from "./productions";
+import { toast } from "sonner";
 
 export interface Expense {
   id: string;
@@ -47,6 +49,26 @@ export const updateExpense = async (
   payload: Partial<CreateExpense>
 ) => {
   try {
+    // First, get the expense to check its production_id
+    const { data: existingExpense, error: fetchError } = await supabase
+      .from("expenses")
+      .select("production_id")
+      .eq("id", expenseId)
+      .single();
+
+    if (fetchError || !existingExpense) {
+      throw new Error("Expense not found");
+    }
+
+    // Check if production is closed
+    const closureCheck = await checkProductionClosed(existingExpense.production_id);
+    if (closureCheck.isClosed) {
+      toast.error("Expense cannot be updated because the production is closed");
+      throw new Error(
+        `Expense cannot be updated because the production is closed`
+      );
+    }
+
     const { data: updatedExpense, error } = await supabase
       .from("expenses")
       .update(payload)
@@ -69,6 +91,26 @@ export const updateExpense = async (
 
 export const deleteExpense = async (expenseId: string) => {
   try {
+    // First, get the expense to check its production_id
+    const { data: existingExpense, error: fetchError } = await supabase
+      .from("expenses")
+      .select("production_id")
+      .eq("id", expenseId)
+      .single();
+
+    if (fetchError || !existingExpense) {
+      throw new Error("Expense not found");
+    }
+
+    // Check if production is closed
+    const closureCheck = await checkProductionClosed(existingExpense.production_id);
+    if (closureCheck.isClosed) {
+      toast.error("Expense cannot be deleted because the production is closed");
+      throw new Error(
+        `Expense cannot be deleted because the production is closed`
+      );
+    }
+
     const { error } = await supabase.from("expenses").delete().eq("id", expenseId);
 
     if (error) {

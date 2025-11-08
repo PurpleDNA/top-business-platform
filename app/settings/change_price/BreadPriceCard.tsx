@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, LoaderCircle } from "lucide-react";
 import { EditBreadPriceModal } from "./EditBreadPriceModal";
-import { formatDateTime } from "@/app/services/utils";
 import { toast } from "sonner";
 
 interface Props {

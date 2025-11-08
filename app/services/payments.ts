@@ -2,6 +2,8 @@
 import supabase from "@/client";
 import { revalidateTag } from "next/cache";
 import { fetchSaleById, Sale } from "./sales";
+import { checkProductionClosed } from "./productions";
+import { toast } from "sonner";
 
 export interface Payment {
   id: number;
@@ -224,6 +226,15 @@ export const updatePayment = async (
       throw new Error("Payment not found");
     }
 
+    // Check if production is closed (if payment has a production_id)
+    const closureCheck = await checkProductionClosed(payment.production_id);
+    if (closureCheck.isClosed) {
+      toast.error("Payment cannot be updated because the production is closed");
+      throw new Error(
+        `Payment cannot be updated because the production is closed`
+      );
+    }
+
     if (!payload.amountPaid) {
       throw new Error("Amount paid is required for update");
     }
@@ -319,6 +330,15 @@ export const deletePayment = async (paymentId: string) => {
 
     if (!payment) {
       throw new Error("Payment not found");
+    }
+
+    // Check if production is closed (if payment has a production_id)
+    const closureCheck = await checkProductionClosed(payment.production_id);
+    if (closureCheck.isClosed) {
+      toast.error("Payment cannot be deleted because the production is closed");
+      throw new Error(
+        `Payment cannot be deleted because the production is closed`
+      );
     }
 
     // Payment has no sale_id (distributed payment)

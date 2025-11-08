@@ -3,6 +3,8 @@
 import supabase from "@/client";
 import { revalidateTag } from "next/cache";
 import { addPayment } from "./payments";
+import { checkProductionClosed } from "./productions";
+import { toast } from "sonner";
 
 interface CreateSale {
   customer_id: string;
@@ -240,6 +242,28 @@ export const updateSale = async (
   from?: string
 ) => {
   try {
+    // First, get the sale to check its production_id
+    const { data: existingSale, error: fetchError } = await supabase
+      .from("sales")
+      .select("production_id")
+      .eq("id", saleId)
+      .single();
+
+    if (fetchError || !existingSale) {
+      throw new Error("Sale not found");
+    }
+
+    // Check if production is closed
+    const closureCheck = await checkProductionClosed(
+      existingSale.production_id
+    );
+    if (closureCheck.isClosed) {
+      toast.error("Sale cannot be updated because the production is closed");
+      throw new Error(
+        `Sale cannot be updated because the production is closed`
+      );
+    }
+
     const { data: updatedSale, error: updateSaleError } = await supabase
       .from("sales")
       .update(payload)
@@ -291,6 +315,28 @@ export const updateSale = async (
 
 export const deleteSale = async (saleId: string) => {
   try {
+    // First, get the sale to check its production_id
+    const { data: existingSale, error: fetchError } = await supabase
+      .from("sales")
+      .select("production_id")
+      .eq("id", saleId)
+      .single();
+
+    if (fetchError || !existingSale) {
+      throw new Error("Sale not found");
+    }
+
+    // Check if production is closed
+    const closureCheck = await checkProductionClosed(
+      existingSale.production_id
+    );
+    if (closureCheck.isClosed) {
+      toast.error("Sale cannot be deleted because the production is closed");
+      throw new Error(
+        `Sale cannot be deleted because the production is closed`
+      );
+    }
+
     const { error } = await supabase.from("sales").delete().eq("id", saleId);
 
     if (error) {

@@ -2,6 +2,7 @@
 import supabase from "@/client";
 import { revalidateTag } from "next/cache";
 import { getBreadPriceMultipliers } from "./bread_price";
+import { toast } from "sonner";
 
 export interface Production {
   id: string;
@@ -23,6 +24,12 @@ export interface Production {
     orange: number;
     [key: string]: number; // allows future extensions
   };
+  bread_price: {
+    blue: number;
+    green: number;
+    orange: number;
+    [key: string]: number; // allows future extensions
+  };
   total: number;
   cash: number;
   created_at: string;
@@ -34,6 +41,25 @@ interface Create {
   quantity: Record<string, string>;
   total: string;
   old_bread: Record<string, string>;
+}
+
+interface PaymentWithCustomer {
+  amount_paid: number;
+  customer_id: string;
+  customers: {
+    id: string;
+    name: string;
+  } | null;
+}
+
+interface SaleWithCustomer {
+  outstanding: number;
+  paid: boolean;
+  customer_id: string;
+  customers: {
+    id: string;
+    name: string;
+  };
 }
 
 export const createProduction = async (payload: Create) => {
@@ -129,6 +155,46 @@ export const getProductionById = async (id: string) => {
   }
 };
 
+/**
+ * Check if a production is closed (not open)
+ * @param productionId - The production ID to check
+ * @returns Object with isClosed boolean and optional error message
+ */
+export const checkProductionClosed = async (
+  productionId: string | null | undefined
+) => {
+  try {
+    // If no production ID provided, it's valid (e.g., payments without production_id)
+    if (!productionId) {
+      return { isClosed: false, error: null };
+    }
+
+    const production = await getProductionById(productionId);
+
+    if (!production) {
+      return {
+        isClosed: true,
+        error: "Production not found",
+      };
+    }
+
+    if (!production.open) {
+      return {
+        isClosed: true,
+        error: "Production is closed",
+      };
+    }
+
+    return { isClosed: false, error: null };
+  } catch (error) {
+    console.error("Error checking production closure:", error);
+    return {
+      isClosed: true,
+      error: "Failed to verify production status",
+    };
+  }
+};
+
 export const fetchAllProductions = async (): Promise<Production[] | []> => {
   try {
     const { data: productions, error } = await supabase
@@ -147,16 +213,6 @@ export const fetchAllProductions = async (): Promise<Production[] | []> => {
     return [];
   }
 };
-
-interface SaleWithCustomer {
-  outstanding: number;
-  paid: boolean;
-  customer_id: string;
-  customers: {
-    id: string;
-    name: string;
-  };
-}
 
 export const getProductionOutstanding = async (productionId: string) => {
   try {
@@ -197,15 +253,6 @@ export const getProductionOutstanding = async (productionId: string) => {
     return null;
   }
 };
-
-interface PaymentWithCustomer {
-  amount_paid: number;
-  customer_id: string;
-  customers: {
-    id: string;
-    name: string;
-  } | null;
-}
 
 export const getProductionPaidOutstanding = async (productionId: string) => {
   try {
@@ -261,10 +308,24 @@ export const toggleProdStatus = async (productionId: string) => {
     // Toggle the open status
     const newStatus = !production.open;
 
-    // Update the production with the new status
+    // Prepare update payload
+    const updatePayload: {
+      open: boolean;
+      bread_price?: { [key: string]: number };
+    } = {
+      open: newStatus,
+    };
+
+    // If closing the production (newStatus is false), set the current bread prices
+    if (!newStatus) {
+      const currentBreadPrices = await getBreadPriceMultipliers();
+      updatePayload.bread_price = currentBreadPrices;
+    }
+
+    // Update the production with the new status and bread_price if closing
     const { data: updatedProduction, error: updateError } = await supabase
       .from("productions")
-      .update({ open: newStatus })
+      .update(updatePayload)
       .eq("id", productionId)
       .select();
 
@@ -287,6 +348,15 @@ export const updateProduction = async (
   payload: Partial<Production>
 ) => {
   try {
+    // Check if production is closed
+    const closureCheck = await checkProductionClosed(productionId);
+    if (closureCheck.isClosed) {
+      toast.error("Production cannot be updated because it is closed");
+      throw new Error(
+        `Production cannot be updated because it is closed`
+      );
+    }
+
     const { data: updatedProduction, error } = await supabase
       .from("productions")
       .update(payload)
@@ -353,19 +423,22 @@ export const updateSoldBread = async (
   }
 };
 
-/**
- * Calculate the total monetary value of bread quantities based on current bread prices
- * @param breadQuantities - Object containing quantities by color (e.g., { orange: 10, blue: 5, green: 3 })
- * @returns Total monetary value
- */
 export const calculateBreadTotal = async (
-  breadQuantities: { [key: string]: number } | null | undefined
+  breadQuantities: { [key: string]: number } | null | undefined,
+  production?: Production | null
 ): Promise<number> => {
   try {
     if (!breadQuantities) return 0;
 
-    // Get current bread prices
-    const breadPrices = await getBreadPriceMultipliers();
+    // Get bread prices from production.bread_price if available, otherwise get current prices
+    let breadPrices: { [key: string]: number };
+
+    if (production && production.bread_price) {
+      breadPrices = production.bread_price;
+    } else {
+      // Fallback to current bread prices
+      breadPrices = await getBreadPriceMultipliers();
+    }
 
     // Calculate total by multiplying each quantity by its price
     let total = 0;
@@ -383,6 +456,15 @@ export const calculateBreadTotal = async (
 
 export const deleteProduction = async (productionId: string) => {
   try {
+    // Check if production is closed
+    const closureCheck = await checkProductionClosed(productionId);
+    if (closureCheck.isClosed) {
+      toast.error("Production cannot be deleted because it is closed");
+      throw new Error(
+        `Production cannot be deleted because it is closed`
+      );
+    }
+
     const { error } = await supabase
       .from("productions")
       .delete()
