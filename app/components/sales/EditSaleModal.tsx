@@ -74,12 +74,12 @@ export const EditSaleModal = ({
 
       const result = await updateSale(sale.id, payload);
 
-      if (result.status === "SUCCESS") {
+      if (result?.status === "SUCCESS") {
         toast.success("Sale updated successfully");
         onOpenChange(false);
         router.refresh();
       } else {
-        toast.error(result.error || "Failed to update sale");
+        toast.error(result?.error || "Failed to update sale");
       }
     } catch (error) {
       console.error("Error updating sale:", error);

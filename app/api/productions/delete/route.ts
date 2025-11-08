@@ -18,8 +18,8 @@ export async function DELETE(request: NextRequest) {
 
     if (result.status === "SUCCESS") {
       // Revalidate cache tags
-      revalidateTag("productions");
-      revalidateTag("last10");
+      revalidateTag("productions", {});
+      revalidateTag("last10", {});
 
       return NextResponse.json(
         { status: "SUCCESS", message: "Production deleted successfully" },

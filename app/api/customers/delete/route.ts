@@ -18,7 +18,7 @@ export async function DELETE(request: NextRequest) {
 
     if (result.status === "SUCCESS") {
       // Revalidate cache tags
-      revalidateTag("customers");
+      revalidateTag("customers", {});
 
       return NextResponse.json(
         { status: "SUCCESS", message: "Customer deleted successfully" },
