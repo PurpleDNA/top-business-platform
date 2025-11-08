@@ -33,7 +33,6 @@ export const EditCustomerModal = ({
   const [formData, setFormData] = useState({
     name: customer.name,
     phone_number: customer.phone_number,
-    total_debt: customer.total_debt.toString(),
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,8 +43,6 @@ export const EditCustomerModal = ({
       const payload = {
         name: formData.name,
         phone_number: formData.phone_number,
-        total_debt: Number(formData.total_debt),
-        has_debt: Number(formData.total_debt) > 0,
       };
 
       const result = await updateCustomer(customer.id, payload);
@@ -96,20 +93,6 @@ export const EditCustomerModal = ({
                   setFormData({ ...formData, phone_number: e.target.value })
                 }
                 required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="total_debt">Total Debt (₦)</Label>
-              <Input
-                id="total_debt"
-                type="number"
-                value={formData.total_debt}
-                onChange={(e) =>
-                  setFormData({ ...formData, total_debt: e.target.value })
-                }
-                required
-                min="0"
-                step="0.01"
               />
             </div>
           </div>

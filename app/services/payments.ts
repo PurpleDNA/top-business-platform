@@ -134,6 +134,7 @@ export async function addPayment(payload: Create) {
         customer_id: payload.customerId,
         production_id: payload.productionId,
         sale_id: payload.saleId,
+        type: payload.type,
       })
       .select();
 
@@ -292,7 +293,7 @@ export const updatePayment = async (
     // Update the payment record
     const { data: updatedPayment, error } = await supabase
       .from("payments")
-      .update({ amount: newAmount })
+      .update({ amount_paid: newAmount })
       .eq("id", paymentId)
       .select();
 

@@ -8,7 +8,6 @@ import {
   ChevronRight,
   UserPlus,
   Users,
-  FileText,
   Factory,
   BriefcaseBusiness,
   CircleDollarSign,
@@ -17,6 +16,7 @@ import {
   AppWindow,
   ShoppingCart,
   Wallet,
+  PackagePlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -49,7 +49,7 @@ const navigationItems = [
   {
     title: "New Production",
     href: "/production/new",
-    icon: FileText,
+    icon: PackagePlus,
   },
   {
     title: "New Sale",

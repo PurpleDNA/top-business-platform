@@ -178,7 +178,13 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
     const newAmountPaid =
       selected.sale?.amount_paid + Number(payload.amountPaid);
 
-    await updateSale(selected.sale?.id, { amount_paid: newAmountPaid });
+    await updateSale(
+      selected.sale?.id,
+      {
+        amount_paid: newAmountPaid,
+      },
+      "payment_form"
+    );
   };
 
   async function handleSubmit(prevState: any, formData: FormData) {

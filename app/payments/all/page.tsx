@@ -280,9 +280,15 @@ export default function AllPaymentsPage() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={payment.sale_id ? "default" : "secondary"}
+                          variant={
+                            payment.type == "on_demand"
+                              ? "default"
+                              : "secondary"
+                          }
                         >
-                          {payment.sale_id ? "On-Demand" : "Distributed"}
+                          {payment.type == "on_demand"
+                            ? "On-Demand"
+                            : "Paid-Out"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground">

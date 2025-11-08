@@ -11,7 +11,7 @@ import { LoaderCircle, UserRoundX } from "lucide-react";
 import z from "zod";
 import { toast } from "sonner";
 import { formatDateTime, getTimeFrame } from "@/app/services/utils";
-import { Production } from "@/app/services/productions";
+import { Production, updateSoldBread } from "@/app/services/productions";
 import { addPayment } from "@/app/services/payments";
 import { getBreadPriceMultipliers } from "@/app/services/bread_price";
 import {
@@ -112,6 +112,12 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
   );
   const [shouldSearch, setShouldSearch] = useState(false);
   const [isOverpayment, setIsOverpayment] = useState(false);
+  const [remainingBread, setRemainingBread] = useState<{
+    [key: string]: number;
+  }>({});
+  const [inventoryErrors, setInventoryErrors] = useState<{
+    [key: string]: string;
+  }>({});
 
   // Fetch multipliers on component mount
   useEffect(() => {
@@ -128,6 +134,24 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
     };
     fetchMultipliers();
   }, []);
+
+  // Calculate and set remaining bread when production changes
+  useEffect(() => {
+    if (selected.production) {
+      const calculatedRemaining: { [key: string]: number } = {};
+      const prod = selected.production;
+
+      // remaining_bread = quantity + old_bread - sold_bread
+      Object.keys(prod.quantity || {}).forEach((color) => {
+        const quantity = prod.quantity[color] || 0;
+        const oldBread = prod.old_bread[color] || 0;
+        const soldBread = prod.sold_bread[color] || 0;
+        calculatedRemaining[color] = quantity + oldBread - soldBread;
+      });
+
+      setRemainingBread(calculatedRemaining);
+    }
+  }, [selected.production]);
 
   // Debounced search effect
   useEffect(() => {
@@ -221,13 +245,25 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
 
       await addPayment({
         customerId: payload.customer_id,
-        amountPaid: Number(payload.amount),
+        amountPaid: Number(payload.amount_paid),
         productionId: null,
         saleId: response.res?.id,
         type: "on_demand",
       });
 
       if (response.status === "SUCCESS") {
+        // Update sold_bread in production
+        await updateSoldBread(payload.production_id, payload.quantity);
+
+        // Update local remaining bread state
+        setRemainingBread((prev) => {
+          const newRemaining = { ...prev };
+          Object.keys(payload.quantity).forEach((color) => {
+            newRemaining[color] = (prev[color] || 0) - payload.quantity[color];
+          });
+          return newRemaining;
+        });
+
         toast("Sale has been created successfully");
 
         // Build dynamic reset objects
@@ -253,6 +289,7 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
         setCustomerSearchValue("");
         setShouldSearch(false);
         setIsOverpayment(false);
+        setInventoryErrors({});
         setSelected((prev) => ({
           ...prev,
           customer: undefined,
@@ -272,6 +309,24 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
   }
 
   function handleQuantityChange(name: string, value: string) {
+    const numValue = Number(value || 0);
+    const available = remainingBread[name] || 0;
+
+    // Check if the input exceeds available inventory
+    if (numValue > available) {
+      setInventoryErrors((prev) => ({
+        ...prev,
+        [name]: `${available} left`,
+      }));
+    } else {
+      // Clear error if input is valid
+      setInventoryErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+
     // update quantity state and compute total from the updated quantities
     setQuantity((prevQty) => {
       const updatedQty = {
@@ -322,11 +377,18 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
         <div className="flex justify-around items-center">
           {Object.keys(multipliers).map((color) => {
             const colorClasses = getColorClasses(color);
+            const hasError = !!inventoryErrors[color];
             return (
               <div key={color} className="flex flex-col items-center gap-1">
                 <span className="text-sm capitalize">{color}</span>
                 <Input
-                  className={`w-[60px] h-[60px] ${colorClasses.bg} text-center no-spinners ${colorClasses.darkBg}`}
+                  className={`w-[60px] h-[60px] ${
+                    colorClasses.bg
+                  } text-center no-spinners ${colorClasses.darkBg} ${
+                    hasError
+                      ? "border-2 border-red-500 ring-2 ring-red-200"
+                      : ""
+                  }`}
                   name={color}
                   type="number"
                   value={quantity[color] || ""}
@@ -334,6 +396,15 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
                     handleQuantityChange(e.target.name, e.target.value)
                   }
                 />
+                {remainingBread[color] !== undefined && (
+                  <span
+                    className={`text-xs text-muted-foreground ${
+                      hasError ? "text-red-500" : ""
+                    }`}
+                  >
+                    Available: {remainingBread[color]}
+                  </span>
+                )}
               </div>
             );
           })}
@@ -437,6 +508,7 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
           id="paid-switch"
           checked={payload.paid}
           onCheckedChange={(isPaid) => {
+            console.log(isPaid);
             setPayload((prev) => ({
               ...prev,
               paid: isPaid,
@@ -497,7 +569,9 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
 
       <Button
         className="bg-primary font-bungee cursor-pointer"
-        disabled={isPending || isOverpayment}
+        disabled={
+          isPending || isOverpayment || Object.keys(inventoryErrors).length > 0
+        }
         type="submit"
       >
         Create{isPending && <LoaderCircle size={15} className="animate-spin" />}

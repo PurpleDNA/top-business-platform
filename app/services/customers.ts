@@ -104,7 +104,7 @@ export const createCustomer = async (payload: Create) => {
         name: payload.name,
         phone_number: payload.phoneNumber,
         has_debt: payload.hasDebt,
-        total_debt: Number(payload.debtAmount) || 0,
+        initial_debt: Number(payload.debtAmount) || 0,
       })
       .select();
 

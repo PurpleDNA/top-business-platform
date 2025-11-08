@@ -1,4 +1,5 @@
 "use client";
+import { formatDate } from "@/app/services/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useState } from "react";
 
@@ -63,7 +64,7 @@ const PaymentHistory = ({
                       key={index}
                     >
                       <td className="px-3 py-3 text-foreground">
-                        {payment?.paid_at}
+                        {formatDate(payment?.paid_at)}
                       </td>
                       <td className="px-3 py-3 text-foreground">
                         ₦{payment?.amount_paid}

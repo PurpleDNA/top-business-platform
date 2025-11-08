@@ -200,9 +200,11 @@ export const createNewSale = async (payload: CreateSale) => {
         outstanding: payload.remaining,
         quantity_bought: payload.quantity,
       })
-      .select();
+      .select("*")
+      .single();
 
     if (error) {
+      console.log(error);
       throw new Error("Create Sale Error");
     }
 
@@ -232,7 +234,11 @@ export const getUnpaidSalesByCustomerId = async (customerId: string) => {
   }
 };
 
-export const updateSale = async (saleId: string, payload: Partial<Sale>) => {
+export const updateSale = async (
+  saleId: string,
+  payload: Partial<Sale>,
+  from: string
+) => {
   try {
     const { data: updatedSale, error: updateSaleError } = await supabase
       .from("sales")
@@ -245,7 +251,7 @@ export const updateSale = async (saleId: string, payload: Partial<Sale>) => {
       throw new Error("update sale error");
     }
 
-    if (payload.amount_paid) {
+    if (payload.amount_paid && !from) {
       const { data: updatedPayment, error: updatePaymentError } = await supabase
         .from("payments")
         .update({ amount_paid: payload.amount_paid })
@@ -253,6 +259,7 @@ export const updateSale = async (saleId: string, payload: Partial<Sale>) => {
         .eq("type", "on_demand")
         .select("*");
 
+      console.log("updatedPayment>>>>>>>>>>>>>>>", updatedPayment);
       if (updatePaymentError) {
         throw new Error("update payment error");
       }
@@ -266,6 +273,7 @@ export const updateSale = async (saleId: string, payload: Partial<Sale>) => {
           productionId: null,
           type: "on_demand",
         });
+        console.log("running no payment found");
         return;
       }
     }
