@@ -1,12 +1,25 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { fetchAllSalesWithDetails, SaleWithDetails } from "@/app/services/sales";
+import { useState, useEffect, useMemo, useRef, Suspense } from "react";
+import {
+  fetchAllSalesWithDetails,
+  SaleWithDetails,
+} from "@/app/services/sales";
 import { fetchAllCustomers, Customer } from "@/app/services/customers";
 import { fetchAllProductions, Production } from "@/app/services/productions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, ArrowLeft, Plus, User, Factory, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import {
+  ShoppingCart,
+  ArrowLeft,
+  Plus,
+  User,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { EditSaleModal } from "@/app/components/sales/EditSaleModal";
@@ -32,6 +45,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { usePathname, useSearchParams } from "next/navigation";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -48,8 +62,8 @@ const formatQuantity = (quantity: { [key: string]: number }) => {
     .join(" | ");
 };
 
-export default function AllSalesPage() {
-  const [sales, setSales] = useState<SaleWithDetails[]>([]);
+function AllSalesContent() {
+  const [onPageCache, setOnPageCache] = useState<SaleWithDetails[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [productions, setProductions] = useState<Production[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>("all");
@@ -61,15 +75,19 @@ export default function AllSalesPage() {
     customerName: string;
   } | null>(null);
 
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const page = Number(searchParams.get("page")) || 1;
+  const fetchedBatches = useRef(new Set<number>());
+
+  // Fetch customers and productions once
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const [salesData, customersData, productionsData] = await Promise.all([
-        fetchAllSalesWithDetails(),
+      const [customersData, productionsData] = await Promise.all([
         fetchAllCustomers(),
         fetchAllProductions(),
       ]);
-      setSales(salesData);
       setCustomers(customersData as Customer[]);
       setProductions(productionsData as Production[]);
       setLoading(false);
@@ -77,19 +95,64 @@ export default function AllSalesPage() {
     fetchData();
   }, []);
 
-  const filteredSales = useMemo(() => {
-    return sales.filter((sale) => {
+  // Fetch sales in batches of 50
+  useEffect(() => {
+    // Pages 1-5 -> batch 1, Pages 6-10 -> batch 2, etc.
+    const batchNumber = Math.floor((page - 1) / 5) + 1;
+
+    const fetchBatch = async () => {
+      const salesData = await fetchAllSalesWithDetails(batchNumber, 50);
+
+      setOnPageCache((prev) => {
+        // Create a copy of the cache
+        const newCache = [...prev];
+        // Calculate where to insert this batch
+        const startIndex = (batchNumber - 1) * 50;
+        // Insert the fetched data at the correct position
+        newCache.splice(startIndex, salesData.length, ...salesData);
+        return newCache;
+      });
+    };
+
+    // Only fetch if we haven't fetched this batch before
+    if (!fetchedBatches.current.has(batchNumber)) {
+      fetchBatch();
+      fetchedBatches.current.add(batchNumber);
+    }
+  }, [page]);
+
+  // Filter the entire cache first (so customers with sales across multiple pages show together)
+  const filteredAllSales = useMemo(() => {
+    return onPageCache.filter((sale) => {
       const customerMatch =
         selectedCustomer === "all" || sale.customer_id === selectedCustomer;
       const productionMatch =
-        selectedProduction === "all" || sale.production_id === selectedProduction;
+        selectedProduction === "all" ||
+        sale.production_id === selectedProduction;
       return customerMatch && productionMatch;
     });
-  }, [sales, selectedCustomer, selectedProduction]);
+  }, [onPageCache, selectedCustomer, selectedProduction]);
 
-  const totalSalesAmount = filteredSales.reduce((sum, sale) => sum + sale.amount, 0);
-  const totalOutstanding = filteredSales.reduce((sum, sale) => sum + sale.outstanding, 0);
-  const paidSalesCount = filteredSales.filter((sale) => sale.paid).length;
+  // Then paginate the filtered results (show 10 per page)
+  const paginatedSales = useMemo(() => {
+    const startIndex = (page - 1) * 10;
+    const endIndex = startIndex + 10;
+    return filteredAllSales.slice(startIndex, endIndex);
+  }, [filteredAllSales, page]);
+
+  // Use paginatedSales as filteredSales for display
+  const filteredSales = paginatedSales;
+
+  // Calculate totals from ALL filtered sales, not just current page
+  const totalSalesAmount = filteredAllSales.reduce(
+    (sum, sale) => sum + sale.amount,
+    0
+  );
+  const totalOutstanding = filteredAllSales.reduce(
+    (sum, sale) => sum + sale.outstanding,
+    0
+  );
+  const paidSalesCount = filteredAllSales.filter((sale) => sale.paid).length;
 
   if (loading) {
     return (
@@ -134,7 +197,10 @@ export default function AllSalesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Filter by Customer</label>
-            <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+            <Select
+              value={selectedCustomer}
+              onValueChange={setSelectedCustomer}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="All Customers" />
               </SelectTrigger>
@@ -151,7 +217,10 @@ export default function AllSalesPage() {
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Filter by Production</label>
-            <Select value={selectedProduction} onValueChange={setSelectedProduction}>
+            <Select
+              value={selectedProduction}
+              onValueChange={setSelectedProduction}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="All Productions" />
               </SelectTrigger>
@@ -194,25 +263,14 @@ export default function AllSalesPage() {
               </div>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Paid / Total Sales
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {paidSalesCount} / {filteredSales.length}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Desktop Table View */}
         <Card className="hidden lg:block">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Sales History</CardTitle>
+            <CardTitle className="text-lg font-semibold">
+              Sales History
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {filteredSales.length === 0 ? (
@@ -245,7 +303,9 @@ export default function AllSalesPage() {
                         {sale.customers?.name || "Unknown"}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {formatDate(sale.productions?.created_at || sale.created_at)}
+                        {formatDate(
+                          sale.productions?.created_at || sale.created_at
+                        )}
                       </TableCell>
                       <TableCell className="font-semibold">
                         ₦{sale.amount.toLocaleString()}
@@ -270,11 +330,18 @@ export default function AllSalesPage() {
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                            >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-background">
+                          <DropdownMenuContent
+                            align="end"
+                            className="bg-background"
+                          >
                             <DropdownMenuItem
                               onClick={() => setEditingSale(sale)}
                             >
@@ -286,7 +353,8 @@ export default function AllSalesPage() {
                               onClick={() =>
                                 setDeletingSale({
                                   id: sale.id,
-                                  customerName: sale.customers?.name || "Unknown",
+                                  customerName:
+                                    sale.customers?.name || "Unknown",
                                 })
                               }
                             >
@@ -356,10 +424,11 @@ export default function AllSalesPage() {
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-background">
-                        <DropdownMenuItem
-                          onClick={() => setEditingSale(sale)}
-                        >
+                      <DropdownMenuContent
+                        align="end"
+                        className="bg-background"
+                      >
+                        <DropdownMenuItem onClick={() => setEditingSale(sale)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
@@ -383,6 +452,42 @@ export default function AllSalesPage() {
             </div>
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {filteredAllSales.length > 0 && (
+          <div className="flex flex-col items-center gap-2 pt-4">
+            <div className="flex items-center gap-2">
+              <Link
+                href={`${pathname}?page=${Math.max(1, page - 1)}`}
+                onClick={(e) => {
+                  if (page === 1) e.preventDefault();
+                }}
+              >
+                <Button variant="outline" size="sm" disabled={page === 1}>
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                </Button>
+              </Link>
+              <span className="text-sm text-muted-foreground">
+                {page} / {Math.ceil(filteredAllSales.length / 10)}
+              </span>
+              <Link
+                href={`${pathname}?page=${page + 1}`}
+                onClick={(e) => {
+                  if (page >= Math.ceil(filteredAllSales.length / 10))
+                    e.preventDefault();
+                }}
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= Math.ceil(filteredAllSales.length / 10)}
+                >
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modals */}
@@ -408,5 +513,19 @@ export default function AllSalesPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function AllSalesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <p className="text-muted-foreground">Loading sales...</p>
+        </div>
+      }
+    >
+      <AllSalesContent />
+    </Suspense>
   );
 }

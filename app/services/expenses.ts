@@ -1,6 +1,6 @@
 "use server";
 import supabase from "@/client";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
 import { checkProductionClosed } from "./productions";
 import { toast } from "sonner";
 
@@ -35,7 +35,7 @@ export const createExpense = async (payload: CreateExpense) => {
       throw new Error("Failed to create expense");
     }
 
-    await revalidateTag("expenses", {});
+    revalidateTag("expenses", {});
 
     return { status: "SUCCESS", error: "", data: expenseData[0] };
   } catch (error) {
@@ -61,7 +61,9 @@ export const updateExpense = async (
     }
 
     // Check if production is closed
-    const closureCheck = await checkProductionClosed(existingExpense.production_id);
+    const closureCheck = await checkProductionClosed(
+      existingExpense.production_id
+    );
     if (closureCheck.isClosed) {
       toast.error("Expense cannot be updated because the production is closed");
       throw new Error(
@@ -80,7 +82,7 @@ export const updateExpense = async (
       throw new Error("Failed to update expense");
     }
 
-    await revalidateTag("expenses", {});
+    revalidateTag("expenses", {});
 
     return { status: "SUCCESS", error: "", data: updatedExpense[0] };
   } catch (error) {
@@ -103,7 +105,9 @@ export const deleteExpense = async (expenseId: string) => {
     }
 
     // Check if production is closed
-    const closureCheck = await checkProductionClosed(existingExpense.production_id);
+    const closureCheck = await checkProductionClosed(
+      existingExpense.production_id
+    );
     if (closureCheck.isClosed) {
       toast.error("Expense cannot be deleted because the production is closed");
       throw new Error(
@@ -111,14 +115,17 @@ export const deleteExpense = async (expenseId: string) => {
       );
     }
 
-    const { error } = await supabase.from("expenses").delete().eq("id", expenseId);
+    const { error } = await supabase
+      .from("expenses")
+      .delete()
+      .eq("id", expenseId);
 
     if (error) {
       console.error("Delete Expense Error:", error);
       throw new Error("Failed to delete expense");
     }
 
-    await revalidateTag("expenses", {});
+    revalidateTag("expenses", {});
 
     return { status: "SUCCESS", error: "" };
   } catch (error) {
@@ -127,24 +134,29 @@ export const deleteExpense = async (expenseId: string) => {
   }
 };
 
-export const getExpensesByProdId = async (
-  productionId: string
-): Promise<Expense[]> => {
-  try {
-    const { data: expenses, error } = await supabase
-      .from("expenses")
-      .select("*")
-      .eq("production_id", productionId)
-      .order("created_at", { ascending: false });
+export const getExpensesByProdId = unstable_cache(
+  async (productionId: string): Promise<Expense[]> => {
+    try {
+      const { data: expenses, error } = await supabase
+        .from("expenses")
+        .select("*")
+        .eq("production_id", productionId)
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching expenses:", error);
+      if (error) {
+        console.error("Error fetching expenses:", error);
+        return [];
+      }
+
+      return expenses || [];
+    } catch (error) {
+      console.error("Unexpected error in getExpensesByProdId:", error);
       return [];
     }
-
-    return expenses || [];
-  } catch (error) {
-    console.error("Unexpected error in getExpensesByProdId:", error);
-    return [];
+  },
+  [],
+  {
+    tags: ["expenses"],
+    revalidate: 1800,
   }
-};
+);

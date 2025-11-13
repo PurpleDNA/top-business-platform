@@ -140,7 +140,7 @@ export const getLast10Productions = unstable_cache(
     }
   },
   [],
-  { tags: ["last10"] }
+  { tags: ["last10"], revalidate: 3600 }
 );
 
 export const getProductionById = async (id: string) => {
@@ -222,7 +222,7 @@ export const fetchAllProductions = unstable_cache(
     }
   },
   [],
-  { tags: ["productions"] }
+  { tags: ["productions"], revalidate: 3600 }
 );
 
 export const getProductionOutstanding = async (productionId: string) => {

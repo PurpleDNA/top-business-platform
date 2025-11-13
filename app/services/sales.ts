@@ -1,7 +1,7 @@
 "use server";
 
 import supabase from "@/client";
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { addPayment } from "./payments";
 import { checkProductionClosed } from "./productions";
 import { toast } from "sonner";
@@ -31,12 +31,14 @@ export interface Sale {
   };
 }
 
-export const fetchAllSales = async () => {
+export const fetchAllSales = async (page: number, limit: number) => {
+  const offset = page * limit;
   try {
     const { data: sales, error } = await supabase
       .from("sales")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
     if (error) {
       console.error("Error fetching sales:", error);
       return [];
@@ -68,12 +70,14 @@ export interface SaleWithDetails {
   };
 }
 
-export const fetchAllSalesWithDetails = async () => {
-  try {
-    const { data: sales, error } = await supabase
-      .from("sales")
-      .select(
-        `
+export const fetchAllSalesWithDetails = unstable_cache(
+  async (page: number, limit: number) => {
+    const offset = (page - 1) * limit;
+    try {
+      const { data: sales, error } = await supabase
+        .from("sales")
+        .select(
+          `
         id,
         amount,
         paid,
@@ -92,20 +96,27 @@ export const fetchAllSalesWithDetails = async () => {
           created_at
         )
       `
-      )
-      .order("created_at", { ascending: false });
+        )
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
 
-    if (error) {
-      console.error("Error fetching sales with details:", error);
+      if (error) {
+        console.error("Error fetching sales with details:", error);
+        return [];
+      }
+
+      return (sales as unknown as SaleWithDetails[]) || [];
+    } catch (error) {
+      console.error("Unexpected error in fetchAllSalesWithDetails:", error);
       return [];
     }
-
-    return (sales as unknown as SaleWithDetails[]) || [];
-  } catch (error) {
-    console.error("Unexpected error in fetchAllSalesWithDetails:", error);
-    return [];
+  },
+  [],
+  {
+    tags: ["sales"],
+    revalidate: 300,
   }
-};
+);
 
 export const fetchSalesByCustomerId = async (customerId: string) => {
   try {
@@ -161,33 +172,40 @@ interface SaleWithCustomer {
   quantity_bought: { [key: string]: number };
 }
 
-export const fetchSalesByProductionId = async (productionId: string) => {
-  try {
-    const { data: sales, error } = await supabase
-      .from("sales")
-      .select(
-        `
+export const fetchSalesByProductionId = unstable_cache(
+  async (productionId: string) => {
+    try {
+      const { data: sales, error } = await supabase
+        .from("sales")
+        .select(
+          `
         *,
         customers!customer_id (
           id,
           name
         )
       `
-      )
-      .eq("production_id", productionId)
-      .order("created_at", { ascending: false });
+        )
+        .eq("production_id", productionId)
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching sales with customer:", error);
+      if (error) {
+        console.error("Error fetching sales with customer:", error);
+        return [];
+      }
+
+      return (sales as unknown as SaleWithCustomer[]) || [];
+    } catch (error) {
+      console.error("Unexpected error in fetchSalesByProductionId:", error);
       return [];
     }
-
-    return (sales as unknown as SaleWithCustomer[]) || [];
-  } catch (error) {
-    console.error("Unexpected error in fetchSalesByProductionId:", error);
-    return [];
+  },
+  [],
+  {
+    tags: ["salesByProd"],
+    revalidate: 300,
   }
-};
+);
 
 export const createNewSale = async (payload: CreateSale) => {
   try {
@@ -209,6 +227,10 @@ export const createNewSale = async (payload: CreateSale) => {
       console.log(error);
       throw new Error("Create Sale Error");
     }
+
+    revalidatePath("/sales/all");
+    revalidateTag("sales", {});
+    revalidateTag("salesByProd", {});
 
     return { status: "SUCCESS", error: "", res: saleData[0] };
   } catch (error) {

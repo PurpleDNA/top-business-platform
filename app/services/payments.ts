@@ -1,6 +1,6 @@
 "use server";
 import supabase from "@/client";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
 import { fetchSaleById, Sale } from "./sales";
 import { checkProductionClosed } from "./productions";
 import { toast } from "sonner";
@@ -61,12 +61,17 @@ export interface PaymentWithDetails {
   } | null;
 }
 
-export async function getAllPaymentsWithDetails() {
-  try {
-    const { data: payments, error } = await supabase
-      .from("payments")
-      .select(
-        `
+export const fetchAllPaymentsWithDetails = unstable_cache(
+  async (page: number, limit: number) => {
+    // page here represents the batch number, not the actual page
+    // Batch 1 (pages 1-5) -> offset 0
+    // Batch 2 (pages 6-10) -> offset 50
+    const offset = (page - 1) * limit;
+    try {
+      const { data: payments, error } = await supabase
+        .from("payments")
+        .select(
+          `
         id,
         amount_paid,
         paid_at,
@@ -83,21 +88,27 @@ export async function getAllPaymentsWithDetails() {
           created_at
         )
       `
-      )
-      .order("paid_at", { ascending: false });
+        )
+        .order("paid_at", { ascending: false })
+        .range(offset, offset + limit - 1);
 
-    if (error) {
-      console.error("Error fetching payments with details:", error);
+      if (error) {
+        console.error("Error fetching payments with details:", error);
+        return [];
+      }
+
+      return (payments as unknown as PaymentWithDetails[]) || [];
+    } catch (error) {
+      console.error("Unexpected error in fetchAllPaymentsWithDetails:", error);
       return [];
     }
-
-    console.log(payments);
-    return (payments as unknown as PaymentWithDetails[]) || [];
-  } catch (error) {
-    console.error("Unexpected error in getAllPaymentsWithDetails:", error);
-    return [];
+  },
+  [],
+  {
+    tags: ["payments"],
+    revalidate: 600,
   }
-}
+);
 
 export async function getPaymentsByCustomerID(
   customerId: string,

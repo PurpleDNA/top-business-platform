@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import {
-  getAllPaymentsWithDetails,
+  fetchAllPaymentsWithDetails,
   PaymentWithDetails,
 } from "@/app/services/payments";
 import { fetchAllCustomers, Customer } from "@/app/services/customers";
@@ -17,7 +17,10 @@ import {
   MoreHorizontal,
   Edit,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { EditPaymentModal } from "@/app/components/payments/EditPaymentModal";
@@ -61,8 +64,8 @@ const formatTime = (dateString: string) => {
   });
 };
 
-export default function AllPaymentsPage() {
-  const [payments, setPayments] = useState<PaymentWithDetails[]>([]);
+function AllPaymentsContent() {
+  const [onPageCache, setOnPageCache] = useState<PaymentWithDetails[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [productions, setProductions] = useState<Production[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>("all");
@@ -76,15 +79,19 @@ export default function AllPaymentsPage() {
     amount: number;
   } | null>(null);
 
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const page = Number(searchParams.get("page")) || 1;
+  const fetchedBatches = useRef(new Set<number>());
+
+  // Fetch customers and productions once
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const [paymentsData, customersData, productionsData] = await Promise.all([
-        getAllPaymentsWithDetails(),
+      const [customersData, productionsData] = await Promise.all([
         fetchAllCustomers(),
         fetchAllProductions(),
       ]);
-      setPayments(paymentsData);
       setCustomers(customersData as Customer[]);
       setProductions(productionsData as Production[]);
       setLoading(false);
@@ -92,8 +99,35 @@ export default function AllPaymentsPage() {
     fetchData();
   }, []);
 
-  const filteredPayments = useMemo(() => {
-    return payments.filter((payment) => {
+  // Fetch payments in batches of 50
+  useEffect(() => {
+    // Pages 1-5 -> batch 1, Pages 6-10 -> batch 2, etc.
+    const batchNumber = Math.floor((page - 1) / 5) + 1;
+
+    const fetchBatch = async () => {
+      const paymentsData = await fetchAllPaymentsWithDetails(batchNumber, 50);
+
+      setOnPageCache((prev) => {
+        // Create a copy of the cache
+        const newCache = [...prev];
+        // Calculate where to insert this batch
+        const startIndex = (batchNumber - 1) * 50;
+        // Insert the fetched data at the correct position
+        newCache.splice(startIndex, paymentsData.length, ...paymentsData);
+        return newCache;
+      });
+    };
+
+    // Only fetch if we haven't fetched this batch before
+    if (!fetchedBatches.current.has(batchNumber)) {
+      fetchBatch();
+      fetchedBatches.current.add(batchNumber);
+    }
+  }, [page]);
+
+  // Filter the entire cache first (so customers with payments across multiple pages show together)
+  const filteredAllPayments = useMemo(() => {
+    return onPageCache.filter((payment) => {
       const customerMatch =
         selectedCustomer === "all" || payment.customer_id === selectedCustomer;
       const productionMatch =
@@ -101,16 +135,27 @@ export default function AllPaymentsPage() {
         payment.production_id === selectedProduction;
       return customerMatch && productionMatch;
     });
-  }, [payments, selectedCustomer, selectedProduction]);
+  }, [onPageCache, selectedCustomer, selectedProduction]);
 
-  const totalPaymentsAmount = filteredPayments.reduce(
+  // Then paginate the filtered results (show 10 per page)
+  const paginatedPayments = useMemo(() => {
+    const startIndex = (page - 1) * 10;
+    const endIndex = startIndex + 10;
+    return filteredAllPayments.slice(startIndex, endIndex);
+  }, [filteredAllPayments, page]);
+
+  // Use paginatedPayments as filteredPayments for display
+  const filteredPayments = paginatedPayments;
+
+  // Calculate totals from ALL filtered payments, not just current page
+  const totalPaymentsAmount = filteredAllPayments.reduce(
     (sum, payment) => sum + payment.amount_paid,
     0
   );
-  const distributedPaymentsCount = filteredPayments.filter(
+  const distributedPaymentsCount = filteredAllPayments.filter(
     (payment) => !payment.sale_id
   ).length;
-  const onDemandPaymentsCount = filteredPayments.filter(
+  const onDemandPaymentsCount = filteredAllPayments.filter(
     (payment) => payment.sale_id
   ).length;
 
@@ -432,6 +477,49 @@ export default function AllPaymentsPage() {
             </div>
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {filteredAllPayments.length > 0 && (
+          <div className="flex flex-col items-center gap-2 pt-4">
+            <div className="text-sm text-muted-foreground">
+              Showing {Math.min((page - 1) * 10 + 1, filteredAllPayments.length)}-
+              {Math.min(page * 10, filteredAllPayments.length)} of{" "}
+              {filteredAllPayments.length} results
+            </div>
+            <div className="flex items-center gap-2">
+              <Link
+                href={`${pathname}?page=${Math.max(1, page - 1)}`}
+                onClick={(e) => {
+                  if (page === 1) e.preventDefault();
+                }}
+              >
+                <Button variant="outline" size="sm" disabled={page === 1}>
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Previous
+                </Button>
+              </Link>
+              <span className="text-sm text-muted-foreground">
+                Page {page} of {Math.ceil(filteredAllPayments.length / 10)}
+              </span>
+              <Link
+                href={`${pathname}?page=${page + 1}`}
+                onClick={(e) => {
+                  if (page >= Math.ceil(filteredAllPayments.length / 10))
+                    e.preventDefault();
+                }}
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= Math.ceil(filteredAllPayments.length / 10)}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modals */}
@@ -457,5 +545,19 @@ export default function AllPaymentsPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function AllPaymentsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <p className="text-muted-foreground">Loading payments...</p>
+        </div>
+      }
+    >
+      <AllPaymentsContent />
+    </Suspense>
   );
 }
