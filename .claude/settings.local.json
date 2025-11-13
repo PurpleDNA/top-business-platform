@@ -12,7 +12,9 @@
       "Bash(dir)",
       "Bash(test:*)",
       "Bash(git merge:*)",
-      "Bash(dir \"c:\\Users\\HP\\Desktop\\PXRPLE\\NextJS\\top-business-platform\\app\\production\\page\\[id]\")"
+      "Bash(dir \"c:\\Users\\HP\\Desktop\\PXRPLE\\NextJS\\top-business-platform\\app\\production\\page\\[id]\")",
+      "Bash(dir:*)",
+      "Bash(nul)"
     ],
     "deny": [],
     "ask": []

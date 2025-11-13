@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2, AlertTriangle } from "lucide-react";
+import { deleteProduction } from "@/app/services/productions";
 
 interface DeleteProductionDialogProps {
   productionId: string;
@@ -36,15 +37,7 @@ export const DeleteProductionDialog = ({
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/productions/delete", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ productionId }),
-      });
-
-      const result = await response.json();
+      const result = await deleteProduction(productionId);
 
       if (result.status === "SUCCESS") {
         toast.success("Production deleted successfully");

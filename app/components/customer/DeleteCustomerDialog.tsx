@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2, AlertTriangle } from "lucide-react";
+import { deleteCustomer } from "@/app/services/customers";
 
 interface DeleteCustomerDialogProps {
   customerId: string;
@@ -36,15 +37,7 @@ export const DeleteCustomerDialog = ({
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/customers/delete", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ customerId }),
-      });
-
-      const result = await response.json();
+      const result = await deleteCustomer(customerId);
 
       if (result.status === "SUCCESS") {
         toast.success("Customer deleted successfully");

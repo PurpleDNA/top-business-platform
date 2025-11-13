@@ -3,6 +3,12 @@
 "use server";
 import supabase from "@/client";
 import { toast } from "sonner";
+import {
+  unstable_cache,
+  updateTag,
+  revalidatePath,
+  revalidateTag,
+} from "next/cache";
 export interface Customer {
   id: string;
   name: string;
@@ -25,38 +31,48 @@ interface Create {
   debtAmount?: string;
 }
 
-export const fetchAllCustomers = async (): Promise<Customer[] | []> => {
-  try {
-    const { data: customers, error } = await supabase
-      .from("customers")
-      .select("*")
-      .order("created_at", { ascending: false });
+export const fetchAllCustomers = unstable_cache(
+  async (): Promise<Customer[] | []> => {
+    try {
+      const { data: customers, error } = await supabase
+        .from("customers")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching customers:", error);
+      if (error) {
+        console.error("Error fetching customers:", error);
+        return [];
+      }
+
+      return customers;
+    } catch (error) {
+      console.error("Unexpected error in fetchAllCustomers:", error);
       return [];
     }
+  },
+  [],
+  { tags: ["customers"] }
+);
 
-    return customers;
-  } catch (error) {
-    console.error("Unexpected error in fetchAllCustomers:", error);
-    return [];
-  }
-};
-
-export const getCustomerCount = async () => {
-  try {
-    const { count, error } = await supabase
-      .from("customers")
-      .select("*", { count: "exact", head: true });
-    if (error) {
-      throw error;
+export const getCustomerCount = unstable_cache(
+  async () => {
+    try {
+      const { count, error } = await supabase
+        .from("customers")
+        .select("*", { count: "exact", head: true });
+      if (error) {
+        throw error;
+      }
+      return count;
+    } catch (error) {
+      console.error("getCustomerCount Error>>>>>", error);
     }
-    return count;
-  } catch (error) {
-    console.error("getCustomerCount Error>>>>>", error);
+  },
+  [],
+  {
+    tags: ["customers_count"],
   }
-};
+);
 
 export const fetchCustomerById = async (id: string) => {
   try {
@@ -109,8 +125,12 @@ export const createCustomer = async (payload: Create) => {
       .select();
 
     if (error) {
-      throw new Error("Create Customer Error");
+      throw new Error(error.message);
     }
+    revalidatePath("customers/all");
+    updateTag("customers");
+    updateTag("customers_count");
+
     return { status: "SUCCESS", error: "", res: customerData[0] };
   } catch (error) {
     console.log("create customer error>>>>>>>>", error);
@@ -152,8 +172,10 @@ export const updateCustomer = async (
       .select();
 
     if (error) {
-      throw new Error("Update Customer Error");
+      throw new Error(error.message);
     }
+    revalidatePath("/customers/all");
+    updateTag("customers");
     return { status: "SUCCESS", error: "", res: UpdatedData };
   } catch (error) {
     console.log("update customer error>>>>>>>>:", error);
@@ -171,6 +193,9 @@ export const deleteCustomer = async (customerId: string) => {
     if (error) {
       throw new Error("Delete Customer Error");
     }
+    revalidatePath("/customers/all");
+    updateTag("customers");
+    updateTag("customers_count");
     return { status: "SUCCESS", error: "" };
   } catch (error) {
     console.log("delete customer error>>>>>>>>:", error);

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { AlertTriangle, Loader2 } from "lucide-react";
+import { deleteSale } from "@/app/services/sales";
 
 interface DeleteSaleDialogProps {
   saleId: string;
@@ -37,17 +38,9 @@ export const DeleteSaleDialog = ({
     setLoading(true);
 
     try {
-      const response = await fetch("/api/sales/delete", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ saleId }),
-      });
+      const result = await deleteSale(saleId);
 
-      const data = await response.json();
-
-      if (response.ok && data.status === "SUCCESS") {
+      if (result.status === "SUCCESS") {
         toast.success("Sale deleted successfully");
         onOpenChange(false);
 
@@ -57,7 +50,7 @@ export const DeleteSaleDialog = ({
           router.refresh();
         }
       } else {
-        toast.error(data.error || "Failed to delete sale");
+        toast.error(result.error || "Failed to delete sale");
       }
     } catch (error) {
       console.error("Error deleting sale:", error);

@@ -1,6 +1,6 @@
 "use server";
 import supabase from "@/client";
-import { revalidateTag } from "next/cache";
+import { revalidatePath, unstable_cache, updateTag } from "next/cache";
 import { getBreadPriceMultipliers } from "./bread_price";
 import { toast } from "sonner";
 
@@ -97,7 +97,10 @@ export const createProduction = async (payload: Create) => {
     if (error) {
       throw new Error("Create Production Error");
     }
-    await revalidateTag("last10", {});
+
+    revalidatePath("/production/all");
+    updateTag("productions");
+    updateTag("last10");
 
     return { status: "SUCCESS", error: "", res: ProductionData[0] };
   } catch (error) {
@@ -121,20 +124,24 @@ export const getLatestProduction = async () => {
   }
 };
 
-export const getLast10Productions = async () => {
-  try {
-    const { data: last10 } = await supabase
-      .from("productions")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(10);
+export const getLast10Productions = unstable_cache(
+  async () => {
+    try {
+      const { data: last10 } = await supabase
+        .from("productions")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(10);
 
-    return last10;
-  } catch (error) {
-    console.log("getLatestProduction Error>>>>>>>", error);
-    throw new Error(String(error));
-  }
-};
+      return last10;
+    } catch (error) {
+      console.log("getLatestProduction Error>>>>>>>", error);
+      throw new Error(String(error));
+    }
+  },
+  [],
+  { tags: ["last10"] }
+);
 
 export const getProductionById = async (id: string) => {
   try {
@@ -195,24 +202,28 @@ export const checkProductionClosed = async (
   }
 };
 
-export const fetchAllProductions = async (): Promise<Production[] | []> => {
-  try {
-    const { data: productions, error } = await supabase
-      .from("productions")
-      .select("*")
-      .order("created_at", { ascending: false });
+export const fetchAllProductions = unstable_cache(
+  async (): Promise<Production[] | []> => {
+    try {
+      const { data: productions, error } = await supabase
+        .from("productions")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching productions:", error);
+      if (error) {
+        console.error("Error fetching productions:", error);
+        return [];
+      }
+
+      return productions;
+    } catch (error) {
+      console.error("Unexpected error in fetchAllProductions:", error);
       return [];
     }
-
-    return productions;
-  } catch (error) {
-    console.error("Unexpected error in fetchAllProductions:", error);
-    return [];
-  }
-};
+  },
+  [],
+  { tags: ["productions"] }
+);
 
 export const getProductionOutstanding = async (productionId: string) => {
   try {
@@ -334,7 +345,7 @@ export const toggleProdStatus = async (productionId: string) => {
       throw new Error("Failed to update production status");
     }
 
-    await revalidateTag("productions", {});
+    updateTag("productions");
 
     return { status: "SUCCESS", data: updatedProduction, newStatus };
   } catch (error) {
@@ -352,9 +363,7 @@ export const updateProduction = async (
     const closureCheck = await checkProductionClosed(productionId);
     if (closureCheck.isClosed) {
       toast.error("Production cannot be updated because it is closed");
-      throw new Error(
-        `Production cannot be updated because it is closed`
-      );
+      throw new Error(`Production cannot be updated because it is closed`);
     }
 
     const { data: updatedProduction, error } = await supabase
@@ -367,8 +376,8 @@ export const updateProduction = async (
       console.error("Error updating production:", error);
       throw new Error("Failed to update production");
     }
-
-    await revalidateTag("productions", {});
+    revalidatePath("/productions/all");
+    updateTag("productions");
 
     return { status: "SUCCESS", data: updatedProduction[0] };
   } catch (error) {
@@ -409,7 +418,7 @@ export const updateSoldBread = async (
       throw new Error("Failed to update sold_bread");
     }
 
-    await revalidateTag("productions", {});
+    updateTag("productions");
 
     return {
       status: "SUCCESS",
@@ -460,9 +469,7 @@ export const deleteProduction = async (productionId: string) => {
     const closureCheck = await checkProductionClosed(productionId);
     if (closureCheck.isClosed) {
       toast.error("Production cannot be deleted because it is closed");
-      throw new Error(
-        `Production cannot be deleted because it is closed`
-      );
+      throw new Error(`Production cannot be deleted because it is closed`);
     }
 
     const { error } = await supabase
@@ -473,8 +480,8 @@ export const deleteProduction = async (productionId: string) => {
     if (error) {
       throw new Error("Delete Production Error");
     }
-
-    await revalidateTag("productions", {});
+    revalidatePath("/productions/all");
+    updateTag("productions");
 
     return { status: "SUCCESS", error: "" };
   } catch (error) {

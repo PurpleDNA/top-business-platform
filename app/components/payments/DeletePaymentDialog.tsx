@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { AlertTriangle, Loader2 } from "lucide-react";
+import { deletePayment } from "@/app/services/payments";
 
 interface DeletePaymentDialogProps {
   paymentId: string;
@@ -39,17 +40,9 @@ export const DeletePaymentDialog = ({
     setLoading(true);
 
     try {
-      const response = await fetch("/api/payments/delete", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ paymentId }),
-      });
+      const result = await deletePayment(paymentId);
 
-      const data = await response.json();
-
-      if (response.ok && data.status === "SUCCESS") {
+      if (result.status === "SUCCESS") {
         toast.success("Payment deleted successfully");
         onOpenChange(false);
 
@@ -59,7 +52,7 @@ export const DeletePaymentDialog = ({
           router.refresh();
         }
       } else {
-        toast.error(data.error || "Failed to delete payment");
+        toast.error(result.error || "Failed to delete payment");
       }
     } catch (error) {
       console.error("Error deleting payment:", error);
