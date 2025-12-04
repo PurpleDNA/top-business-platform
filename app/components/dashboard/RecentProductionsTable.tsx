@@ -33,9 +33,12 @@ const formatDate = (dateString: string) => {
 
 const RecentProductionsTable = ({
   productions,
+  multipliers = { orange: 1200, blue: 1000, green: 650 },
 }: {
   productions: Production[];
+  multipliers?: Record<string, number>;
 }) => {
+  const breadTypes = Object.keys(multipliers);
   const [editingProduction, setEditingProduction] = useState<Production | null>(
     null
   );
@@ -50,9 +53,14 @@ const RecentProductionsTable = ({
         <TableHeader>
           <TableRow>
             <TableHead>Date</TableHead>
-            <TableHead className="hidden lg:table-cell">Orange</TableHead>
-            <TableHead className="hidden lg:table-cell">Blue</TableHead>
-            <TableHead className="hidden lg:table-cell">Green</TableHead>
+            {breadTypes.map((breadType) => (
+              <TableHead
+                key={breadType}
+                className="hidden lg:table-cell capitalize"
+              >
+                {breadType}
+              </TableHead>
+            ))}
             <TableHead>Total</TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
@@ -69,15 +77,15 @@ const RecentProductionsTable = ({
               <TableCell className="font-medium">
                 {formatDate(production.created_at)}
               </TableCell>
-              <TableCell className="text-muted-foreground hidden lg:table-cell">
-                {production.quantity.orange.toLocaleString()}
-              </TableCell>
-              <TableCell className="text-muted-foreground hidden lg:table-cell">
-                {production.quantity.blue.toLocaleString()}
-              </TableCell>
-              <TableCell className="text-muted-foreground hidden lg:table-cell">
-                {production.quantity.green.toLocaleString()}
-              </TableCell>
+              {breadTypes.map((breadType) => (
+                <TableCell
+                  key={breadType}
+                  className="text-muted-foreground hidden lg:table-cell"
+                >
+                  {production.quantity[breadType] +
+                    production.old_bread[breadType] || 0}
+                </TableCell>
+              ))}
               <TableCell className="font-semibold">
                 ₦{production.total.toLocaleString()}
               </TableCell>

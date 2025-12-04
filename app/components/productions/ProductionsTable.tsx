@@ -25,7 +25,14 @@ const formatDate = (dateString: string) => {
   });
 };
 
-const ProductionsTable = ({ productions }: { productions: Production[] }) => {
+const ProductionsTable = ({
+  productions,
+  multipliers = { orange: 1200, blue: 1000, green: 650 }
+}: {
+  productions: Production[];
+  multipliers?: Record<string, number>;
+}) => {
+  const breadTypes = Object.keys(multipliers);
   const [currentPage, setCurrentPage] = useState(1);
   const [editingProduction, setEditingProduction] = useState<Production | null>(null);
   const [deletingProduction, setDeletingProduction] = useState<{
@@ -74,30 +81,20 @@ const ProductionsTable = ({ productions }: { productions: Production[] }) => {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2 flex-wrap">
-                      {production.quantity.orange > 0 && (
-                        <Badge
-                          variant="secondary"
-                          className="bg-orange-200 text-orange-900 dark:bg-orange-500/20 dark:text-orange-400"
-                        >
-                          O: {production.quantity.orange}
-                        </Badge>
-                      )}
-                      {production.quantity.blue > 0 && (
-                        <Badge
-                          variant="secondary"
-                          className="bg-blue-200 text-blue-900 dark:bg-blue-500/20 dark:text-blue-400"
-                        >
-                          B: {production.quantity.blue}
-                        </Badge>
-                      )}
-                      {production.quantity.green > 0 && (
-                        <Badge
-                          variant="secondary"
-                          className="bg-green-200 text-green-900 dark:bg-green-500/20 dark:text-green-400"
-                        >
-                          G: {production.quantity.green}
-                        </Badge>
-                      )}
+                      {breadTypes.map((breadType) => {
+                        const totalQuantity = (production.quantity[breadType] || 0) + (production.old_bread[breadType] || 0);
+                        if (totalQuantity === 0) return null;
+
+                        return (
+                          <Badge
+                            key={breadType}
+                            variant="secondary"
+                            className={`bg-${breadType}-200 text-${breadType}-900 dark:bg-${breadType}-500/20 dark:text-${breadType}-400`}
+                          >
+                            {breadType.charAt(0).toUpperCase()}: {totalQuantity}
+                          </Badge>
+                        );
+                      })}
                     </div>
                   </TableCell>
                   <TableCell className="font-semibold">

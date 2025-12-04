@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${rubik.variable} ${bungee.variable}`}>
       <body
-        className={`${rubik.className} antialiased`}
+        className={`${rubik.className} antialiased overflow-hidden`}
         suppressHydrationWarning={true}
       >
         <AuthProvider>
@@ -46,7 +46,7 @@ export default function RootLayout({
           >
             <DashboardHeader />
             <Toaster />
-            <div className="flex lg:h-screen scrollbar-hide">
+            <div className="flex h-[calc(100vh-4rem)]">
               <Sidebar />
               <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
                 {children}

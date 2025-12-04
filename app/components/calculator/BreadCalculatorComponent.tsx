@@ -11,18 +11,32 @@ interface Props {
 }
 
 export const BreadCalculatorComponent = ({ multipliers }: Props) => {
+  // Color mapping for Tailwind classes (Tailwind requires complete class strings)
+  const colorClasses: Record<string, string> = {
+    orange: "bg-orange-500",
+    blue: "bg-blue-500",
+    green: "bg-green-500",
+    red: "bg-red-500",
+    yellow: "bg-yellow-500",
+    purple: "bg-purple-500",
+    pink: "bg-pink-500",
+    white: "bg-white-500",
+  };
+
   const [quantity, setQuantity] = useState<{
     [key: string]: number | undefined;
-  }>({
-    orange: undefined,
-    blue: undefined,
-    green: undefined,
+  }>(() => {
+    const initialQty: Record<string, number | undefined> = {};
+    Object.keys(multipliers).forEach((color) => {
+      initialQty[color] = undefined;
+    });
+    return initialQty;
   });
 
-  const [total, setTotal] = useState(0);
+  const [total, setTotal] = useState<number>();
 
   const handleQuantityChange = (name: string, value: string) => {
-    const num = Number(value) || 0;
+    const num = value === "" ? undefined : Number(value);
 
     setQuantity((prevQty) => {
       const updatedQty = {
@@ -44,19 +58,13 @@ export const BreadCalculatorComponent = ({ multipliers }: Props) => {
   };
 
   const handleReset = () => {
-    setQuantity({
-      orange: undefined,
-      blue: undefined,
-      green: undefined,
+    const resetQty: Record<string, number | undefined> = {};
+    Object.keys(multipliers).forEach((color) => {
+      resetQty[color] = undefined;
     });
+    setQuantity(resetQty);
     setTotal(0);
   };
-
-  const breadTypes = [
-    { name: "orange", label: "Orange", color: "bg-orange-200 dark:bg-orange-500" },
-    { name: "blue", label: "Blue", color: "bg-blue-200 dark:bg-blue-500" },
-    { name: "green", label: "Green", color: "bg-green-200 dark:bg-green-500" },
-  ];
 
   return (
     <Card>
@@ -69,23 +77,24 @@ export const BreadCalculatorComponent = ({ multipliers }: Props) => {
       <CardContent className="space-y-6">
         {/* Bread Type Inputs */}
         <div className="flex justify-around items-center">
-          {breadTypes.map((bread) => (
-            <div key={bread.name} className="flex flex-col items-center gap-2">
+          {Object.entries(multipliers).map(([color, price]) => (
+            <div key={color} className="flex flex-col items-center gap-2">
               <span className="text-sm text-muted-foreground capitalize">
-                {bread.label}
+                {color}
               </span>
               <Input
-                className={`w-[80px] h-[80px] ${bread.color} text-center no-spinners text-xl font-semibold`}
-                name={bread.name}
+                className={`w-[80px] h-[80px] ${
+                  colorClasses[color] || "bg-gray-500"
+                } text-center no-spinners text-xl font-semibold`}
+                name={color}
                 type="number"
-                value={quantity[bread.name] === undefined ? "" : quantity[bread.name]}
+                value={quantity[color] === undefined ? "" : quantity[color]}
                 onChange={(e) =>
                   handleQuantityChange(e.target.name, e.target.value)
                 }
-                placeholder="0"
               />
               <span className="text-xs text-muted-foreground">
-                ₦{multipliers[bread.name]?.toLocaleString() || 0} each
+                ₦{price?.toLocaleString() || 0} each
               </span>
             </div>
           ))}
@@ -95,14 +104,12 @@ export const BreadCalculatorComponent = ({ multipliers }: Props) => {
         <div className="p-6 rounded-lg bg-primary/10 border-2 border-primary">
           <div className="text-center">
             <p className="text-sm text-muted-foreground mb-2">Total Amount</p>
-            <p className="text-4xl font-bold text-foreground">
-              ₦{total.toLocaleString()}
-            </p>
+            <p className="text-4xl font-bold text-foreground">₦{total}</p>
           </div>
         </div>
 
         {/* Breakdown */}
-        {total > 0 && (
+        {total !== undefined && total > 0 && (
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground">Breakdown:</p>
             {Object.entries(quantity).map(([key, val]) => {
@@ -116,7 +123,9 @@ export const BreadCalculatorComponent = ({ multipliers }: Props) => {
                   <span className="capitalize">
                     {key}: {val} × ₦{multipliers[key]?.toLocaleString()}
                   </span>
-                  <span className="font-medium">₦{amount.toLocaleString()}</span>
+                  <span className="font-medium">
+                    ₦{amount.toLocaleString()}
+                  </span>
                 </div>
               );
             })}
@@ -124,11 +133,7 @@ export const BreadCalculatorComponent = ({ multipliers }: Props) => {
         )}
 
         {/* Reset Button */}
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={handleReset}
-        >
+        <Button variant="outline" className="w-full" onClick={handleReset}>
           <RotateCcw className="h-4 w-4 mr-2" />
           Reset Calculator
         </Button>

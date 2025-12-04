@@ -49,7 +49,7 @@ export const ProductionActions = ({
     return (
       <>
         <div className="flex items-center gap-3">
-          <Link
+          {/* <Link
             href={{
               pathname: "/sale/new",
               query: { production_id: productionId },
@@ -58,11 +58,11 @@ export const ProductionActions = ({
             <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground transition">
               New Sale
             </button>
-          </Link>
+          </Link> */}
           <ExpenseModal productionId={productionId} />
-          <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-muted border border-border hover:bg-accent transition">
+          {/* <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-muted border border-border hover:bg-accent transition">
             Export
-          </button>
+          </button> */}
           <button
             onClick={() => setEditModalOpen(true)}
             className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-muted border border-border hover:bg-accent transition"

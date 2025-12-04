@@ -58,14 +58,13 @@ const ProductionFrom = ({
         [name]: value,
       };
 
-      // sum all quantities × multipliers
-      const total = Object.entries(updatedQuantity).reduce(
-        (sum, [key, val]) => {
-          const multiplier = multipliers[key] || 0;
-          return sum + Number(val || 0) * multiplier;
-        },
-        0
-      );
+      // sum all (quantities + old_bread) × multipliers
+      const total = Object.keys(multipliers).reduce((sum, color) => {
+        const quantity = Number(updatedQuantity[color] || 0);
+        const oldBread = Number(prev.old_bread[color] || 0);
+        const multiplier = multipliers[color] || 0;
+        return sum + (quantity + oldBread) * multiplier;
+      }, 0);
 
       return {
         ...prev,
@@ -76,13 +75,26 @@ const ProductionFrom = ({
   }
 
   function handleOldBreadChange(name: string, value: string) {
-    setPayload((prev) => ({
-      ...prev,
-      old_bread: {
+    setPayload((prev) => {
+      const updatedOldBread = {
         ...prev.old_bread,
         [name]: value,
-      },
-    }));
+      };
+
+      // sum all (quantities + old_bread) × multipliers
+      const total = Object.keys(multipliers).reduce((sum, color) => {
+        const quantity = Number(prev.quantity[color] || 0);
+        const oldBread = Number(updatedOldBread[color] || 0);
+        const multiplier = multipliers[color] || 0;
+        return sum + (quantity + oldBread) * multiplier;
+      }, 0);
+
+      return {
+        ...prev,
+        old_bread: updatedOldBread,
+        total: String(total),
+      };
+    });
   }
 
   async function handleSubmit(prevState: any, formData: FormData) {

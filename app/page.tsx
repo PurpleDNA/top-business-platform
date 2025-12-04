@@ -18,14 +18,28 @@ import { getLatestProduction } from "./services/productions";
 import { ProductionCard } from "./components/dashboard/ProductionCard";
 import { Production } from "./services/productions";
 import { formatDate } from "./services/utils";
+import { getBreadPriceMultipliers } from "./services/bread_price";
 
 const Index = async () => {
   const totalOutstanding = await getTotalBusinessOutstanding();
+  console.log(totalOutstanding);
   const customerCount = await getCustomerCount();
-  const latestProduction = (await getLatestProduction()) as Production[];
+  const latestProduction = (await getLatestProduction()) as Production;
+  const multipliers = await getBreadPriceMultipliers();
+  const breadTypes = Object.keys(multipliers);
+
+  // Dynamically build value object from bread types (quantity + old_bread)
+  const productionValue = breadTypes.reduce((acc, breadType) => {
+    const quantity = latestProduction?.quantity?.[breadType] || 0;
+    const oldBread = latestProduction?.old_bread?.[breadType] || 0;
+    acc[breadType] = String(quantity + oldBread);
+    return acc;
+  }, {} as Record<string, string>);
+
   const date =
-    latestProduction[0]?.created_at &&
-    formatDate(latestProduction[0]?.created_at);
+    (latestProduction?.created_at &&
+      formatDate(latestProduction?.created_at)) ||
+    0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -45,12 +59,9 @@ const Index = async () => {
 
           <ProductionCard
             title={`Latest Production - ${date}`}
-            value={{
-              orange: String(latestProduction[0]?.quantity?.orange),
-              blue: String(latestProduction[0]?.quantity?.blue),
-              green: String(latestProduction[0]?.quantity?.green),
-            }}
-            total={`₦${latestProduction[0]?.total}`}
+            value={productionValue}
+            multipliers={multipliers}
+            total={`₦${latestProduction?.total}`}
             icon={Factory}
             description="Manufacturing output"
           />

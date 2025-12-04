@@ -57,7 +57,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
     );
   }
 
-  const { quantity, total, cash, created_at, old_bread, sold_bread } =
+  const { total, quantity, cash, created_at, old_bread, sold_bread } =
     production;
 
   // Calculate remaining bread: quantity + old_bread - sold_bread
@@ -76,11 +76,6 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const isOldBread = Object.values(old_bread).some((color) => {
     return color != 0;
   });
-
-  console.log(isOldBread);
-
-  // Calculate total value (production total + old_bread value)
-  const totalValue = total + oldBreadTotal;
 
   // Calculate total expenses from expenses table
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -106,7 +101,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const adjustedTotal = totalMoneyIn - totalPaidOutstanding;
 
   // Compare with revenue to see if we're short, excess, or balanced
-  const difference = adjustedTotal - totalValue;
+  const difference = adjustedTotal - total;
 
   const isShort = difference < 0;
   const isExcess = difference > 0;
@@ -309,7 +304,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                       Total Value
                     </dt>
                     <dd className="mt-1 text-sm text-foreground font-semibold">
-                      ₦{totalValue.toLocaleString()}
+                      ₦{total.toLocaleString()}
                     </dd>
                   </div>
                   {/* Cash Collected */}
@@ -439,7 +434,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                       </span>
                     </div>
                     <span className="text-sm font-semibold text-foreground">
-                      -₦{totalValue.toLocaleString()}
+                      -₦{total.toLocaleString()}
                     </span>
                   </div>
 

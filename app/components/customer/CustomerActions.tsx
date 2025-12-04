@@ -43,9 +43,9 @@ export const CustomerActions = ({
     return (
       <>
         <div className="flex items-center gap-3">
-          <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-muted border border-border hover:bg-accent transition">
+          {/* <button className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-muted border border-border hover:bg-accent transition">
             Export
-          </button>
+          </button> */}
           <button
             onClick={() => setEditModalOpen(true)}
             className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-muted border border-border hover:bg-accent transition"

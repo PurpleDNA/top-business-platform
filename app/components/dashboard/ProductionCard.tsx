@@ -4,7 +4,8 @@ import { cn } from "@/lib/utils";
 
 interface ProductionCardProps {
   title: string;
-  value: { orange: string; blue: string; green: string };
+  value: Record<string, string>;
+  multipliers?: Record<string, number>;
   total: string;
   icon: LucideIcon;
   description?: string;
@@ -13,10 +14,13 @@ interface ProductionCardProps {
 export const ProductionCard = ({
   title,
   value,
+  multipliers = { orange: 1200, blue: 1000, green: 650 },
   total,
   icon: Icon,
   description,
 }: ProductionCardProps) => {
+  const breadTypes = Object.keys(multipliers);
+
   return (
     <Card className="hover:shadow-md transition-shadow duration-200">
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -26,16 +30,15 @@ export const ProductionCard = ({
         <Icon className="h-5 w-5 text-primary" />
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-3">
-          <div className="text-2xl font-bold  mb-1 text-orange-500">
-            {value.orange}
-          </div>
-          <div className="text-2xl font-bold  mb-1 text-blue-500">
-            {value.blue}
-          </div>
-          <div className="text-2xl font-bold mb-1 text-green-500">
-            {value.green}
-          </div>
+        <div className={`grid grid-cols-${breadTypes.length}`}>
+          {breadTypes.map((breadType) => (
+            <div
+              key={breadType}
+              className={`text-2xl font-bold mb-1 text-${breadType}-500`}
+            >
+              {value[breadType] || 0}
+            </div>
+          ))}
         </div>
         {total && <p className={cn("text-base")}>Total: {total}</p>}
 

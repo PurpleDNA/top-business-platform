@@ -46,26 +46,26 @@ const navigationItems = [
     href: "/payments/all",
     icon: Wallet,
   },
-  {
-    title: "New Production",
-    href: "/production/new",
-    icon: PackagePlus,
-  },
-  {
-    title: "New Sale",
-    href: "/sale/new",
-    icon: BriefcaseBusiness,
-  },
-  {
-    title: "New Payment",
-    href: "/payment/new",
-    icon: CircleDollarSign,
-  },
-  {
-    title: "New Customer",
-    href: "/customers/new",
-    icon: UserPlus,
-  },
+  // {
+  //   title: "New Production",
+  //   href: "/production/new",
+  //   icon: PackagePlus,
+  // },
+  // {
+  //   title: "New Sale",
+  //   href: "/sale/new",
+  //   icon: BriefcaseBusiness,
+  // },
+  // {
+  //   title: "New Payment",
+  //   href: "/payment/new",
+  //   icon: CircleDollarSign,
+  // },
+  // {
+  //   title: "New Customer",
+  //   href: "/customers/new",
+  //   icon: UserPlus,
+  // },
   {
     title: "New Expense",
     href: "/expenses/new",
@@ -92,7 +92,7 @@ export const Sidebar = () => {
       {/* Sidebar for desktop only */}
       <aside
         className={cn(
-          "hidden md:flex flex-col relative bg-background border-r border-border transition-all duration-300 z-30 h-screen flex-shrink-0 pt-16 md:pt-20",
+          "hidden md:flex flex-col relative bg-background border-r border-border transition-all duration-300 z-30 h-full flex-shrink-0 pt-16 md:pt-20",
           isCollapsed ? "w-16" : "w-64"
         )}
       >

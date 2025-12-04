@@ -87,7 +87,6 @@ export const createProduction = async (payload: Create) => {
       .from("productions")
       .insert({
         quantity: quantity,
-        total: Number(payload.total),
         old_bread: old_bread,
         sold_bread: sold_bread,
         open: true,
@@ -104,7 +103,7 @@ export const createProduction = async (payload: Create) => {
 
     return { status: "SUCCESS", error: "", res: ProductionData[0] };
   } catch (error) {
-    console.log("create production error>>>>>>>>, error");
+    console.log("create production error>>>>>>>>:", error);
     throw new Error(String(error));
   }
 };
@@ -115,7 +114,7 @@ export const getLatestProduction = async () => {
       .from("productions")
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(1);
+      .single();
 
     return lastProduction;
   } catch (error) {
@@ -391,6 +390,7 @@ export const updateSoldBread = async (
   soldQuantity: { orange?: number; blue?: number; green?: number }
 ) => {
   try {
+    console.log("quantity sold>>>>>>>>>>:", soldQuantity);
     const production = await getProductionById(productionId);
 
     if (!production || !production.sold_bread) {
@@ -482,6 +482,8 @@ export const deleteProduction = async (productionId: string) => {
     }
     revalidatePath("/productions/all");
     updateTag("productions");
+    updateTag("sales");
+    updateTag("payments");
 
     return { status: "SUCCESS", error: "" };
   } catch (error) {
