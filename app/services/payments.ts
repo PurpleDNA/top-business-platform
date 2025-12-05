@@ -1,8 +1,6 @@
 "use server";
 import supabase from "@/client";
 import { revalidateTag, unstable_cache } from "next/cache";
-import { fetchSaleById, Sale } from "./sales";
-import { checkProductionClosed } from "./productions";
 import { toast } from "sonner";
 
 export interface Payment {
@@ -138,6 +136,50 @@ export async function getPaymentsByCustomerID(
   }
 }
 
+/**
+ * Atomic payment creation for a specific sale
+ * Replaces: addPayment + updateSale (for sale-specific payments)
+ */
+export const createPaymentForSale = async (
+  customerId: string,
+  saleId: string,
+  amountPaid: number,
+  productionId: string | null = null
+) => {
+  try {
+    // Call atomic RPC function
+    const { data, error } = await supabase.rpc(
+      "create_payment_for_sale_atomic",
+      {
+        p_customer_id: customerId,
+        p_sale_id: saleId,
+        p_amount_paid: amountPaid,
+        p_production_id: productionId,
+      }
+    );
+
+    if (error) {
+      console.error("create_payment_for_sale_atomic error:", error);
+      throw new Error(error.message || "Failed to create payment");
+    }
+
+    // Revalidate all affected caches
+    revalidateTag("payments", {});
+    revalidateTag("sales", {});
+    revalidateTag("customers", {});
+    revalidateTag("productions", {});
+
+    return { status: "SUCCESS", error: "", data };
+  } catch (error) {
+    console.error("Unexpected error in createPaymentForSale:", error);
+    throw new Error("Unexpected Error Occured");
+  }
+};
+
+/**
+ * @deprecated For sale-specific payments, use createPaymentForSale instead
+ * Legacy function kept for backward compatibility
+ */
 export async function addPayment(payload: Create) {
   try {
     const { data: paymentData, error } = await supabase
@@ -189,6 +231,7 @@ export async function distributePaymentAcrossSales(
 ): Promise<{ status: string; error: string; data?: DistributePaymentResult }> {
   try {
     // Call the Supabase function
+    console.log(customerId, amountPaid);
     const { data, error } = await supabase.rpc(
       "distribute_payment_across_sales",
       {
@@ -231,96 +274,19 @@ export const updatePayment = async (
   payload: Partial<Create>
 ) => {
   try {
-    const payment = (await getPaymentById(paymentId)) as unknown as Payment;
-
-    if (!payment) {
-      throw new Error("Payment not found");
-    }
-
-    // Check if production is closed (if payment has a production_id)
-    const closureCheck = await checkProductionClosed(payment.production_id);
-    if (closureCheck.isClosed) {
-      toast.error("Payment cannot be updated because the production is closed");
-      throw new Error(
-        `Payment cannot be updated because the production is closed`
-      );
-    }
-
     if (!payload.amountPaid) {
       throw new Error("Amount paid is required for update");
     }
 
-    const oldAmount = payment.amount_paid;
-    const newAmount = payload.amountPaid;
-
-    // Payment has no sale_id (distributed payment)
-    if (!payment.sale_id) {
-      // Calculate the difference
-      const difference = newAmount - oldAmount;
-
-      if (difference < 0) {
-        const amountToReverse = Math.abs(difference);
-        const { error: reverseError } = await supabase.rpc("reverse_payment", {
-          p_customer_id: payment.customer_id,
-          p_amount_to_reverse: amountToReverse,
-        });
-
-        if (reverseError) {
-          console.error("Reverse Payment Error:", reverseError);
-          throw new Error("Failed to reverse payment: " + reverseError.message);
-        }
-      } else if (difference > 0) {
-        // New value is greater: distribute the additional amount
-        const { error: distributeError } = await supabase.rpc(
-          "distribute_payment_across_sales",
-          {
-            p_customer_id: payment.customer_id,
-            p_amount_paid: difference,
-          }
-        );
-
-        if (distributeError) {
-          console.error("Distribute Payment Error:", distributeError);
-          throw new Error(
-            "Failed to distribute payment: " + distributeError.message
-          );
-        }
-      }
-    } else {
-      // Payment has a sale_id (single sale payment)
-      const difference = newAmount - oldAmount;
-      const sale = (await fetchSaleById(payment.sale_id)) as unknown as Sale;
-
-      if (!sale) {
-        throw new Error("Sale not found");
-      }
-
-      const newSaleAmountPaid = sale.amount_paid + difference;
-      const newOutstanding = sale.amount - newSaleAmountPaid;
-
-      const { error: updateSaleError } = await supabase
-        .from("sales")
-        .update({
-          amount_paid: newSaleAmountPaid,
-          outstanding:
-            payment.type === "on_demand" ? newOutstanding : sale.outstanding,
-        })
-        .eq("id", payment.sale_id);
-
-      if (updateSaleError) {
-        throw new Error("Failed to update sale amount paid");
-      }
-    }
-
-    // Update the payment record
-    const { data: updatedPayment, error } = await supabase
-      .from("payments")
-      .update({ amount_paid: newAmount })
-      .eq("id", paymentId)
-      .select();
+    // Call atomic RPC function
+    const { data, error } = await supabase.rpc("update_payment_atomic", {
+      p_payment_id: Number(paymentId),
+      p_new_amount: payload.amountPaid,
+    });
 
     if (error) {
-      throw new Error("Failed to update payment");
+      console.error("update_payment_atomic error:", error);
+      throw new Error(error.message || "Failed to update payment");
     }
 
     revalidateTag("payments", {});
@@ -328,7 +294,7 @@ export const updatePayment = async (
     revalidateTag("productions", {});
     revalidateTag("sales", {});
 
-    return { status: "SUCCESS", error: "", data: updatedPayment };
+    return { status: "SUCCESS", error: "", data };
   } catch (error) {
     console.log("update payment error >>>>>>", error);
     throw new Error("Unexpected Error Occured");
@@ -337,70 +303,15 @@ export const updatePayment = async (
 
 export const deletePayment = async (paymentId: string) => {
   try {
-    const payment = (await getPaymentById(paymentId)) as unknown as Payment;
-
-    if (!payment) {
-      throw new Error("Payment not found");
-    }
-
-    // Check if production is closed (if payment has a production_id)
-    const closureCheck = await checkProductionClosed(payment.production_id);
-    if (closureCheck.isClosed) {
-      toast.error("Payment cannot be deleted because the production is closed");
-      throw new Error(
-        `Payment cannot be deleted because the production is closed`
-      );
-    }
-
-    // Payment has no sale_id (distributed payment)
-    if (!payment.sale_id) {
-      // Reverse the entire payment using RPC function
-      const { error: reverseError } = await supabase.rpc("reverse_payment", {
-        p_customer_id: payment.customer_id,
-        p_amount_to_reverse: payment.amount_paid,
-      });
-
-      if (reverseError) {
-        console.error("Reverse Payment Error:", reverseError);
-        throw new Error("Failed to reverse payment: " + reverseError.message);
-      }
-    } else {
-      const { data: sale, error: getSaleError } = await supabase
-        .from("sales")
-        .select("amount, amount_paid")
-        .eq("id", payment.sale_id)
-        .single();
-
-      if (getSaleError) {
-        throw new Error("Failed to fetch sale");
-      }
-
-      // Deduct the payment amount from the sale's amount_paid
-      const newAmountPaid = (sale.amount_paid || 0) - payment.amount_paid;
-      const newOutstanding = sale.amount - newAmountPaid;
-
-      // Update the sale
-      const { error: updateSaleError } = await supabase
-        .from("sales")
-        .update({
-          amount_paid: newAmountPaid,
-          outstanding: newOutstanding,
-        })
-        .eq("id", payment.sale_id);
-
-      if (updateSaleError) {
-        throw new Error("Failed to update sale after payment deletion");
-      }
-    }
-
-    // Delete the payment
-    const { error } = await supabase
-      .from("payments")
-      .delete()
-      .eq("id", paymentId);
+    // Call atomic RPC function
+    const { error } = await supabase.rpc("delete_payment_atomic", {
+      p_payment_id: Number(paymentId),
+    });
 
     if (error) {
-      throw new Error("Delete Payment Error");
+      console.error("delete_payment_atomic error:", error);
+      toast.error(error.message || "Failed to delete payment");
+      throw new Error(error.message || "Failed to delete payment");
     }
 
     revalidateTag("payments", {});

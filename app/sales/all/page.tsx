@@ -290,7 +290,7 @@ function AllSalesContent() {
                     <TableHead>Customer</TableHead>
                     <TableHead>Production</TableHead>
                     <TableHead>Amount</TableHead>
-                    <TableHead>Outstanding</TableHead>
+                    <TableHead>Remaining</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
@@ -311,9 +311,9 @@ function AllSalesContent() {
                         ₦{sale.amount.toLocaleString()}
                       </TableCell>
                       <TableCell>
-                        {sale.outstanding > 0 ? (
+                        {sale.remaining > 0 ? (
                           <span className="text-destructive font-medium">
-                            ₦{sale.outstanding.toLocaleString()}
+                            ₦{sale.remaining.toLocaleString()}
                           </span>
                         ) : (
                           <span className="text-muted-foreground">₦0</span>

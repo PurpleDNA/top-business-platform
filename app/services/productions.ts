@@ -100,6 +100,7 @@ export const createProduction = async (payload: Create) => {
     revalidatePath("/production/all");
     updateTag("productions");
     updateTag("last10");
+    updateTag("latestProd");
 
     return { status: "SUCCESS", error: "", res: ProductionData[0] };
   } catch (error) {
@@ -108,20 +109,28 @@ export const createProduction = async (payload: Create) => {
   }
 };
 
-export const getLatestProduction = async () => {
-  try {
-    const { data: lastProduction } = await supabase
-      .from("productions")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .single();
+export const getLatestProduction = unstable_cache(
+  async () => {
+    try {
+      const { data: lastProduction } = await supabase
+        .from("productions")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(1);
 
-    return lastProduction;
-  } catch (error) {
-    console.log("getLatestProduction Error>>>>>>>", error);
-    throw new Error(String(error));
-  }
-};
+      if (lastProduction) {
+        return lastProduction[0];
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.log("getLatestProduction Error>>>>>>>", error);
+      throw new Error(String(error));
+    }
+  },
+  [],
+  { tags: ["latestProd"], revalidate: 3600 }
+);
 
 export const getLast10Productions = unstable_cache(
   async () => {
@@ -134,7 +143,7 @@ export const getLast10Productions = unstable_cache(
 
       return last10;
     } catch (error) {
-      console.log("getLatestProduction Error>>>>>>>", error);
+      console.log("getLast10 Error>>>>>>>", error);
       throw new Error(String(error));
     }
   },
@@ -303,50 +312,28 @@ export const getProductionPaidOutstanding = async (productionId: string) => {
 
 export const toggleProdStatus = async (productionId: string) => {
   try {
-    // First, get the current status
-    const { data: production, error: fetchError } = await supabase
-      .from("productions")
-      .select("open")
-      .eq("id", productionId)
-      .single();
+    // Call atomic RPC function
+    const { data, error } = await supabase.rpc(
+      "toggle_production_status_atomic",
+      {
+        p_production_id: productionId,
+      }
+    );
 
-    if (fetchError) {
-      console.error("Error fetching production status:", fetchError);
-      throw new Error("Failed to fetch production status");
-    }
-
-    // Toggle the open status
-    const newStatus = !production.open;
-
-    // Prepare update payload
-    const updatePayload: {
-      open: boolean;
-      bread_price?: { [key: string]: number };
-    } = {
-      open: newStatus,
-    };
-
-    // If closing the production (newStatus is false), set the current bread prices
-    if (!newStatus) {
-      const currentBreadPrices = await getBreadPriceMultipliers();
-      updatePayload.bread_price = currentBreadPrices;
-    }
-
-    // Update the production with the new status and bread_price if closing
-    const { data: updatedProduction, error: updateError } = await supabase
-      .from("productions")
-      .update(updatePayload)
-      .eq("id", productionId)
-      .select();
-
-    if (updateError) {
-      console.error("Error updating production status:", updateError);
-      throw new Error("Failed to update production status");
+    if (error) {
+      console.error("toggle_production_status_atomic error:", error);
+      throw new Error(error.message || "Failed to toggle production status");
     }
 
     updateTag("productions");
+    updateTag("last10");
+    updateTag("latestProd");
 
-    return { status: "SUCCESS", data: updatedProduction, newStatus };
+    return {
+      status: "SUCCESS",
+      data,
+      newStatus: data.new_status,
+    };
   } catch (error) {
     console.error("Unexpected error in toggleProdStatus:", error);
     return { status: "ERROR", error: String(error) };
@@ -377,6 +364,8 @@ export const updateProduction = async (
     }
     revalidatePath("/productions/all");
     updateTag("productions");
+    updateTag("last10");
+    updateTag("latestProd");
 
     return { status: "SUCCESS", data: updatedProduction[0] };
   } catch (error) {
@@ -385,51 +374,24 @@ export const updateProduction = async (
   }
 };
 
+/**
+ * @deprecated This function is no longer needed.
+ * The database trigger automatically updates sold_bread when sales are created/updated/deleted.
+ * Keeping this function for backward compatibility only.
+ */
 export const updateSoldBread = async (
-  productionId: string,
-  soldQuantity: { orange?: number; blue?: number; green?: number }
+  _productionId: string,
+  _soldQuantity: { orange?: number; blue?: number; green?: number }
 ) => {
-  try {
-    console.log("quantity sold>>>>>>>>>>:", soldQuantity);
-    const production = await getProductionById(productionId);
-
-    if (!production || !production.sold_bread) {
-      console.error("Production not found or has no sold_bread");
-      return { status: "ERROR", error: "Production not found" };
-    }
-
-    const currentSold = production.sold_bread;
-    const newSold: { [key: string]: number } = {};
-
-    Object.keys(currentSold).forEach((key) => {
-      const current = currentSold[key] || 0;
-      const sold = soldQuantity[key as keyof typeof soldQuantity] || 0;
-      newSold[key] = Math.max(0, current + sold);
-    });
-
-    const { data: updatedProduction, error } = await supabase
-      .from("productions")
-      .update({ sold_bread: newSold })
-      .eq("id", productionId)
-      .select();
-
-    if (error) {
-      console.error("Error updating sold_bread:", error);
-      throw new Error("Failed to update sold_bread");
-    }
-
-    updateTag("productions");
-
-    return {
-      status: "SUCCESS",
-      data: updatedProduction[0],
-      previousSold: currentSold,
-      newSold,
-    };
-  } catch (error) {
-    console.error("Unexpected error in updateSoldBread:", error);
-    return { status: "ERROR", error: String(error) };
-  }
+  console.warn(
+    "updateSoldBread is deprecated. The database trigger handles sold_bread updates automatically."
+  );
+  // Return success immediately since the trigger handles this
+  return {
+    status: "SUCCESS",
+    data: null,
+    message: "Handled by database trigger",
+  };
 };
 
 export const calculateBreadTotal = async (
@@ -484,6 +446,8 @@ export const deleteProduction = async (productionId: string) => {
     updateTag("productions");
     updateTag("sales");
     updateTag("payments");
+    updateTag("last10");
+    updateTag("latestProd");
 
     return { status: "SUCCESS", error: "" };
   } catch (error) {

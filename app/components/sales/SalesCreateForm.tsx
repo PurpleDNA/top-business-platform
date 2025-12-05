@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { createNewSale } from "@/app/services/sales";
 import React, { useActionState, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,9 +10,9 @@ import { LoaderCircle, UserRoundX } from "lucide-react";
 import z from "zod";
 import { toast } from "sonner";
 import { formatDateTime, getTimeFrame } from "@/app/services/utils";
-import { Production, updateSoldBread } from "@/app/services/productions";
-import { addPayment } from "@/app/services/payments";
+import { Production } from "@/app/services/productions";
 import { getBreadPriceMultipliers } from "@/app/services/bread_price";
+import { createSaleWithPaymentAndInventory } from "@/app/services/sales";
 import {
   Customer,
   searchCustomers,
@@ -241,61 +240,56 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
 
     try {
       await validate.parseAsync(values);
-      const response = await createNewSale(payload);
 
-      await addPayment({
-        customerId: payload.customer_id,
-        amountPaid: Number(payload.amount_paid),
-        productionId: null,
-        saleId: response.res?.id,
-        type: "on_demand",
-      });
+      // Call atomic service function - handles sale, payment, and inventory in one transaction
+      const response = await createSaleWithPaymentAndInventory(payload);
 
-      if (response.status === "SUCCESS") {
-        // Update sold_bread in production
-        await updateSoldBread(payload.production_id, payload.quantity);
-
-        // Update local remaining bread state
-        setRemainingBread((prev) => {
-          const newRemaining = { ...prev };
-          Object.keys(payload.quantity).forEach((color) => {
-            newRemaining[color] = (prev[color] || 0) - payload.quantity[color];
-          });
-          return newRemaining;
-        });
-
-        toast("Sale has been created successfully");
-
-        // Build dynamic reset objects
-        const resetQuantity: { [key: string]: number } = {};
-        const resetQuantityStrings: { [key: string]: string } = {};
-        Object.keys(multipliers).forEach((color) => {
-          resetQuantity[color] = 0;
-          resetQuantityStrings[color] = "";
-        });
-
-        // Reset form after successful submission
-        setPayload({
-          customer_id: "",
-          production_id: selected?.production?.id || "",
-          amount: "",
-          paid: false,
-          remaining: 0,
-          amount_paid: "",
-          quantity: resetQuantity,
-        });
-        setAmountPaid("");
-        setQuantity(resetQuantityStrings);
-        setCustomerSearchValue("");
-        setShouldSearch(false);
-        setIsOverpayment(false);
-        setInventoryErrors({});
-        setSelected((prev) => ({
-          ...prev,
-          customer: undefined,
-        }));
+      if (response.status !== "SUCCESS") {
+        toast.error("Failed to create sale");
         return response;
       }
+
+      // Update local remaining bread state
+      setRemainingBread((prev) => {
+        const newRemaining = { ...prev };
+        Object.keys(payload.quantity).forEach((color) => {
+          newRemaining[color] = (prev[color] || 0) - payload.quantity[color];
+        });
+        return newRemaining;
+      });
+
+      toast.success("Sale created successfully");
+
+      // Build dynamic reset objects
+      const resetQuantity: { [key: string]: number } = {};
+      const resetQuantityStrings: { [key: string]: string } = {};
+      Object.keys(multipliers).forEach((color) => {
+        resetQuantity[color] = 0;
+        resetQuantityStrings[color] = "";
+      });
+
+      // Reset form after successful submission
+      setPayload({
+        customer_id: "",
+        production_id: selected?.production?.id || "",
+        amount: "",
+        paid: false,
+        remaining: 0,
+        amount_paid: "",
+        quantity: resetQuantity,
+      });
+      setAmountPaid("");
+      setQuantity(resetQuantityStrings);
+      setCustomerSearchValue("");
+      setShouldSearch(false);
+      setIsOverpayment(false);
+      setInventoryErrors({});
+      setSelected((prev) => ({
+        ...prev,
+        customer: undefined,
+      }));
+
+      return response;
     } catch (error) {
       if (error instanceof z.ZodError) {
         const fieldErrors = error.flatten().fieldErrors;
@@ -303,7 +297,9 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
         toast.error("Validation error, check your input");
         return { status: "ERROR", error: fieldErrors };
       } else {
-        toast("Unexpected error occured");
+        toast.error("Unexpected error occurred");
+        console.error("Sale creation error:", error);
+        return { status: "ERROR", error: String(error) };
       }
     }
   }
@@ -494,7 +490,7 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
           </DropdownMenuContent>
         </DropdownMenu>{" "}
         <span className="text-xs text-primary">
-          {getTimeFrame(selected.production?.created_at)}
+          {getTimeFrame(selected.production?.created_at) || ""}
         </span>
         {errors.production_id && (
           <p className="text-red-500 text-xs mt-1">{errors.production_id}</p>

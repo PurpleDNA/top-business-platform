@@ -2,8 +2,6 @@
 
 import supabase from "@/client";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
-import { addPayment } from "./payments";
-import { checkProductionClosed } from "./productions";
 import { toast } from "sonner";
 
 interface CreateSale {
@@ -55,6 +53,7 @@ export interface SaleWithDetails {
   amount: number;
   paid: boolean;
   outstanding: number;
+  remaining: number;
   amount_paid: number;
   created_at: string;
   customer_id: string;
@@ -82,6 +81,7 @@ export const fetchAllSalesWithDetails = unstable_cache(
         amount,
         paid,
         outstanding,
+        remaining,
         amount_paid,
         created_at,
         customer_id,
@@ -207,6 +207,52 @@ export const fetchSalesByProductionId = unstable_cache(
   }
 );
 
+/**
+ * Atomic sale creation with payment and inventory update
+ * Replaces: createNewSale + addPayment + updateSoldBread
+ */
+export const createSaleWithPaymentAndInventory = async (
+  payload: CreateSale
+) => {
+  try {
+    // Call atomic RPC function
+    const { data, error } = await supabase.rpc(
+      "create_sale_with_payment_and_inventory",
+      {
+        p_customer_id: payload.customer_id,
+        p_production_id: payload.production_id,
+        p_amount: Number(payload.amount),
+        p_amount_paid: Number(payload.amount_paid) || 0,
+        p_quantity_bought: payload.quantity || {},
+        p_outstanding: payload.remaining,
+      }
+    );
+
+    if (error) {
+      console.error("create_sale_with_payment_and_inventory error:", error);
+      throw new Error(error.message || "Failed to create sale");
+    }
+
+    // Revalidate all affected caches
+    revalidatePath("/sales/all");
+    revalidateTag("sales", {});
+    revalidateTag("salesByProd", {});
+    revalidateTag("payments", {});
+    revalidateTag("customers", {});
+    revalidateTag("productions", {});
+    revalidateTag("last10", {});
+
+    return { status: "SUCCESS", error: "", data };
+  } catch (error) {
+    console.log("create sale error>>>>>>", error);
+    throw new Error("Unexpected Error Occured");
+  }
+};
+
+/**
+ * @deprecated Use createSaleWithPaymentAndInventory for new code
+ * Legacy function kept for backward compatibility
+ */
 export const createNewSale = async (payload: CreateSale) => {
   try {
     // 1. Create the sale record
@@ -232,7 +278,7 @@ export const createNewSale = async (payload: CreateSale) => {
     revalidateTag("sales", {});
     revalidateTag("salesByProd", {});
 
-    return { status: "SUCCESS", error: "", res: saleData[0] };
+    return { status: "SUCCESS", error: "", res: saleData };
   } catch (error) {
     console.log("create sale error>>>>>>", error);
     throw new Error("Unexpected Error Occured");
@@ -258,77 +304,27 @@ export const getUnpaidSalesByCustomerId = async (customerId: string) => {
   }
 };
 
-export const updateSale = async (
-  saleId: string,
-  payload: Partial<Sale>,
-  from?: string
-) => {
+export const updateSale = async (saleId: string, payload: Partial<Sale>) => {
   try {
-    // First, get the sale to check its production_id
-    const { data: existingSale, error: fetchError } = await supabase
-      .from("sales")
-      .select("production_id")
-      .eq("id", saleId)
-      .single();
+    // Call atomic RPC function
+    const { data, error } = await supabase.rpc("update_sale_atomic", {
+      p_sale_id: saleId,
+      p_amount: payload.amount || null,
+      p_amount_paid: payload.amount_paid || null,
+      p_quantity_bought: payload.quantity_bought || null,
+      p_outstanding: payload.outstanding || null,
+    });
 
-    if (fetchError || !existingSale) {
-      throw new Error("Sale not found");
-    }
-
-    // Check if production is closed
-    const closureCheck = await checkProductionClosed(
-      existingSale.production_id
-    );
-    if (closureCheck.isClosed) {
-      toast.error("Sale cannot be updated because the production is closed");
-      throw new Error(
-        `Sale cannot be updated because the production is closed`
-      );
-    }
-
-    const { data: updatedSale, error: updateSaleError } = await supabase
-      .from("sales")
-      .update(payload)
-      .eq("id", saleId)
-      .select("*")
-      .single();
-
-    if (updateSaleError) {
-      throw new Error("update sale error");
-    }
-
-    if (payload.amount_paid && !from) {
-      const { data: updatedPayment, error: updatePaymentError } = await supabase
-        .from("payments")
-        .update({ amount_paid: payload.amount_paid })
-        .eq("sale_id", saleId)
-        .eq("type", "on_demand")
-        .select("*");
-
-      console.log("updatedPayment>>>>>>>>>>>>>>>", updatedPayment);
-      if (updatePaymentError) {
-        throw new Error("update payment error");
-      }
-
-      if (!updatedPayment || updatedPayment.length === 0) {
-        console.log("No payment found with that sale_id");
-        addPayment({
-          customerId: updatedSale.customer_id,
-          amountPaid: updatedSale.amount_paid,
-          saleId: updatedSale.id,
-          productionId: null,
-          type: "on_demand",
-        });
-        console.log("running no payment found");
-        return;
-      }
+    if (error) {
+      console.error("update_sale_atomic error:", error);
+      throw new Error(error.message || "Failed to update sale");
     }
 
     revalidateTag("sales", {});
     revalidateTag("customers", {});
     revalidateTag("productions", {});
 
-    return { status: "SUCCESS", error: "", data: updatedSale };
+    return { status: "SUCCESS", error: "", data };
   } catch (error) {
     console.log("update sale error >>>>>>", error);
     throw new Error("Unexpected Error Occured");
@@ -337,32 +333,15 @@ export const updateSale = async (
 
 export const deleteSale = async (saleId: string) => {
   try {
-    // First, get the sale to check its production_id
-    const { data: existingSale, error: fetchError } = await supabase
-      .from("sales")
-      .select("production_id")
-      .eq("id", saleId)
-      .single();
-
-    if (fetchError || !existingSale) {
-      throw new Error("Sale not found");
-    }
-
-    // Check if production is closed
-    const closureCheck = await checkProductionClosed(
-      existingSale.production_id
-    );
-    if (closureCheck.isClosed) {
-      toast.error("Sale cannot be deleted because the production is closed");
-      throw new Error(
-        `Sale cannot be deleted because the production is closed`
-      );
-    }
-
-    const { error } = await supabase.from("sales").delete().eq("id", saleId);
+    // Call atomic RPC function
+    const { error } = await supabase.rpc("delete_sale_atomic", {
+      p_sale_id: saleId,
+    });
 
     if (error) {
-      throw new Error("Delete Sale Error");
+      console.error("delete_sale_atomic error:", error);
+      toast.error(error.message || "Failed to delete sale");
+      throw new Error(error.message || "Failed to delete sale");
     }
 
     revalidateTag("sales", {});

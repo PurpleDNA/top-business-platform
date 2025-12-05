@@ -4,14 +4,13 @@
 import {
   Customer,
   searchCustomers,
-  updateCustomer,
 } from "@/app/services/customers";
 import React, { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
 import {
-  addPayment,
   distributePaymentAcrossSales,
+  createPaymentForSale,
 } from "@/app/services/payments";
 import { Input } from "@/components/ui/input";
 import { LoaderCircle, UserRoundX } from "lucide-react";
@@ -23,7 +22,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { updateSale, fetchSaleById } from "@/app/services/sales";
 import { Production } from "@/app/services/productions";
 
 interface Props {
@@ -174,19 +172,6 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
     setShowResults(false);
   };
 
-  const updateSaleStatus = async () => {
-    const newAmountPaid =
-      selected.sale?.amount_paid + Number(payload.amountPaid);
-
-    await updateSale(
-      selected.sale?.id,
-      {
-        amount_paid: newAmountPaid,
-      },
-      "payment_form"
-    );
-  };
-
   async function handleSubmit(prevState: any, formData: FormData) {
     const values = {
       customerId: payload.customerId,
@@ -231,43 +216,46 @@ const PaymentCreateForm = ({ customer, latestProd }: Props) => {
           return result;
         }
       } else {
-        const response_1 = await addPayment({
-          customerId: payload.customerId,
-          amountPaid: Number(payload.amountPaid),
-          saleId: payload?.saleId,
-          productionId: latestProd.open ? latestProd.id : null,
-          type: "after",
-        });
-        await updateSaleStatus();
+        // Call atomic service function - handles payment creation and sale update in one transaction
+        const response = await createPaymentForSale(
+          payload.customerId,
+          payload.saleId,
+          Number(payload.amountPaid),
+          latestProd.open ? latestProd.id : null
+        );
 
-        if (response_1.status === "SUCCESS") {
-          toast("Payment made successfully");
-          // Reset form after successful submission
-          setPayload({
-            customerId: "",
-            amountPaid: "",
-            saleId: "",
-          });
-          setCustomerSearchValue("");
-          setShouldSearch(false);
-          setSelected({
-            customer: undefined,
-            sale: undefined,
-          });
-          return response_1;
+        if (response.status !== "SUCCESS") {
+          toast.error("Failed to create payment");
+          return response;
         }
-        if (response_1.status === "EROOR") {
-          toast("Unexpected Error Occurred");
-        }
+
+        toast.success("Payment made successfully");
+
+        // Reset form after successful submission
+        setPayload({
+          customerId: "",
+          amountPaid: "",
+          saleId: "",
+        });
+        setCustomerSearchValue("");
+        setShouldSearch(false);
+        setSelected({
+          customer: undefined,
+          sale: undefined,
+        });
+
+        return response;
       }
     } catch (error) {
+      console.error("Payment creation error:", error);
       if (error instanceof z.ZodError) {
         const fieldErrors = error.flatten().fieldErrors;
         setErrors(fieldErrors as unknown as Record<string, string>);
         toast.error("Validation error, check your input");
         return { status: "ERROR", error: fieldErrors };
       } else {
-        toast("Unexpected error occured");
+        toast.error("Unexpected error occurred");
+        return { status: "ERROR", error: String(error) };
       }
     }
   }

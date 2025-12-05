@@ -17,11 +17,6 @@ const page = async ({ searchParams }: Props) => {
     customer = await fetchCustomerById(customer_id);
   }
 
-  const latestProdItem =
-    Array.isArray(latestProd) && latestProd.length > 0
-      ? latestProd[0]
-      : undefined;
-
   return (
     <div className="flex justify-center items-center">
       <div className="w-[95%] lg:w-[40%] ">
@@ -29,7 +24,7 @@ const page = async ({ searchParams }: Props) => {
           Create New Payment
         </h1>
         <Suspense>
-          <PaymentCreateForm customer={customer} latestProd={latestProdItem} />
+          <PaymentCreateForm customer={customer} latestProd={latestProd} />
         </Suspense>
       </div>
     </div>
