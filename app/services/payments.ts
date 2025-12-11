@@ -1,6 +1,7 @@
 "use server";
 import supabase from "@/client";
 import { revalidateTag, unstable_cache } from "next/cache";
+import { revalidateAllPaths } from "./revalidate";
 import { toast } from "sonner";
 
 export interface Payment {
@@ -178,6 +179,7 @@ export const createPaymentForSale = async (
     revalidateTag("sales", {});
     revalidateTag("customers", {});
     revalidateTag("productions", {});
+    await revalidateAllPaths();
 
     return { status: "SUCCESS", error: "", data };
   } catch (error) {
@@ -207,6 +209,7 @@ export async function addPayment(payload: Create) {
       console.error("Add Payment Error:", error);
       throw new Error("Database Error Occured");
     }
+    await revalidateAllPaths();
     return { status: "SUCCESS", error: "", res: paymentData[0] };
   } catch (error) {
     console.error("Unexpected error in Add Payment:", error);
@@ -241,12 +244,12 @@ export async function distributePaymentAcrossSales(
 ): Promise<{ status: string; error: string; data?: DistributePaymentResult }> {
   try {
     // Call the Supabase function
-    console.log(customerId, amountPaid);
     const { data, error } = await supabase.rpc(
       "distribute_payment_across_sales",
       {
         p_customer_id: customerId,
         p_amount_paid: amountPaid,
+        p_production_id: productionId,
       }
     );
 
@@ -255,13 +258,7 @@ export async function distributePaymentAcrossSales(
       throw new Error("Failed to distribute payment: " + error.message);
     }
 
-    // Also add to payments table
-    await addPayment({
-      customerId,
-      amountPaid,
-      productionId,
-      type: "after",
-    });
+    await revalidateAllPaths();
 
     return {
       status: "SUCCESS",
@@ -303,11 +300,17 @@ export const updatePayment = async (
     revalidateTag("customers", {});
     revalidateTag("productions", {});
     revalidateTag("sales", {});
+    await revalidateAllPaths();
 
     return { status: "SUCCESS", error: "", data };
   } catch (error) {
-    console.log("update payment error >>>>>>", error);
-    throw new Error("Unexpected Error Occured");
+    const errorMsg = String(error);
+    const parts = errorMsg.split(":");
+    return {
+      status: "ERROR",
+      error: parts[parts.length - 1].trim(),
+      data: null,
+    };
   }
 };
 
@@ -320,7 +323,6 @@ export const deletePayment = async (paymentId: string) => {
 
     if (error) {
       console.error("delete_payment_atomic error:", error);
-      toast.error(error.message || "Failed to delete payment");
       throw new Error(error.message || "Failed to delete payment");
     }
 
@@ -328,10 +330,16 @@ export const deletePayment = async (paymentId: string) => {
     revalidateTag("customers", {});
     revalidateTag("productions", {});
     revalidateTag("sales", {});
+    await revalidateAllPaths();
 
     return { status: "SUCCESS", error: "" };
   } catch (error) {
-    console.log("delete payment error >>>>>>", error);
-    throw new Error("Unexpected Error Occured");
+    const errorMsg = String(error);
+    const parts = errorMsg.split(":");
+    return {
+      status: "ERROR",
+      error: parts[parts.length - 1].trim(),
+      data: null,
+    };
   }
 };

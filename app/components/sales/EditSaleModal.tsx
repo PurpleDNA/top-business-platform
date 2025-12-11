@@ -150,7 +150,11 @@ export const EditSaleModal = ({
       }
     } catch (error) {
       console.error("Error updating sale:", error);
-      toast.error("An unexpected error occurred");
+      if (typeof error === "string") {
+        toast.error(error);
+      } else {
+        toast.error("An unexpected error occurred");
+      }
     } finally {
       setLoading(false);
     }
@@ -208,6 +212,11 @@ export const EditSaleModal = ({
               placeholder="Enter amount paid"
               required
             />
+             {Number(formData.amount_paid) > Number(formData.amount) && (
+              <p className="text-sm text-red-500">
+                Amount paid cannot exceed total amount
+              </p>
+            )}
           </div>
 
           <div className="text-sm text-muted-foreground">
@@ -231,7 +240,13 @@ export const EditSaleModal = ({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button
+              type="submit"
+              disabled={
+                loading ||
+                Number(formData.amount_paid) > Number(formData.amount)
+              }
+            >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
             </Button>

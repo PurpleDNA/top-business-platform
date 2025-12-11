@@ -2,6 +2,7 @@
 import supabase from "@/client";
 import { revalidateTag, unstable_cache } from "next/cache";
 import { checkProductionClosed } from "./productions";
+import { revalidateAllPaths } from "./revalidate";
 import { toast } from "sonner";
 
 export interface Expense {
@@ -36,6 +37,7 @@ export const createExpense = async (payload: CreateExpense) => {
     }
 
     revalidateTag("expenses", {});
+    await revalidateAllPaths();
 
     return { status: "SUCCESS", error: "", data: expenseData[0] };
   } catch (error) {
@@ -83,6 +85,7 @@ export const updateExpense = async (
     }
 
     revalidateTag("expenses", {});
+    await revalidateAllPaths();
 
     return { status: "SUCCESS", error: "", data: updatedExpense[0] };
   } catch (error) {
@@ -126,6 +129,7 @@ export const deleteExpense = async (expenseId: string) => {
     }
 
     revalidateTag("expenses", {});
+    await revalidateAllPaths();
 
     return { status: "SUCCESS", error: "" };
   } catch (error) {

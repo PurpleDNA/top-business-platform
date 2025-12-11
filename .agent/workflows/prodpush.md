@@ -8,7 +8,11 @@ description: This workflow main goal is to psuh editted work to github/productio
 
 1. Turn off Next.js dev server if running to avoid conflicts (optional but recommended for clean build)
 
-2. Stage modified and unstaged files <br>
+2.1 check the git status <br>
+// turbo
+` git status `
+
+2.2 Stage modified and unstaged files <br>
 // turbo
 ` git add .`  
 

@@ -68,7 +68,7 @@ const PurchaseHistory = ({ sales }: { sales: any[] }) => {
                       <td className="px-3 py-3 text-foreground">
                         ₦{sale.amount}
                       </td>
-                      <td className="px-3 py-3 text-foreground">{sale.remaining}</td>
+                      <td className="px-3 py-3 text-foreground">₦{sale.remaining}</td>
                       <td className="px-5 py-3 text-foreground text-right">
                         {sale.paid ? (
                           <Check

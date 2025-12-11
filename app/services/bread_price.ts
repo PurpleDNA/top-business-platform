@@ -1,6 +1,7 @@
 "use server";
 import supabase from "@/client";
 import { revalidateTag, unstable_cache } from "next/cache";
+import { revalidateAllPaths } from "./revalidate";
 
 export interface BreadPrice {
   id: number;
@@ -85,6 +86,7 @@ export const createBreadPrice = async (payload: CreateBreadPrice) => {
     }
 
     revalidateTag("bread_prices", {});
+    await revalidateAllPaths();
 
     return { status: "SUCCESS", error: "", data: breadPriceData[0] };
   } catch (error) {
@@ -113,6 +115,7 @@ export const updateBreadPrice = async (
     }
 
     revalidateTag("bread_prices", {});
+    await revalidateAllPaths();
 
     return { status: "SUCCESS", error: "", data: updatedBreadPrice[0] };
   } catch (error) {
@@ -137,6 +140,7 @@ export const deleteBreadPrice = async (breadPriceId: number) => {
     }
 
     revalidateTag("bread_prices", {});
+    await revalidateAllPaths();
 
     return { status: "SUCCESS", error: "" };
   } catch (error) {

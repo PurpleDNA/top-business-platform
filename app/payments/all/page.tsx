@@ -362,6 +362,12 @@ function AllPaymentsContent() {
                             align="end"
                             className="bg-background"
                           >
+                           <Link href={`/customers/page/${payment.customer_id}`}>
+                                <DropdownMenuItem>
+                                <User className="mr-2 h-4 w-4" />
+                                View Customer
+                                </DropdownMenuItem>
+                            </Link>
                             <DropdownMenuItem
                               onClick={() => setEditingPayment(payment)}
                             >
@@ -449,6 +455,12 @@ function AllPaymentsContent() {
                         align="end"
                         className="bg-background"
                       >
+                         <Link href={`/customers/page/${payment.customer_id}`}>
+                            <DropdownMenuItem>
+                                <User className="mr-2 h-4 w-4" />
+                                View Customer
+                            </DropdownMenuItem>
+                         </Link>
                         <DropdownMenuItem
                           onClick={() => setEditingPayment(payment)}
                         >
@@ -529,6 +541,7 @@ function AllPaymentsContent() {
             id: editingPayment.id,
             amount: editingPayment.amount_paid,
             type: editingPayment.type,
+            sale_id: editingPayment.sale_id,
           }}
           open={!!editingPayment}
           onOpenChange={(open) => !open && setEditingPayment(null)}

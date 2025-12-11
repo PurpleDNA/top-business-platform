@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { updatePayment, Payment } from "@/app/services/payments";
+import { fetchSaleById } from "@/app/services/sales";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,7 @@ interface EditPaymentModalProps {
     id: string;
     amount: number;
     type: string;
+    sale_id?: string | null;
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -34,6 +36,24 @@ export const EditPaymentModal = ({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState(payment.amount.toString());
+  const [remainingAmount, setRemainingAmount] = useState<number | null>(null);
+  const [saleAmount, setSaleAmount] = useState<number | null>(null);
+
+  useEffect(() => {
+    const loadSaleDetails = async () => {
+      if (payment.sale_id) {
+        const sale = await fetchSaleById(payment.sale_id);
+        if (sale) {
+          setRemainingAmount(sale.remaining);
+          setSaleAmount(sale.amount);
+        }
+      }
+    };
+    loadSaleDetails();
+  }, [payment.sale_id]);
+
+  const isOverpaid =
+    saleAmount !== null && Number(amount) > saleAmount;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +93,30 @@ export const EditPaymentModal = ({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
+            { (saleAmount !== null && remainingAmount !== null) && 
+            (<div className="flex justify-between gap-3">
+              <div className="space-y-2">
+
+              <Label htmlFor="sale_amount">Sale Amount</Label>
+              <Input
+                id="sale_amount"
+                type="number"
+                value={saleAmount}
+                readOnly
+                className="bg-muted"
+              />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sale_amount">Remaining Amount</Label>
+                <Input
+                  id="sale_amount"
+                  type="number"
+                  value={remainingAmount}
+                  readOnly
+                  className="bg-muted"
+                />
+              </div>
+            </div>)}
             <Label htmlFor="amount">Payment Amount</Label>
             <Input
               id="amount"
@@ -82,6 +126,11 @@ export const EditPaymentModal = ({
               placeholder="Enter payment amount"
               required
             />
+            {isOverpaid && (
+              <p className="text-sm text-red-500">
+                Payment amount cannot exceed sale amount
+              </p>
+            )}
           </div>
 
           <div className="text-sm text-muted-foreground">
@@ -105,7 +154,10 @@ export const EditPaymentModal = ({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button
+              type="submit"
+              disabled={loading || isOverpaid}
+            >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
             </Button>

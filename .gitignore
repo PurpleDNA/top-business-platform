@@ -41,6 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+.md
 
 # Playwright
 node_modules/

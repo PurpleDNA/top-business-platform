@@ -342,6 +342,12 @@ function AllSalesContent() {
                             align="end"
                             className="bg-background"
                           >
+                            <Link href={`/customers/page/${sale.customer_id}`}>
+                                <DropdownMenuItem>
+                                <User className="mr-2 h-4 w-4" />
+                                View Customer
+                                </DropdownMenuItem>
+                            </Link>
                             <DropdownMenuItem
                               onClick={() => setEditingSale(sale)}
                             >
@@ -428,6 +434,12 @@ function AllSalesContent() {
                         align="end"
                         className="bg-background"
                       >
+                         <Link href={`/customers/page/${sale.customer_id}`}>
+                            <DropdownMenuItem>
+                                <User className="mr-2 h-4 w-4" />
+                                View Customer
+                            </DropdownMenuItem>
+                         </Link>
                         <DropdownMenuItem onClick={() => setEditingSale(sale)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit

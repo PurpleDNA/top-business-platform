@@ -2,6 +2,7 @@
 
 import supabase from "@/client";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { revalidateAllPaths } from "./revalidate";
 import { toast } from "sonner";
 
 interface CreateSale {
@@ -241,6 +242,7 @@ export const createSaleWithPaymentAndInventory = async (
     revalidateTag("customers", {});
     revalidateTag("productions", {});
     revalidateTag("last10", {});
+    await revalidateAllPaths();
 
     return { status: "SUCCESS", error: "", data };
   } catch (error) {
@@ -277,6 +279,7 @@ export const createNewSale = async (payload: CreateSale) => {
     revalidatePath("/sales/all");
     revalidateTag("sales", {});
     revalidateTag("salesByProd", {});
+    await revalidateAllPaths();
 
     return { status: "SUCCESS", error: "", res: saleData };
   } catch (error) {
@@ -316,8 +319,7 @@ export const updateSale = async (saleId: string, payload: Partial<Sale>) => {
     });
 
     if (error) {
-      console.error("update_sale_atomic error:", error);
-      throw new Error(error.message || "Failed to update sale");
+      throw new Error(error.message || "Failed to update");
     }
 
     revalidatePath("sales/all");
@@ -327,11 +329,13 @@ export const updateSale = async (saleId: string, payload: Partial<Sale>) => {
     revalidateTag("customers", {});
     revalidateTag("productions", {});
     revalidateTag("last10", {});
+    await revalidateAllPaths();
 
     return { status: "SUCCESS", error: "", data };
   } catch (error) {
-    console.log("update sale error >>>>>>", error);
-    throw new Error("Unexpected Error Occured");
+    const errorMsg = String(error)
+     const parts = errorMsg.split(":")
+     return {status : "ERROR" , error:parts[parts.length - 1].trim(), data: null}
   }
 };
 
@@ -344,17 +348,18 @@ export const deleteSale = async (saleId: string) => {
 
     if (error) {
       console.error("delete_sale_atomic error:", error);
-      toast.error(error.message || "Failed to delete sale");
       throw new Error(error.message || "Failed to delete sale");
     }
 
     revalidateTag("sales", {});
     revalidateTag("customers", {});
     revalidateTag("productions", {});
+    await revalidateAllPaths();
 
     return { status: "SUCCESS", error: "" };
   } catch (error) {
-    console.log("delete sale error >>>>>>", error);
-    throw new Error("Unexpected Error Occured");
+      const errorMsg = String(error)
+     const parts = errorMsg.split(":")
+     return {status : "ERROR" , error:parts[parts.length - 1].trim(), data: null}
   }
 };

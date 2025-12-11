@@ -137,18 +137,9 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
   // Calculate and set remaining bread when production changes
   useEffect(() => {
     if (selected.production) {
-      const calculatedRemaining: { [key: string]: number } = {};
       const prod = selected.production;
-
-      // remaining_bread = quantity + old_bread - sold_bread
-      Object.keys(prod.quantity || {}).forEach((color) => {
-        const quantity = prod.quantity[color] || 0;
-        const oldBread = prod.old_bread[color] || 0;
-        const soldBread = prod.sold_bread[color] || 0;
-        calculatedRemaining[color] = quantity + oldBread - soldBread;
-      });
-
-      setRemainingBread(calculatedRemaining);
+      // remaining_bread directly from DB
+      setRemainingBread(prod.remaining_bread || {});
     }
   }, [selected.production]);
 

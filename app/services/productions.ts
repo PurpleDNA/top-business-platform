@@ -1,5 +1,6 @@
 "use server";
 import supabase from "@/client";
+import { revalidateAllPaths } from "./revalidate";
 import { revalidatePath, unstable_cache, updateTag } from "next/cache";
 import { getBreadPriceMultipliers } from "./bread_price";
 import { toast } from "sonner";
@@ -35,6 +36,12 @@ export interface Production {
   created_at: string;
   updated_at: string;
   open: boolean;
+  remaining_bread?: {
+    blue: number;
+    green: number;
+    orange: number;
+    [key: string]: number;
+  };
 }
 
 interface Create {
@@ -101,6 +108,7 @@ export const createProduction = async (payload: Create) => {
     updateTag("productions");
     updateTag("last10");
     updateTag("latestProd");
+    await revalidateAllPaths();
 
     return { status: "SUCCESS", error: "", res: ProductionData[0] };
   } catch (error) {
@@ -287,7 +295,7 @@ export const getProductionPaidOutstanding = async (productionId: string) => {
         )
       `
       )
-      .eq("production_id", productionId)
+      .eq("production_id", productionId).eq("type", "after")
       .order("paid_at", { ascending: false });
 
     if (error) {
@@ -328,6 +336,7 @@ export const toggleProdStatus = async (productionId: string) => {
     updateTag("productions");
     updateTag("last10");
     updateTag("latestProd");
+    await revalidateAllPaths();
 
     return {
       status: "SUCCESS",
@@ -366,6 +375,7 @@ export const updateProduction = async (
     updateTag("productions");
     updateTag("last10");
     updateTag("latestProd");
+    await revalidateAllPaths();
 
     return { status: "SUCCESS", data: updatedProduction[0] };
   } catch (error) {
@@ -448,6 +458,7 @@ export const deleteProduction = async (productionId: string) => {
     updateTag("payments");
     updateTag("last10");
     updateTag("latestProd");
+    await revalidateAllPaths();
 
     return { status: "SUCCESS", error: "" };
   } catch (error) {

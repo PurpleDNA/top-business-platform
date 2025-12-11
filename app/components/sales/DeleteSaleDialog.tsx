@@ -50,7 +50,7 @@ export const DeleteSaleDialog = ({
           router.refresh();
         }
       } else {
-        toast.error(result.error || "Failed to delete sale");
+        toast.error(result?.error || "Failed to delete sale");
       }
     } catch (error) {
       console.error("Error deleting sale:", error);

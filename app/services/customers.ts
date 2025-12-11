@@ -9,6 +9,7 @@ import {
   revalidatePath,
   revalidateTag,
 } from "next/cache";
+import { revalidateAllPaths } from "./revalidate";
 export interface Customer {
   id: string;
   name: string;
@@ -119,7 +120,6 @@ export const createCustomer = async (payload: Create) => {
       .insert({
         name: payload.name,
         phone_number: payload.phoneNumber,
-        has_debt: payload.hasDebt,
         initial_debt: Number(payload.debtAmount) || 0,
       })
       .select();
@@ -130,6 +130,7 @@ export const createCustomer = async (payload: Create) => {
     revalidatePath("customers/all");
     updateTag("customers");
     updateTag("customers_count");
+    await revalidateAllPaths();
 
     return { status: "SUCCESS", error: "", res: customerData[0] };
   } catch (error) {
@@ -176,6 +177,7 @@ export const updateCustomer = async (
     }
     revalidatePath("/customers/all");
     updateTag("customers");
+    await revalidateAllPaths();
     return { status: "SUCCESS", error: "", res: UpdatedData };
   } catch (error) {
     console.log("update customer error>>>>>>>>:", error);
@@ -196,6 +198,7 @@ export const deleteCustomer = async (customerId: string) => {
     revalidatePath("/customers/all");
     updateTag("customers");
     updateTag("customers_count");
+    await revalidateAllPaths();
     return { status: "SUCCESS", error: "" };
   } catch (error) {
     console.log("delete customer error>>>>>>>>:", error);

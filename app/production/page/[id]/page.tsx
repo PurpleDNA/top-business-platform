@@ -60,14 +60,8 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { total, quantity, cash, created_at, old_bread, sold_bread } =
     production;
 
-  // Calculate remaining bread: quantity + old_bread - sold_bread
-  const remaining_bread: { [key: string]: number } = {};
-  Object.keys(quantity).forEach((color) => {
-    remaining_bread[color] =
-      (quantity[color] || 0) +
-      (old_bread[color] || 0) -
-      (sold_bread[color] || 0);
-  });
+  // Use remaining_bread from database
+  const remaining_bread = production.remaining_bread || {};
 
   // Calculate old_bread & remaining_bread monetary value
   const oldBreadTotal = await calculateBreadTotal(old_bread);
