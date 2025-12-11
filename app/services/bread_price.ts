@@ -198,6 +198,6 @@ export const getBreadPriceMultipliers = unstable_cache(
   ["bread-price-multipliers"],
   {
     tags: ["bread_prices"],
-    revalidate: false, // Cache indefinitely until manually revalidated
+    revalidate: 60 * 60 * 24,
   }
 );

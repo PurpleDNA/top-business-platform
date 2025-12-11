@@ -29,24 +29,20 @@ export interface Sale {
   };
 }
 
-export const fetchAllSales = async (page: number, limit: number) => {
-  const offset = page * limit;
-  try {
-    const { data: sales, error } = await supabase
-      .from("sales")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
-    if (error) {
-      console.error("Error fetching sales:", error);
-      return [];
-    }
-    return sales;
-  } catch (error) {
-    console.error("Unexpected error in fetchAllSales:", error);
-    return [];
-  }
-};
+interface SaleWithCustomer {
+  id: string;
+  amount: number;
+  paid: boolean;
+  outstanding: number;
+  created_at: string;
+  customer_id: string;
+  production_id: string;
+  customers: {
+    id: string;
+    name: string;
+  };
+  quantity_bought: { [key: string]: number };
+}
 
 export interface SaleWithDetails {
   id: string;
@@ -68,6 +64,25 @@ export interface SaleWithDetails {
     created_at: string;
   };
 }
+
+export const fetchAllSales = async (page: number, limit: number) => {
+  const offset = page * limit;
+  try {
+    const { data: sales, error } = await supabase
+      .from("sales")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+    if (error) {
+      console.error("Error fetching sales:", error);
+      return [];
+    }
+    return sales;
+  } catch (error) {
+    console.error("Unexpected error in fetchAllSales:", error);
+    return [];
+  }
+};
 
 export const fetchAllSalesWithDetails = unstable_cache(
   async (page: number, limit: number) => {
@@ -156,21 +171,6 @@ export const fetchSaleById = async (saleId: string) => {
     return [];
   }
 };
-
-interface SaleWithCustomer {
-  id: string;
-  amount: number;
-  paid: boolean;
-  outstanding: number;
-  created_at: string;
-  customer_id: string;
-  production_id: string;
-  customers: {
-    id: string;
-    name: string;
-  };
-  quantity_bought: { [key: string]: number };
-}
 
 export const fetchSalesByProductionId = unstable_cache(
   async (productionId: string) => {
@@ -320,9 +320,13 @@ export const updateSale = async (saleId: string, payload: Partial<Sale>) => {
       throw new Error(error.message || "Failed to update sale");
     }
 
+    revalidatePath("sales/all");
     revalidateTag("sales", {});
+    revalidateTag("salesByProd", {});
+    revalidateTag("payments", {});
     revalidateTag("customers", {});
     revalidateTag("productions", {});
+    revalidateTag("last10", {});
 
     return { status: "SUCCESS", error: "", data };
   } catch (error) {

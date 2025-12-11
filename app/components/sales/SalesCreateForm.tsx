@@ -375,6 +375,7 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
             const colorClasses = getColorClasses(color);
             const hasError = !!inventoryErrors[color];
             return (
+              remainingBread[color] !== undefined && (
               <div key={color} className="flex flex-col items-center gap-1">
                 <span className="text-sm capitalize">{color}</span>
                 <Input
@@ -392,7 +393,6 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
                     handleQuantityChange(e.target.name, e.target.value)
                   }
                 />
-                {remainingBread[color] !== undefined && (
                   <span
                     className={`text-xs text-muted-foreground ${
                       hasError ? "text-red-500" : ""
@@ -400,8 +400,8 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
                   >
                     Available: {remainingBread[color]}
                   </span>
-                )}
               </div>
+              )
             );
           })}
         </div>

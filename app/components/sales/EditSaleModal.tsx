@@ -1,8 +1,7 @@
-"use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { updateSale, Sale } from "@/app/services/sales";
+import { getBreadPriceMultipliers } from "@/app/services/bread_price";
 import {
   Dialog,
   DialogContent,
@@ -22,10 +21,36 @@ interface EditSaleModalProps {
     amount: number;
     amount_paid: number;
     outstanding: number;
+    quantity_bought: { [key: string]: number };
   };
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+// Helper function to get color-specific CSS classes
+const getColorClasses = (color: string) => {
+  const colorMap: Record<string, { bg: string; darkBg: string }> = {
+    orange: {
+      bg: "bg-orange-200",
+      darkBg: "dark:bg-orange-500",
+    },
+    blue: {
+      bg: "bg-blue-200",
+      darkBg: "dark:bg-blue-500",
+    },
+    green: {
+      bg: "bg-green-200",
+      darkBg: "dark:bg-green-500",
+    },
+  };
+
+  return (
+    colorMap[color.toLowerCase()] || {
+      bg: "bg-gray-200",
+      darkBg: "dark:bg-gray-500",
+    }
+  );
+};
 
 export const EditSaleModal = ({
   sale,
@@ -34,10 +59,46 @@ export const EditSaleModal = ({
 }: EditSaleModalProps) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [multipliers, setMultipliers] = useState<Record<string, number>>({});
   const [formData, setFormData] = useState({
     amount: sale.amount.toString(),
     amount_paid: sale.amount_paid.toString(),
   });
+  const [quantity, setQuantity] = useState<{ [key: string]: string }>({});
+
+  // Fetch multipliers on mount and initialize quantity
+  useEffect(() => {
+    const fetchMultipliers = async () => {
+      const prices = await getBreadPriceMultipliers();
+      setMultipliers(prices);
+
+      // Initialize quantity from sale data or default to 0 for available colors
+      const initialQuantity: { [key: string]: string } = {};
+      Object.keys(prices).forEach((color) => {
+        initialQuantity[color] = (sale.quantity_bought?.[color] || 0).toString();
+      });
+      setQuantity(initialQuantity);
+    };
+    fetchMultipliers();
+  }, [sale]);
+
+    const handleQuantityChange = (name: string, value: string) => {
+    // Update quantity state
+    const updatedQty = {
+      ...quantity,
+      [name]: value,
+    };
+    setQuantity(updatedQty);
+
+    // Calculate new total amount
+    let total = 0;
+    Object.entries(updatedQty).forEach(([key, val]) => {
+      const multiplier = multipliers[key] || 0;
+      total += Number(val || 0) * multiplier;
+    });
+
+    setFormData((prev) => ({ ...prev, amount: total.toString() }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,11 +126,17 @@ export const EditSaleModal = ({
         return;
       }
 
+      const quantityPayload: { [key: string]: number } = {};
+      Object.entries(quantity).forEach(([key, value]) => {
+          quantityPayload[key] = Number(value);
+      });
+
       const payload: Partial<Sale> = {
         amount,
         amount_paid: amountPaid,
         outstanding: amount - amountPaid,
         paid: amountPaid >= amount,
+        quantity_bought: quantityPayload,
       };
 
       const result = await updateSale(sale.id, payload);
@@ -97,16 +164,35 @@ export const EditSaleModal = ({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
+            <div className="flex justify-around items-center">
+              {Object.keys(multipliers).map((color) => {
+                const colorClasses = getColorClasses(color);
+                return (
+                  <div key={color} className="flex flex-col items-center gap-1">
+                    <span className="text-sm capitalize">{color}</span>
+                    <Input
+                      className={`w-[60px] h-[60px] ${colorClasses.bg} text-center no-spinners ${colorClasses.darkBg}`}
+                      name={color}
+                      type="number"
+                      value={quantity[color] || ""}
+                      onChange={(e) =>
+                        handleQuantityChange(e.target.name, e.target.value)
+                      }
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="amount">Total Amount</Label>
             <Input
               id="amount"
               type="number"
               value={formData.amount}
-              onChange={(e) =>
-                setFormData({ ...formData, amount: e.target.value })
-              }
-              placeholder="Enter total amount"
-              required
+              readOnly
+              className="bg-muted"
             />
           </div>
 

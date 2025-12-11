@@ -30,11 +30,11 @@ export const ProductionCard = ({
         <Icon className="h-5 w-5 text-primary" />
       </CardHeader>
       <CardContent>
-        <div className={`grid grid-cols-${breadTypes.length}`}>
+        <div className={`grid grid-cols-3`}>
           {breadTypes.map((breadType) => (
             <div
               key={breadType}
-              className={`text-2xl font-bold mb-1 text-${breadType}-500`}
+              className={`text-2xl font-bold mb-1 text-${breadType}-500 ${Number(value[breadType]) > 0 ? "" : "hidden"}`}
             >
               {value[breadType] || 0}
             </div>

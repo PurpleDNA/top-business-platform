@@ -157,6 +157,6 @@ export const getExpensesByProdId = unstable_cache(
   [],
   {
     tags: ["expenses"],
-    revalidate: 1800,
+    revalidate: 60 * 60,
   }
 );

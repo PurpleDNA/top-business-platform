@@ -498,6 +498,7 @@ function AllSalesContent() {
             amount: editingSale.amount,
             amount_paid: editingSale.amount_paid,
             outstanding: editingSale.outstanding,
+            quantity_bought: editingSale.quantity_bought,
           }}
           open={!!editingSale}
           onOpenChange={(open) => !open && setEditingSale(null)}

@@ -27,10 +27,10 @@ const formatDate = (dateString: string) => {
 
 const ProductionsTable = ({
   productions,
-  multipliers = { orange: 1200, blue: 1000, green: 650 }
+  multipliers
 }: {
   productions: Production[];
-  multipliers?: Record<string, number>;
+  multipliers: Record<string, number>;
 }) => {
   const breadTypes = Object.keys(multipliers);
   const [currentPage, setCurrentPage] = useState(1);
