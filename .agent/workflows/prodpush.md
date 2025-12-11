@@ -6,16 +6,24 @@ description: This workflow main goal is to psuh editted work to github/productio
 
 #### Steps
 
-1. stage modified and unstaged files <br>
+1. Turn off Next.js dev server if running to avoid conflicts (optional but recommended for clean build)
+
+2. Stage modified and unstaged files <br>
+// turbo
 ` git add .`  
 
-2. commit changes with a description suitable for the changes"<br>
+3. Commit changes with a description suitable for the changes"<br>
+// turbo
 ` git commit -m "suitable description" `  
 
-3. run the build command to check for errors that'll fail at build. <br>
+4. Pull any remote changes to avoid conflicts <br>
+` git pull --rebase `
+
+5. Run the build command to check for errors that'll fail at build. <br>
+// turbo
  ` npm run build `
 
-4. if error, make implementation plan about error fix.
+6. If error, make implementation plan about error fix.
 
-5. if no errors, push to prod <br>
+7. If no errors, push to prod <br>
   ` git push `

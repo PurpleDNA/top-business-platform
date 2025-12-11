@@ -13,6 +13,16 @@ export interface Payment {
   type: string;
 }
 
+export interface PaymentRow {
+  id: number;
+  paid_at: string;
+  customer_id: string;
+  amount_paid: number | null;
+  production_id: string | null;
+  sale_id: string | null;
+  type: "on_demand" | "after";
+}
+
 export interface Create {
   customerId: string;
   amountPaid: number;
