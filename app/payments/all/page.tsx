@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import {
-  fetchAllPaymentsWithDetails,
-  PaymentWithDetails,
+  fetchFilteredPayments,
+  FilteredPayment,
 } from "@/app/services/payments";
 import { fetchAllCustomers, Customer } from "@/app/services/customers";
 import { fetchAllProductions, Production } from "@/app/services/productions";
@@ -20,7 +20,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { EditPaymentModal } from "@/app/components/payments/EditPaymentModal";
@@ -46,6 +46,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -65,29 +66,40 @@ const formatTime = (dateString: string) => {
 };
 
 function AllPaymentsContent() {
-  const [onPageCache, setOnPageCache] = useState<PaymentWithDetails[]>([]);
+  const [filters, setFilters] = useState<{
+    customerId: string | null;
+    productionId: string | null;
+  }>({
+    customerId: null,
+    productionId: null,
+  });
+
+  const [cache, setCache] = useState<Record<string, (FilteredPayment | undefined)[]>>({});
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [productions, setProductions] = useState<Production[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<string>("all");
-  const [selectedProduction, setSelectedProduction] = useState<string>("all");
   const [loading, setLoading] = useState(true);
+  
   const [editingPayment, setEditingPayment] =
-    useState<PaymentWithDetails | null>(null);
+    useState<FilteredPayment | null>(null);
   const [deletingPayment, setDeletingPayment] = useState<{
-    id: string;
+    id: number;
     customerName: string;
     amount: number;
   } | null>(null);
 
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const page = Number(searchParams.get("page")) || 1;
-  const fetchedBatches = useRef(new Set<number>());
+  
+  const fetchedBatches = useRef<Map<string, Set<number>>>(new Map());
+
+  // Generate unique key for current filter state
+  const filterKey = `${filters.customerId || "all"}-${filters.productionId || "all"}`;
 
   // Fetch customers and productions once
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
       const [customersData, productionsData] = await Promise.all([
         fetchAllCustomers(),
         fetchAllProductions(),
@@ -99,73 +111,80 @@ function AllPaymentsContent() {
     fetchData();
   }, []);
 
-  // Fetch payments in batches of 50
+  // Fetch payments in batches
   useEffect(() => {
-    // Pages 1-5 -> batch 1, Pages 6-10 -> batch 2, etc.
     const batchNumber = Math.floor((page - 1) / 5) + 1;
 
-    const fetchBatch = async () => {
-      const paymentsData = await fetchAllPaymentsWithDetails(batchNumber, 50);
+    // Get or create batch tracker for this filter
+    if (!fetchedBatches.current.has(filterKey)) {
+      fetchedBatches.current.set(filterKey, new Set());
+    }
+    const batchSet = fetchedBatches.current.get(filterKey)!;
 
-      setOnPageCache((prev) => {
-        // Create a copy of the cache
-        const newCache = [...prev];
-        // Calculate where to insert this batch
+    // Skip if already fetched
+    if (batchSet.has(batchNumber)) return;
+
+    const fetchBatch = async () => {
+      setLoading(true);
+      const paymentsData = await fetchFilteredPayments(
+        batchNumber,
+        50,
+        filters.customerId,
+        filters.productionId
+      );
+
+      setCache((prev) => {
+        const existingData = prev[filterKey] || [];
         const startIndex = (batchNumber - 1) * 50;
-        // Insert the fetched data at the correct position
-        newCache.splice(startIndex, paymentsData.length, ...paymentsData);
-        return newCache;
+        const newData = [...existingData];
+        // Ensure array is large enough before splicing
+        while (newData.length < startIndex) {
+            newData.push(undefined); 
+        }
+        newData.splice(startIndex, paymentsData.length, ...paymentsData);
+        return { ...prev, [filterKey]: newData };
       });
+
+      batchSet.add(batchNumber);
+      setLoading(false);
     };
 
-    // Only fetch if we haven't fetched this batch before
-    if (!fetchedBatches.current.has(batchNumber)) {
-      fetchBatch();
-      fetchedBatches.current.add(batchNumber);
-    }
-  }, [page]);
+    fetchBatch();
+  }, [page, filterKey, filters.customerId, filters.productionId]);
 
-  // Filter the entire cache first (so customers with payments across multiple pages show together)
-  const filteredAllPayments = useMemo(() => {
-    return onPageCache.filter((payment) => {
-      const customerMatch =
-        selectedCustomer === "all" || payment.customer_id === selectedCustomer;
-      const productionMatch =
-        selectedProduction === "all" ||
-        payment.production_id === selectedProduction;
-      return customerMatch && productionMatch;
-    });
-  }, [onPageCache, selectedCustomer, selectedProduction]);
+  const handleFilterChange = (type: "customer" | "production", value: string) => {
+    const newFilters = {
+      ...filters,
+      [type === "customer" ? "customerId" : "productionId"]:
+        value === "all" ? null : value,
+    };
+    setFilters(newFilters);
+    router.push(`${pathname}?page=1`);
+  };
 
-  // Then paginate the filtered results (show 10 per page)
-  const paginatedPayments = useMemo(() => {
-    const startIndex = (page - 1) * 10;
-    const endIndex = startIndex + 10;
-    return filteredAllPayments.slice(startIndex, endIndex);
-  }, [filteredAllPayments, page]);
+  // Get data for current filter
+  const currentFilterData = cache[filterKey] || [];
+  
+  const startIndex = (page - 1) * 10;
+  const endIndex = startIndex + 10;
+  const paginatedPayments = currentFilterData.slice(startIndex, endIndex).filter(Boolean) as FilteredPayment[];
 
-  // Use paginatedPayments as filteredPayments for display
-  const filteredPayments = paginatedPayments;
-
-  // Calculate totals from ALL filtered payments, not just current page
-  const totalPaymentsAmount = filteredAllPayments.reduce(
-    (sum, payment) => sum + payment.amount_paid,
+  // Calculate totals from LOADED filtered payments
+  const totalPaymentsAmount = currentFilterData.filter(Boolean).reduce(
+    (sum, payment) => sum + (payment?.amount_paid || 0),
     0
   );
-  const distributedPaymentsCount = filteredAllPayments.filter(
-    (payment) => !payment.sale_id
+  // Note: distributed/on-demand counts are only for loaded data
+  const distributedPaymentsCount = currentFilterData.filter(Boolean).filter(
+    (payment) => !payment?.sale_id
   ).length;
-  const onDemandPaymentsCount = filteredAllPayments.filter(
-    (payment) => payment.sale_id
+  const onDemandPaymentsCount = currentFilterData.filter(Boolean).filter(
+    (payment) => payment?.sale_id
   ).length;
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Loading payments...</p>
-      </div>
-    );
-  }
+  // We only block full page render if we have no loaded data for this filter AND we are loading it for the first time
+  // Wait, actually with the skeleton approach we never want to block the full page after the initial static data (customers/productions) is loaded.
+  // The skeleton logic handles the data loading visualization.
 
   return (
     <div className="min-h-screen bg-background p-4">
@@ -183,9 +202,6 @@ function AllPaymentsContent() {
                 All Payments
               </h1>
             </div>
-            <p className="text-muted-foreground lg:hidden">
-              Total: {filteredPayments.length} payments
-            </p>
           </div>
           <Link href="/payment/new">
             <Button className="bg-primary hidden lg:flex">
@@ -203,8 +219,8 @@ function AllPaymentsContent() {
           <div className="space-y-2">
             <label className="text-sm font-medium">Filter by Customer</label>
             <Select
-              value={selectedCustomer}
-              onValueChange={setSelectedCustomer}
+              value={filters.customerId || "all"}
+              onValueChange={(val) => handleFilterChange("customer", val)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All Customers" />
@@ -223,8 +239,8 @@ function AllPaymentsContent() {
           <div className="space-y-2">
             <label className="text-sm font-medium">Filter by Production</label>
             <Select
-              value={selectedProduction}
-              onValueChange={setSelectedProduction}
+              value={filters.productionId || "all"}
+              onValueChange={(val) => handleFilterChange("production", val)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All Productions" />
@@ -246,13 +262,17 @@ function AllPaymentsContent() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Payments Amount
+                Loaded Payments Amount
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                ₦{totalPaymentsAmount.toLocaleString()}
-              </div>
+              {loading && !totalPaymentsAmount ? (
+                <Skeleton className="h-8 w-32" />
+              ) : (
+                <div className="text-2xl font-bold">
+                  ₦{totalPaymentsAmount.toLocaleString()}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -263,9 +283,13 @@ function AllPaymentsContent() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-500">
-                {distributedPaymentsCount}
-              </div>
+               {loading && !distributedPaymentsCount && !totalPaymentsAmount ? (
+                <Skeleton className="h-8 w-16" />
+               ) : (
+                <div className="text-2xl font-bold text-blue-500">
+                    {distributedPaymentsCount}
+                </div>
+               )}
             </CardContent>
           </Card>
 
@@ -276,9 +300,13 @@ function AllPaymentsContent() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-500">
-                {onDemandPaymentsCount}
-              </div>
+               {loading && !onDemandPaymentsCount && !totalPaymentsAmount ? (
+                 <Skeleton className="h-8 w-16" />
+               ) : (
+                <div className="text-2xl font-bold text-green-500">
+                    {onDemandPaymentsCount}
+                </div>
+               )}
             </CardContent>
           </Card>
         </div>
@@ -291,7 +319,15 @@ function AllPaymentsContent() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {filteredPayments.length === 0 ? (
+            {loading && !paginatedPayments.length ? (
+              <div className="space-y-4">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center space-x-4">
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                ))}
+              </div>
+            ) : paginatedPayments.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <Wallet className="h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-lg font-medium text-muted-foreground">
@@ -315,10 +351,10 @@ function AllPaymentsContent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredPayments.map((payment) => (
+                  {paginatedPayments.map((payment) => (
                     <TableRow key={payment.id} className="hover:bg-muted/50">
                       <TableCell className="font-medium">
-                        {payment.customers?.name || "Unknown"}
+                        {payment.customer_name || "Unknown"}
                       </TableCell>
                       <TableCell className="font-semibold">
                         ₦{payment.amount_paid.toLocaleString()}
@@ -337,8 +373,8 @@ function AllPaymentsContent() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {payment.productions
-                          ? formatDate(payment.productions.created_at)
+                        {payment.production_date
+                          ? formatDate(payment.production_date)
                           : "N/A"}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
@@ -380,7 +416,7 @@ function AllPaymentsContent() {
                                 setDeletingPayment({
                                   id: payment.id,
                                   customerName:
-                                    payment.customers?.name || "Unknown",
+                                    payment.customer_name || "Unknown",
                                   amount: payment.amount_paid,
                                 })
                               }
@@ -401,7 +437,13 @@ function AllPaymentsContent() {
 
         {/* Mobile View */}
         <div className="lg:hidden space-y-4">
-          {filteredPayments.length === 0 ? (
+          {loading && !paginatedPayments.length ? (
+             <div className="space-y-4">
+               {Array.from({length: 5}).map((_, i) => (
+                 <Skeleton key={i} className="h-24 w-full" />
+               ))}
+             </div>
+          ) : paginatedPayments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Wallet className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-lg font-medium text-muted-foreground">
@@ -413,7 +455,7 @@ function AllPaymentsContent() {
             </div>
           ) : (
             <div>
-              {filteredPayments.map((payment) => (
+              {paginatedPayments.map((payment) => (
                 <div
                   key={payment.id}
                   className="border-b border-muted py-4 flex items-center justify-between"
@@ -422,7 +464,7 @@ function AllPaymentsContent() {
                     <div className="flex items-center gap-2 mb-1">
                       <User className="h-4 w-4 text-muted-foreground" />
                       <h3 className="text-lg font-medium">
-                        {payment.customers?.name || "Unknown"}
+                        {payment.customer_name || "Unknown"}
                       </h3>
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -473,7 +515,7 @@ function AllPaymentsContent() {
                             setDeletingPayment({
                               id: payment.id,
                               customerName:
-                                payment.customers?.name || "Unknown",
+                                payment.customer_name || "Unknown",
                               amount: payment.amount_paid,
                             })
                           }
@@ -491,47 +533,26 @@ function AllPaymentsContent() {
         </div>
 
         {/* Pagination Controls */}
-        {filteredAllPayments.length > 0 && (
-          <div className="flex flex-col items-center gap-2 pt-4">
-            <div className="text-sm text-muted-foreground">
-              Showing {Math.min((page - 1) * 10 + 1, filteredAllPayments.length)}-
-              {Math.min(page * 10, filteredAllPayments.length)} of{" "}
-              {filteredAllPayments.length} results
-            </div>
+        <div className="flex flex-col items-center gap-2 pt-4">
             <div className="flex items-center gap-2">
-              <Link
-                href={`${pathname}?page=${Math.max(1, page - 1)}`}
-                onClick={(e) => {
-                  if (page === 1) e.preventDefault();
-                }}
-              >
-                <Button variant="outline" size="sm" disabled={page === 1}>
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Previous
-                </Button>
-              </Link>
-              <span className="text-sm text-muted-foreground">
-                Page {page} of {Math.ceil(filteredAllPayments.length / 10)}
-              </span>
-              <Link
-                href={`${pathname}?page=${page + 1}`}
-                onClick={(e) => {
-                  if (page >= Math.ceil(filteredAllPayments.length / 10))
-                    e.preventDefault();
-                }}
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= Math.ceil(filteredAllPayments.length / 10)}
+                <Button variant="outline" size="sm" 
+                    disabled={page === 1}
+                    onClick={() => router.push(`${pathname}?page=${Math.max(1, page - 1)}`)}
                 >
-                  Next
-                  <ChevronRight className="h-4 w-4 ml-1" />
+                    <ChevronLeft className="h-4 w-4 mr-1" />
                 </Button>
-              </Link>
+                <span className="text-sm text-muted-foreground">
+                    Page {page}
+                </span>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push(`${pathname}?page=${page + 1}`)}
+                >
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
             </div>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Modals */}

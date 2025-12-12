@@ -19,7 +19,7 @@ import { Loader2 } from "lucide-react";
 
 interface EditPaymentModalProps {
   payment: {
-    id: string;
+    id: string | number;
     amount: number;
     type: string;
     sale_id?: string | null;
@@ -68,7 +68,7 @@ export const EditPaymentModal = ({
         return;
       }
 
-      const result = await updatePayment(payment.id, { amountPaid });
+      const result = await updatePayment(String(payment.id), { amountPaid });
 
       if (result.status === "SUCCESS") {
         toast.success("Payment updated successfully");

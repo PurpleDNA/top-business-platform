@@ -66,6 +66,49 @@ export interface SaleWithDetails {
   };
 }
 
+export interface FilteredSale {
+  id: string;
+  amount: number;
+  paid: boolean;
+  outstanding: number;
+  remaining: number;
+  amount_paid: number;
+  created_at: string;
+  customer_id: string;
+  production_id: string;
+  quantity_bought: { [key: string]: number };
+  customer_name: string;
+  production_date: string;
+}
+
+export const fetchFilteredSales = async (
+  page: number,
+  limit: number,
+  customerId?: string | null,
+  productionId?: string | null
+): Promise<FilteredSale[]> => {
+  const offset = (page - 1) * limit;
+
+  try {
+    const { data, error } = await supabase.rpc("fetch_sales_paginated", {
+      p_limit: limit,
+      p_offset: offset,
+      p_customer_id: customerId || null,
+      p_production_id: productionId || null,
+    });
+
+    if (error) {
+      console.error("Error fetching filtered sales:", error);
+      return [];
+    }
+
+    return (data as unknown as FilteredSale[]) || [];
+  } catch (error) {
+    console.error("Unexpected error in fetchFilteredSales:", error);
+    return [];
+  }
+};
+
 export const fetchAllSales = async (page: number, limit: number) => {
   const offset = page * limit;
   try {

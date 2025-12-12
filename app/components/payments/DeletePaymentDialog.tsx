@@ -17,7 +17,7 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 import { deletePayment } from "@/app/services/payments";
 
 interface DeletePaymentDialogProps {
-  paymentId: string;
+  paymentId: string | number;
   customerName: string;
   amount: number;
   open: boolean;
@@ -40,7 +40,7 @@ export const DeletePaymentDialog = ({
     setLoading(true);
 
     try {
-      const result = await deletePayment(paymentId);
+      const result = await deletePayment(String(paymentId));
 
       if (result.status === "SUCCESS") {
         toast.success("Payment deleted successfully");

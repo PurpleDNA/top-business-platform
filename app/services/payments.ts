@@ -68,7 +68,48 @@ export interface PaymentWithDetails {
     id: string;
     created_at: string;
   } | null;
+
 }
+
+export interface FilteredPayment {
+  id: number;
+  amount_paid: number;
+  paid_at: string;
+  customer_id: string;
+  production_id: string | null;
+  sale_id: string | null;
+  type: string;
+  customer_name: string;
+  production_date: string | null;
+}
+
+export const fetchFilteredPayments = async (
+  page: number,
+  limit: number,
+  customerId?: string | null,
+  productionId?: string | null
+): Promise<FilteredPayment[]> => {
+  const offset = (page - 1) * limit;
+
+  try {
+    const { data, error } = await supabase.rpc("fetch_payments_paginated", {
+      p_limit: limit,
+      p_offset: offset,
+      p_customer_id: customerId || null,
+      p_production_id: productionId || null,
+    });
+
+    if (error) {
+      console.error("Error fetching filtered payments:", error);
+      return [];
+    }
+
+    return (data as unknown as FilteredPayment[]) || [];
+  } catch (error) {
+    console.error("Unexpected error in fetchFilteredPayments:", error);
+    return [];
+  }
+};
 
 export const fetchAllPaymentsWithDetails = unstable_cache(
   async (page: number, limit: number) => {

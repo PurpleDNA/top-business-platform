@@ -93,7 +93,7 @@ export const ExpenseModal = ({ productionId }: ExpenseModalProps) => {
   }
 
   const formContent = (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form id="create-expense-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="w-full">
         <label htmlFor="expense" className="text-sm font-medium">
           Expense Description
@@ -167,14 +167,9 @@ export const ExpenseModal = ({ productionId }: ExpenseModalProps) => {
               </Button>
               <Button
                 type="submit"
+                form="create-expense-form"
                 className="bg-primary"
                 disabled={isLoading}
-                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                  const form = e.currentTarget.closest("form");
-                  if (form) {
-                    form.requestSubmit();
-                  }
-                }}
               >
                 {isLoading ? (
                   <>
@@ -210,14 +205,9 @@ export const ExpenseModal = ({ productionId }: ExpenseModalProps) => {
         <DrawerFooter>
           <Button
             type="submit"
+            form="create-expense-form"
             className="bg-primary"
             disabled={isLoading}
-            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-              const form = e.currentTarget.closest("form");
-              if (form) {
-                form.requestSubmit();
-              }
-            }}
           >
             {isLoading ? (
               <>

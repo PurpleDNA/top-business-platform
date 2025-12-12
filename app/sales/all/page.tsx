@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import {
-  fetchAllSalesWithDetails,
-  SaleWithDetails,
+  fetchFilteredSales,
+  FilteredSale,
 } from "@/app/services/sales";
 import { fetchAllCustomers, Customer } from "@/app/services/customers";
 import { fetchAllProductions, Production } from "@/app/services/productions";
@@ -45,7 +45,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { usePathname, useSearchParams } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -63,13 +64,22 @@ const formatQuantity = (quantity: { [key: string]: number }) => {
 };
 
 function AllSalesContent() {
-  const [onPageCache, setOnPageCache] = useState<SaleWithDetails[]>([]);
+  const [filters, setFilters] = useState<{
+    customerId: string | null;
+    productionId: string | null;
+  }>({
+    customerId: null,
+    productionId: null,
+  });
+
+  const [cache, setCache] = useState<Record<string, (FilteredSale | undefined)[]>>({});
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [productions, setProductions] = useState<Production[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<string>("all");
-  const [selectedProduction, setSelectedProduction] = useState<string>("all");
   const [loading, setLoading] = useState(true);
-  const [editingSale, setEditingSale] = useState<SaleWithDetails | null>(null);
+  
+  // We handle editing/deleting using the same modals. 
+  // We cast FilteredSale to SaleWithDetails where needed or adjust the type locally if structure matches enough.
+  const [editingSale, setEditingSale] = useState<FilteredSale | null>(null);
   const [deletingSale, setDeletingSale] = useState<{
     id: string;
     customerName: string;
@@ -77,13 +87,18 @@ function AllSalesContent() {
 
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const page = Number(searchParams.get("page")) || 1;
-  const fetchedBatches = useRef(new Set<number>());
+  
+  // Map<filterKey, Set<batchNumber>>
+  const fetchedBatches = useRef<Map<string, Set<number>>>(new Map());
+
+  // Generate unique key for current filter state
+  const filterKey = `${filters.customerId || "all"}-${filters.productionId || "all"}`;
 
   // Fetch customers and productions once
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
       const [customersData, productionsData] = await Promise.all([
         fetchAllCustomers(),
         fetchAllProductions(),
@@ -95,71 +110,94 @@ function AllSalesContent() {
     fetchData();
   }, []);
 
-  // Fetch sales in batches of 50
+  // Fetch sales in batches
   useEffect(() => {
-    // Pages 1-5 -> batch 1, Pages 6-10 -> batch 2, etc.
     const batchNumber = Math.floor((page - 1) / 5) + 1;
 
-    const fetchBatch = async () => {
-      const salesData = await fetchAllSalesWithDetails(batchNumber, 50);
+    // Get or create batch tracker for this filter (if not exist)
+    if (!fetchedBatches.current.has(filterKey)) {
+      fetchedBatches.current.set(filterKey, new Set());
+    }
+    const batchSet = fetchedBatches.current.get(filterKey)!;
 
-      setOnPageCache((prev) => {
-        // Create a copy of the cache
-        const newCache = [...prev];
-        // Calculate where to insert this batch
+    // Skip if already fetched
+    if (batchSet.has(batchNumber)) return;
+
+    const fetchBatch = async () => {
+      setLoading(true);
+      const salesData = await fetchFilteredSales(
+        batchNumber,
+        50,
+        filters.customerId,
+        filters.productionId
+      );
+
+      setCache((prev) => {
+        const existingData = prev[filterKey] || [];
         const startIndex = (batchNumber - 1) * 50;
-        // Insert the fetched data at the correct position
-        newCache.splice(startIndex, salesData.length, ...salesData);
-        return newCache;
+        const newData = [...existingData];
+        // Ensure array is large enough before splicing
+        while (newData.length < startIndex) {
+            newData.push(undefined); 
+        }
+        newData.splice(startIndex, salesData.length, ...salesData);
+        // Clean up any undefined holes if we want, but splicing typically handles it by expanding.
+        // Actually, if we jump straight to page 6 (batch 2), index 0-49 might be empty.
+        // The slice logic locally handles holes, but let's be safe:
+        // Filter out undefined if we strictly want a clean list, BUT we rely on index positioning.
+        // It's safer to keep the holes if we want strict index mapping, 
+        // OR we can just append if we assume sequential navigation, but user asked for robust pagination.
+        // Since we insert at specific index, `newData` will have empty slots if we skipped batches.
+        
+        return { ...prev, [filterKey]: newData };
       });
+
+      batchSet.add(batchNumber);
+      setLoading(false);
     };
 
-    // Only fetch if we haven't fetched this batch before
-    if (!fetchedBatches.current.has(batchNumber)) {
-      fetchBatch();
-      fetchedBatches.current.add(batchNumber);
-    }
-  }, [page]);
+    fetchBatch();
+  }, [page, filterKey, filters.customerId, filters.productionId]);
 
-  // Filter the entire cache first (so customers with sales across multiple pages show together)
-  const filteredAllSales = useMemo(() => {
-    return onPageCache.filter((sale) => {
-      const customerMatch =
-        selectedCustomer === "all" || sale.customer_id === selectedCustomer;
-      const productionMatch =
-        selectedProduction === "all" ||
-        sale.production_id === selectedProduction;
-      return customerMatch && productionMatch;
-    });
-  }, [onPageCache, selectedCustomer, selectedProduction]);
+  const handleFilterChange = (type: "customer" | "production", value: string) => {
+    const newFilters = {
+      ...filters,
+      [type === "customer" ? "customerId" : "productionId"]:
+        value === "all" ? null : value,
+    };
+    setFilters(newFilters);
+    router.push(`${pathname}?page=1`);
+  };
 
-  // Then paginate the filtered results (show 10 per page)
-  const paginatedSales = useMemo(() => {
-    const startIndex = (page - 1) * 10;
-    const endIndex = startIndex + 10;
-    return filteredAllSales.slice(startIndex, endIndex);
-  }, [filteredAllSales, page]);
+  // Get data for current filter
+  const currentFilterData = cache[filterKey] || [];
+  
+  // Important: currentFilterData might have holes if we fetched batch 2 but not batch 1.
+  // We need to handle that gracefully or ensure we just render what we have.
+  // However, the standard behavior is that the cache stores objects at their correct data-index.
+  
+  const startIndex = (page - 1) * 10;
+  const endIndex = startIndex + 10;
+  const paginatedSales = currentFilterData
+    .slice(startIndex, endIndex)
+    .filter((sale): sale is FilteredSale => !!sale);
 
-  // Use paginatedSales as filteredSales for display
-  const filteredSales = paginatedSales;
-
-  // Calculate totals from ALL filtered sales, not just current page
-  const totalSalesAmount = filteredAllSales.reduce(
-    (sum, sale) => sum + sale.amount,
+  // Calculate totals - ONLY for loaded data in this filter context
+  // Note: Calculating "Total Sales Amount" for *all* data matching a filter would require 
+  // a separate aggregate query to the DB if we haven't loaded all batches. 
+  // For now, we sum what we have loaded.
+  const totalSalesAmount = currentFilterData.filter(Boolean).reduce(
+    (sum, sale) => sum + (sale?.amount || 0),
     0
   );
-  const totalOutstanding = filteredAllSales.reduce(
-    (sum, sale) => sum + sale.outstanding,
+  const totalOutstanding = currentFilterData.filter(Boolean).reduce(
+    (sum, sale) => sum + (sale?.outstanding || 0),
     0
   );
-  const paidSalesCount = filteredAllSales.filter((sale) => sale.paid).length;
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Loading sales...</p>
-      </div>
-    );
+  if (loading && !cache[filterKey]) {
+    // Show table skeleton when initial data for filter is loading
+    // We let the header and filters render, but replace content with skeletons
   }
 
   return (
@@ -178,9 +216,6 @@ function AllSalesContent() {
                 All Sales
               </h1>
             </div>
-            <p className="text-muted-foreground lg:hidden">
-              Total: {filteredSales.length} sales
-            </p>
           </div>
           <Link href="/sale/new">
             <Button className="bg-primary hidden lg:flex">
@@ -198,8 +233,8 @@ function AllSalesContent() {
           <div className="space-y-2">
             <label className="text-sm font-medium">Filter by Customer</label>
             <Select
-              value={selectedCustomer}
-              onValueChange={setSelectedCustomer}
+              value={filters.customerId || "all"}
+              onValueChange={(val) => handleFilterChange("customer", val)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All Customers" />
@@ -218,8 +253,8 @@ function AllSalesContent() {
           <div className="space-y-2">
             <label className="text-sm font-medium">Filter by Production</label>
             <Select
-              value={selectedProduction}
-              onValueChange={setSelectedProduction}
+              value={filters.productionId || "all"}
+              onValueChange={(val) => handleFilterChange("production", val)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All Productions" />
@@ -236,31 +271,39 @@ function AllSalesContent() {
           </div>
         </div>
 
-        {/* Stats Cards - Hidden on Mobile */}
+        {/* Stats Cards - Visualization of currently loaded data */}
         <div className="hidden lg:grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Sales Amount
+                Loaded Sales Amount
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                ₦{totalSalesAmount.toLocaleString()}
-              </div>
+              {loading && !totalSalesAmount ? (
+                <Skeleton className="h-8 w-32" />
+              ) : (
+                <div className="text-2xl font-bold">
+                  ₦{totalSalesAmount.toLocaleString()}
+                </div>
+              )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Outstanding
+                Loaded Outstanding
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-destructive">
-                ₦{totalOutstanding.toLocaleString()}
-              </div>
+              {loading && !totalOutstanding ? (
+                <Skeleton className="h-8 w-32" />
+              ) : (
+                <div className="text-2xl font-bold text-destructive">
+                  ₦{totalOutstanding.toLocaleString()}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -273,7 +316,16 @@ function AllSalesContent() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {filteredSales.length === 0 ? (
+            {loading && !paginatedSales.length ? (
+              <div className="space-y-4">
+                {/* Skeleton Rows */}
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center space-x-4">
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                ))}
+              </div>
+            ) : paginatedSales.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <ShoppingCart className="h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-lg font-medium text-muted-foreground">
@@ -297,14 +349,14 @@ function AllSalesContent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSales.map((sale) => (
+                  {paginatedSales.map((sale) => (
                     <TableRow key={sale.id} className="hover:bg-muted/50">
                       <TableCell className="font-medium">
-                        {sale.customers?.name || "Unknown"}
+                        {sale.customer_name || "Unknown"}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {formatDate(
-                          sale.productions?.created_at || sale.created_at
+                          sale.production_date || sale.created_at
                         )}
                       </TableCell>
                       <TableCell className="font-semibold">
@@ -360,7 +412,7 @@ function AllSalesContent() {
                                 setDeletingSale({
                                   id: sale.id,
                                   customerName:
-                                    sale.customers?.name || "Unknown",
+                                    sale.customer_name || "Unknown",
                                 })
                               }
                             >
@@ -380,7 +432,13 @@ function AllSalesContent() {
 
         {/* Mobile View */}
         <div className="lg:hidden space-y-4">
-          {filteredSales.length === 0 ? (
+          {loading && !paginatedSales.length ? (
+             <div className="space-y-4">
+               {Array.from({length: 5}).map((_, i) => (
+                 <Skeleton key={i} className="h-24 w-full" />
+               ))}
+             </div>
+          ) : paginatedSales.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <ShoppingCart className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-lg font-medium text-muted-foreground">
@@ -392,7 +450,7 @@ function AllSalesContent() {
             </div>
           ) : (
             <div>
-              {filteredSales.map((sale) => (
+              {paginatedSales.map((sale) => (
                 <div
                   key={sale.id}
                   className="border-b border-muted py-4 flex items-center justify-between"
@@ -401,7 +459,7 @@ function AllSalesContent() {
                     <div className="flex items-center gap-2 mb-1">
                       <User className="h-4 w-4 text-muted-foreground" />
                       <h3 className="text-lg font-medium">
-                        {sale.customers?.name || "Unknown"}
+                        {sale.customer_name || "Unknown"}
                       </h3>
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -449,7 +507,7 @@ function AllSalesContent() {
                           onClick={() =>
                             setDeletingSale({
                               id: sale.id,
-                              customerName: sale.customers?.name || "Unknown",
+                              customerName: sale.customer_name || "Unknown",
                             })
                           }
                         >
@@ -466,40 +524,28 @@ function AllSalesContent() {
         </div>
 
         {/* Pagination Controls */}
-        {filteredAllSales.length > 0 && (
-          <div className="flex flex-col items-center gap-2 pt-4">
+        <div className="flex flex-col items-center gap-2 pt-4">
             <div className="flex items-center gap-2">
-              <Link
-                href={`${pathname}?page=${Math.max(1, page - 1)}`}
-                onClick={(e) => {
-                  if (page === 1) e.preventDefault();
-                }}
-              >
-                <Button variant="outline" size="sm" disabled={page === 1}>
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                </Button>
-              </Link>
-              <span className="text-sm text-muted-foreground">
-                {page} / {Math.ceil(filteredAllSales.length / 10)}
-              </span>
-              <Link
-                href={`${pathname}?page=${page + 1}`}
-                onClick={(e) => {
-                  if (page >= Math.ceil(filteredAllSales.length / 10))
-                    e.preventDefault();
-                }}
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= Math.ceil(filteredAllSales.length / 10)}
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    disabled={page === 1}
+                    onClick={() => router.push(`${pathname}?page=${Math.max(1, page - 1)}`)}
                 >
-                  <ChevronRight className="h-4 w-4 ml-1" />
+                    <ChevronLeft className="h-4 w-4 mr-1" />
                 </Button>
-              </Link>
+                <span className="text-sm text-muted-foreground">
+                    Page {page}
+                </span>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push(`${pathname}?page=${page + 1}`)}
+                >
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
             </div>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Modals */}
