@@ -11,7 +11,7 @@ interface Props {
   initialPrices: BreadPrice[];
 }
 
-export const BreadPriceList = ({ initialPrices }: Props) => {
+export const BreadPriceList = ({ initialPrices, canManage }: { initialPrices: BreadPrice[], canManage: boolean }) => {
   const [prices, setPrices] = useState<BreadPrice[]>(initialPrices);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -38,13 +38,16 @@ export const BreadPriceList = ({ initialPrices }: Props) => {
         <p className="text-sm text-muted-foreground">
           {prices.length} price {prices.length === 1 ? "entry" : "entries"}
         </p>
-        <Button
-          onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Add New Price
-        </Button>
+        
+        {canManage && (
+          <Button
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Add New Price
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -56,6 +59,7 @@ export const BreadPriceList = ({ initialPrices }: Props) => {
             color={price.color}
             onUpdate={handlePriceUpdated}
             onDelete={handlePriceDeleted}
+            readOnly={!canManage} 
           />
         ))}
       </div>
@@ -63,10 +67,12 @@ export const BreadPriceList = ({ initialPrices }: Props) => {
       {prices.length === 0 && (
         <div className="text-center py-12 border-2 border-dashed rounded-lg">
           <p className="text-muted-foreground mb-4">No bread prices yet</p>
-          <Button onClick={() => setIsAddModalOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add First Price
-          </Button>
+          {canManage && (
+            <Button onClick={() => setIsAddModalOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add First Price
+            </Button>
+          )}
         </div>
       )}
 

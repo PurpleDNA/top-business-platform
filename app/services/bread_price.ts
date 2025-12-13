@@ -2,6 +2,7 @@
 import supabase from "@/client";
 import { revalidateTag, unstable_cache } from "next/cache";
 import { revalidateAllPaths } from "./revalidate";
+import { isSuperAdmin } from "./roles";
 
 export interface BreadPrice {
   id: number;
@@ -72,6 +73,11 @@ export const fetchBreadPriceById = async (
  */
 export const createBreadPrice = async (payload: CreateBreadPrice) => {
   try {
+    const isAllowed = await isSuperAdmin();
+    if (!isAllowed) {
+       throw new Error("Unauthorized: Only Super Admins can manage prices.");
+    }
+
     const { data: breadPriceData, error } = await supabase
       .from("bread_price")
       .insert({
@@ -103,6 +109,11 @@ export const updateBreadPrice = async (
   payload: UpdateBreadPrice
 ) => {
   try {
+    const isAllowed = await isSuperAdmin();
+    if (!isAllowed) {
+       throw new Error("Unauthorized: Only Super Admins can manage prices.");
+    }
+
     const { data: updatedBreadPrice, error } = await supabase
       .from("bread_price")
       .update(payload)
@@ -129,6 +140,11 @@ export const updateBreadPrice = async (
  */
 export const deleteBreadPrice = async (breadPriceId: number) => {
   try {
+    const isAllowed = await isSuperAdmin();
+    if (!isAllowed) {
+       throw new Error("Unauthorized: Only Super Admins can manage prices.");
+    }
+
     const { error } = await supabase
       .from("bread_price")
       .delete()

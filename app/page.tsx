@@ -19,6 +19,10 @@ import { ProductionCard } from "./components/dashboard/ProductionCard";
 import { Production } from "./services/productions";
 import { formatDate } from "./services/utils";
 import { getBreadPriceMultipliers } from "./services/bread_price";
+import { getUser } from "./services/roles";
+
+const profile = await getUser()
+console.log(profile)
 
 const Index = async () => {
   const totalOutstanding = await getTotalBusinessOutstanding();
@@ -45,7 +49,7 @@ const Index = async () => {
     <div className="min-h-screen bg-background">
       <main className="mx-auto p-6 space-y-6">
         {/* Hero Section */}
-        <Hero />
+        <Hero profile={profile}/>
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <MetricsCard

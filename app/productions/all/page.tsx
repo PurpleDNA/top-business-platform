@@ -44,16 +44,17 @@ const AllProductionsPage = async () => {
               Total: {productions.length} production batches
             </p>
           </div>
-          <Link href="/production/new">
-            <Button className="bg-primary hidden lg:flex">
-              <Factory className="h-4 w-4 mr-2" />
-              New Production
-            </Button>
-            <Button className="bg-primary lg:hidden">
-              <Plus className="h-4 w-4" />
-            </Button>
-          </Link>
+            <Link href="/production/new">
+              <Button className="bg-primary hidden lg:flex">
+                <Factory className="h-4 w-4 mr-2" />
+                New Production
+              </Button>
+              <Button className="bg-primary lg:hidden">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </Link>
         </div>
+
 
         {/* Stats Cards - Hidden on Mobile */}
         <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 gap-6">

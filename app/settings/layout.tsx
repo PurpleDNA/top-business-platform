@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SettingsList } from "./components/SettingsList";
+import { useAuth } from "../providers/auth-provider";
 
 export default function SettingsLayout({
   children,
@@ -14,7 +15,7 @@ export default function SettingsLayout({
   const pathname = usePathname();
   const router = useRouter();
   const isSettingsHome = pathname === "/settings";
-
+  const {isSuper} = useAuth();
   return (
     <div className="h-full bg-background">
       {/* Desktop Layout - Split View */}
@@ -26,7 +27,7 @@ export default function SettingsLayout({
             <p className="text-sm text-muted-foreground mb-6">
               Manage your account and preferences
             </p>
-            <SettingsList />
+            <SettingsList isSuper={isSuper}/>
           </div>
         </div>
 
@@ -45,7 +46,7 @@ export default function SettingsLayout({
             <p className="text-sm text-muted-foreground mb-6">
               Manage your account and preferences
             </p>
-            <SettingsList />
+            <SettingsList isSuper={isSuper} />
           </div>
         ) : (
           /* Setting Detail View with Back Button */

@@ -15,58 +15,62 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const settingsItems = [
-  {
-    title: "Bread Pricing",
-    description: "Manage bread prices and multipliers",
-    href: "/settings/change_price",
-    icon: DollarSign,
-  },
-  {
-    title: "Manage Roles",
-    description: "Configure user roles and permissions",
-    href: "/settings/roles",
-    icon: Shield,
-  },
-  {
-    title: "Change Password",
-    description: "Update your account password",
-    href: "/settings/password",
-    icon: Lock,
-  },
-  {
-    title: "Notifications",
-    description: "Configure notification preferences",
-    href: "/settings/notifications",
-    icon: Bell,
-  },
-  {
-    title: "Profile Settings",
-    description: "Manage your profile information",
-    href: "/settings/profile",
-    icon: User,
-  },
-  {
-    title: "Appearance",
-    description: "Customize theme and display options",
-    href: "/settings/appearance",
-    icon: Palette,
-  },
-  {
-    title: "Language & Region",
-    description: "Set your language and regional preferences",
-    href: "/settings/language",
-    icon: Globe,
-  },
-  {
-    title: "Email Preferences",
-    description: "Manage email notifications and updates",
-    href: "/settings/email",
-    icon: Mail,
-  },
-];
+export const SettingsList = ({ isSuper }: { isSuper: boolean }) => {
+  const settingsItems = [
+    ...(isSuper
+      ? [
+          {
+            title: "Bread Pricing",
+            description: "Manage bread prices and multipliers",
+            href: "/settings/change_price",
+            icon: DollarSign,
+          },
+          {
+            title: "Manage Roles",
+            description: "Configure user roles and permissions",
+            href: "/settings/roles",
+            icon: Shield,
+          },
+        ]
+      : []),
+    {
+      title: "Change Password",
+      description: "Update your account password",
+      href: "/settings/password",
+      icon: Lock,
+    },
+    {
+      title: "Notifications",
+      description: "Configure notification preferences",
+      href: "/settings/notifications",
+      icon: Bell,
+    },
+    {
+      title: "Profile Settings",
+      description: "Manage your profile information",
+      href: "/settings/profile",
+      icon: User,
+    },
+    {
+      title: "Appearance",
+      description: "Customize theme and display options",
+      href: "/settings/appearance",
+      icon: Palette,
+    },
+    {
+      title: "Language & Region",
+      description: "Set your language and regional preferences",
+      href: "/settings/language",
+      icon: Globe,
+    },
+    {
+      title: "Email Preferences",
+      description: "Manage email notifications and updates",
+      href: "/settings/email",
+      icon: Mail,
+    },
+  ];
 
-export const SettingsList = () => {
   const pathname = usePathname();
 
   return (

@@ -36,9 +36,9 @@ export const bungee = Bungee({
   weight: ["400"],
 });
 
-export const DashboardHeader = () => {
+export const DashboardHeader = ({profile}: {profile: any}) => {
   const router = useRouter();
-  const { signOut, profile } = useAuth();
+  const { signOut } = useAuth();
   const pathname = usePathname();
 
   const [searchResults, setSearchResults] = useState<Customer[]>([]);
@@ -101,7 +101,6 @@ export const DashboardHeader = () => {
     };
   }, [showResults]);
 
-  console.log(profile);
   return (
     <header
       className={`sticky top-0 z-50 w-full border-b bg-background ${
@@ -211,17 +210,15 @@ export const DashboardHeader = () => {
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium">
-                    {profile?.user_metadata?.display_name}
+                    {profile?.display_name}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {profile?.profile?.email}
+                    {profile?.email}
                   </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer">
-                Profile
-              </DropdownMenuItem>
+
               <Link href="/settings">
                 <DropdownMenuItem className="cursor-pointer">
                   Settings

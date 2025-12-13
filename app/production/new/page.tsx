@@ -1,6 +1,5 @@
 import ProductionFrom from "@/app/components/production/ProductionCreateFrom";
 import { getBreadPriceMultipliers } from "@/app/services/bread_price";
-import React from "react";
 
 const page = async () => {
   const multipliers = await getBreadPriceMultipliers();

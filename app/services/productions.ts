@@ -4,6 +4,7 @@ import { revalidateAllPaths } from "./revalidate";
 import { revalidatePath, unstable_cache, updateTag } from "next/cache";
 import { getBreadPriceMultipliers } from "./bread_price";
 import { toast } from "sonner";
+import { isSuperAdmin } from "./roles";
 
 export interface Production {
   id: string;
@@ -11,25 +12,25 @@ export interface Production {
     blue: number;
     green: number;
     orange: number;
-    [key: string]: number; // allows future extensions
+    [key: string]: number; 
   };
   old_bread: {
     blue: number;
     green: number;
     orange: number;
-    [key: string]: number; // allows future extensions
+    [key: string]: number;
   };
   sold_bread: {
     blue: number;
     green: number;
     orange: number;
-    [key: string]: number; // allows future extensions
+    [key: string]: number;
   };
   bread_price: {
     blue: number;
     green: number;
     orange: number;
-    [key: string]: number; // allows future extensions
+    [key: string]: number;
   };
   total: number;
   cash: number;
@@ -71,6 +72,7 @@ interface SaleWithCustomer {
 
 export const createProduction = async (payload: Create) => {
   try {
+
     const quantity = Object.fromEntries(
       Object.entries(payload.quantity).map(([key, value]) => [
         key,
@@ -320,6 +322,11 @@ export const getProductionPaidOutstanding = async (productionId: string) => {
 
 export const toggleProdStatus = async (productionId: string) => {
   try {
+    const isAllowed = await isSuperAdmin();
+    if (!isAllowed) {
+       throw new Error("Unauthorized: Only Super Admins can open/close productions.");
+    }
+
     // Call atomic RPC function
     const { data, error } = await supabase.rpc(
       "toggle_production_status_atomic",

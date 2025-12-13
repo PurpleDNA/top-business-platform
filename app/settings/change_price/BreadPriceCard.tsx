@@ -4,8 +4,9 @@ import { useState } from "react";
 import { BreadPrice, deleteBreadPrice } from "@/app/services/bread_price";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, LoaderCircle } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { EditBreadPriceModal } from "./EditBreadPriceModal";
+import { DeleteBreadPriceDialog } from "./DeleteBreadPriceDialog";
 import { toast } from "sonner";
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
   color: string;
   onUpdate: (updatedPrice: BreadPrice) => void;
   onDelete: (deletedId: number) => void;
+  readOnly?: boolean;
 }
 
 export const BreadPriceCard = ({
@@ -22,16 +24,12 @@ export const BreadPriceCard = ({
   onUpdate,
   onDelete,
   color,
+  readOnly,
 }: Props) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this price entry?")) {
-      return;
-    }
-
-    setIsDeleting(true);
+  const handleDeleteConfirm = async () => {
     try {
       await deleteBreadPrice(id);
       toast.success("Price entry deleted successfully");
@@ -39,8 +37,7 @@ export const BreadPriceCard = ({
     } catch (error) {
       console.error("Error deleting price:", error);
       toast.error("Failed to delete price entry");
-    } finally {
-      setIsDeleting(false);
+      throw error;
     }
   };
 
@@ -50,28 +47,24 @@ export const BreadPriceCard = ({
         <CardHeader className="pb-3">
           <div className="flex justify-between items-start">
             <CardTitle className="text-lg">Price Entry</CardTitle>
+            {!readOnly && (
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsEditModalOpen(true)}
-                disabled={isDeleting}
               >
                 <Pencil className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleDelete}
-                disabled={isDeleting}
+                onClick={() => setIsDeleteDialogOpen(true)}
               >
-                {isDeleting ? (
-                  <LoaderCircle className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                )}
+                <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </div>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -96,6 +89,13 @@ export const BreadPriceCard = ({
           onUpdate(updatedPrice);
           setIsEditModalOpen(false);
         }}
+      />
+
+      <DeleteBreadPriceDialog
+        color={color}
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
       />
     </>
   );

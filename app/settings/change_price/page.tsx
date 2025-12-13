@@ -1,8 +1,10 @@
 import { fetchAllBreadPrices } from "@/app/services/bread_price";
+import { isSuperAdmin } from "@/app/services/roles";
 import { BreadPriceList } from "./BreadPriceList";
 
 export default async function ChangePricePage() {
   const breadPrices = await fetchAllBreadPrices();
+  const isSuper = await isSuperAdmin();
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -13,7 +15,7 @@ export default async function ChangePricePage() {
         </p>
       </div>
 
-      <BreadPriceList initialPrices={breadPrices} />
+      <BreadPriceList initialPrices={breadPrices} canManage={isSuper} />
     </div>
   );
 }

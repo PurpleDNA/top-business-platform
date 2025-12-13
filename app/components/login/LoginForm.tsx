@@ -7,10 +7,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
 
-const LoginForm = () => {
+const LoginForm = ({user}: {user: any}) => {
   const {
     signInWithGoogle,
-    user,
     loading: googleLoading,
     signInWithEmail,
   } = useAuth();

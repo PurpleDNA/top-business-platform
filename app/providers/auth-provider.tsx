@@ -25,6 +25,7 @@ interface AuthContextProps {
   signUpNewUser: (payload: Payload) => void;
   signInWithEmail: (payload: LoginPayload) => void;
   profile: any;
+  isSuper:boolean;
 }
 
 const AuthContext = createContext<AuthContextProps>({
@@ -35,6 +36,7 @@ const AuthContext = createContext<AuthContextProps>({
   signUpNewUser: () => {},
   signInWithEmail: () => {},
   profile: null,
+  isSuper:false
 });
 
 export const useAuth = () => {
@@ -45,26 +47,26 @@ export const useAuth = () => {
   return context;
 };
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children , isSuper}: { children: ReactNode , isSuper: boolean}) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState({});
 
   const router = useRouter();
   useEffect(() => {
-    const getInitialSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    // const getInitialSession = async () => {
+    //   const {
+    //     data: { session },
+    //   } = await supabase.auth.getSession();
 
-      setUser(session?.user ?? null);
-      setLoading(false);
-      if (!session?.user) {
-        router.push("/login");
-      }
-    };
+    //   setUser(session?.user ?? null);
+    //   setLoading(false);
+    //   if (!session?.user) {
+    //     router.push("/login");
+    //   }
+    // };
 
-    getInitialSession();
+    // getInitialSession();
 
     const getUserWithRole = async () => {
       const {
@@ -98,12 +100,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription?.unsubscribe();
   }, [router]);
 
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     if (!user) {
-  //     }
-  //   }, 200);
-  // }, [user, router]);
 
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -167,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signOut,
     signUpNewUser,
     signInWithEmail,
+    isSuper
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

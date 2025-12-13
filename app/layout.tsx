@@ -8,6 +8,11 @@ import { AuthProvider } from "./providers/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { Sidebar } from "./components/dashboard/Sidebar";
+import { getUser } from "./services/roles";
+import { isSuperAdmin } from "./services/roles";
+
+const isSuper = await isSuperAdmin()
+const profile = await getUser();
 
 const rubik = Rubik({
   variable: "--font-rubik",
@@ -37,14 +42,14 @@ export default function RootLayout({
         className={`${rubik.className} antialiased overflow-hidden`}
         suppressHydrationWarning={true}
       >
-        <AuthProvider>
+        <AuthProvider isSuper={isSuper}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
           >
-            <DashboardHeader />
+            <DashboardHeader profile={profile}/>
             <Toaster />
             <div className="flex h-[calc(100vh-4rem)]">
               <Sidebar />

@@ -1,14 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
-export async function proxy(request) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
@@ -34,14 +34,28 @@ export async function proxy(request) {
     return supabaseResponse;
   }
 
-  // Refreshing the auth token
   const {
     data: { user },
-    error,
   } = await supabase.auth.getUser();
 
+  // IMPORTANT: This refreshes the session
+
   // Protect routes
-  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+  const protectedPaths = [
+    "/settings",
+    "/production",
+    "/productions",
+    "/customers",
+    "/sale",
+    "/payment",
+    "/expenses",
+    "/calculator",
+  ];
+  const isProtectedPath =
+    request.nextUrl.pathname === "/" ||
+    protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path));
+
+  if (!user && isProtectedPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
@@ -50,7 +64,7 @@ export async function proxy(request) {
   // Redirect authenticated users away from login
   if (user && request.nextUrl.pathname === "/login") {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = "/";
     return NextResponse.redirect(url);
   }
 
