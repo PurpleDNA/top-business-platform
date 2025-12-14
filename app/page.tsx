@@ -21,10 +21,8 @@ import { formatDate } from "./services/utils";
 import { getBreadPriceMultipliers } from "./services/bread_price";
 import { getUser } from "./services/roles";
 
-const profile = await getUser()
-console.log(profile)
-
 const Index = async () => {
+  const profile = await getUser();
   const totalOutstanding = await getTotalBusinessOutstanding();
   console.log(totalOutstanding);
   const customerCount = await getCustomerCount();

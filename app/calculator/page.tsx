@@ -1,6 +1,8 @@
 import { BreadCalculatorComponent } from "@/app/components/calculator/BreadCalculatorComponent";
 import { getBreadPriceMultipliers } from "@/app/services/bread_price";
 
+export const dynamic = "force-dynamic";
+
 export default async function CalculatorPage() {
   const multipliers = await getBreadPriceMultipliers();
 

@@ -11,9 +11,6 @@ import { Sidebar } from "./components/dashboard/Sidebar";
 import { getUser } from "./services/roles";
 import { isSuperAdmin } from "./services/roles";
 
-const isSuper = await isSuperAdmin()
-const profile = await getUser();
-
 const rubik = Rubik({
   variable: "--font-rubik",
   subsets: ["latin"],
@@ -31,11 +28,16 @@ export const metadata: Metadata = {
   description: "A platform for managing business operations",
 };
 
-export default function RootLayout({
+export const dynamic = "force-dynamic";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isSuper = await isSuperAdmin();
+  const profile = await getUser();
+
   return (
     <html lang="en" className={`${rubik.variable} ${bungee.variable}`}>
       <body
