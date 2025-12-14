@@ -25,8 +25,7 @@ const LoginForm = ({ user }: { user: any }) => {
   const router = useRouter();
 
   const handleForgot = () => {
-    // TODO: forgot password flow
-    console.log("forgot password");
+    router.push("/forgot-password");
   };
 
   const handleGoogle = async () => {

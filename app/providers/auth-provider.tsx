@@ -26,6 +26,8 @@ interface AuthContextProps {
   signInWithEmail: (payload: LoginPayload) => void;
   profile: any;
   isSuper:boolean;
+  resetPassword: (email: string) => Promise<void>;
+  updateAppPassword: (password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps>({
@@ -35,8 +37,11 @@ const AuthContext = createContext<AuthContextProps>({
   signOut: () => {},
   signUpNewUser: () => {},
   signInWithEmail: () => {},
+
   profile: null,
-  isSuper:false
+  isSuper:false,
+  resetPassword: async () => {},
+  updateAppPassword: async () => {},
 });
 
 export const useAuth = () => {
@@ -112,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `http://localhost:3000/`,
+        redirectTo: `http://localhost:3000/auth/callback`,
         queryParams: {
           access_type: "offline",
           prompt: "consent",
@@ -162,6 +167,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // window.location.replace("http://localhost:3000/login");
   };
 
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+    });
+    if (error) {
+      throw error;
+    }
+  };
+
+  const updateAppPassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      throw error;
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -170,8 +191,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signOut,
     signUpNewUser,
     signInWithEmail,
-    isSuper
+    isSuper,
+    resetPassword,
+    updateAppPassword,
   };
+  
+  console.log("AuthProvider value:", { ...value, user: value.user?.email });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
