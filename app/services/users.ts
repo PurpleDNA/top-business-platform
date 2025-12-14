@@ -48,6 +48,13 @@ export async function createUser(payload: {
       throw new Error("Unauthorized: Only Super Admins can create users.");
     }
 
+      const supabase = await createClient();
+    const {
+      data: { user: currentUser },
+    } = await supabase.auth.getUser();
+
+    if (!currentUser) throw new Error("User not found");
+
     // 2. Create User in Supabase Auth (using Admin Client)
     const { data: authData, error: authError } =
       await adminAuthClient.auth.admin.createUser({
@@ -58,6 +65,7 @@ export async function createUser(payload: {
           display_name: `${payload.firstName} ${payload.lastName}`,
           first_name: payload.firstName,
           last_name: payload.lastName,
+          created_by: currentUser.id,
         },
       });
 
@@ -73,6 +81,7 @@ export async function createUser(payload: {
       last_name: payload.lastName,
       display_name: `${payload.firstName} ${payload.lastName}`,
       role: payload.role,
+      created_by: currentUser.id,
     });
 
     if (profileError) {
@@ -140,19 +149,52 @@ export async function deleteUser(id: string) {
       throw new Error("Unauthorized");
     }
 
-    // Deleting from Auth automatically handles the database if cascading is set up.
-    // However, usually we need to delete from Auth.
+    // 1. Manually delete from 'users' table (profiles) first.
+    // This is necessary because if ON DELETE CASCADE is missing on the foreign key,
+    // the auth user deletion will fail.
+    const { error: profileError } = await adminAuthClient
+      .from("users")
+      .delete()
+      .eq("id", id);
+
+    if (profileError) {
+      // If we can't delete the profile, it might be referenced by other tables (though we checked and didn't find any).
+      // Or it could be an RLS issue, but we are using adminAuthClient.
+      console.error("Failed to delete user profile:", profileError);
+      throw new Error(
+        `Failed to delete user profile: ${profileError.message}. User might have associated data preventing deletion.`
+      );
+    }
+
+    // 2. Delete from Auth
     const { error } = await adminAuthClient.auth.admin.deleteUser(id);
 
-    if (error) throw error;
-
-    // If no cascade, we manually delete from users table (Admin Client)
-    // const { error: dbError } = await adminAuthClient.from("users").delete().eq("id", id);
+    if (error) {
+      // If auth delete fails, we might leave the user without a profile (orphan auth user).
+      // This is less critical than an orphan profile, but still not ideal.
+      // Ideally we would wrap this in a transaction if we could.
+      console.error("Failed to delete auth user:", error);
+      throw error;
+    }
 
     revalidatePath("/settings/roles");
     return { success: true };
   } catch (error: any) {
-    console.log("ERROR>>>>>>>>>>>", error);
+    console.log("ERROR_DELETING_USER>>>>>>>>>>>", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateUserPassword(password: string) {
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.updateUser({ password });
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error updating password:", error);
     return { success: false, error: error.message };
   }
 }

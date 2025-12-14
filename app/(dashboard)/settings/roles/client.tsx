@@ -46,11 +46,13 @@ import { DeleteUserDialog } from "./DeleteUserDialog";
 interface UserManagementClientProps {
   initialUsers: UserData[];
   currentUserRole?: string | null;
+  currentUserId?: string;
 }
 
 export default function UserManagementClient({
   initialUsers,
   currentUserRole,
+  currentUserId,
 }: UserManagementClientProps) {
   const [users, setUsers] = useState<UserData[]>(initialUsers);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -61,8 +63,12 @@ export default function UserManagementClient({
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  // Sort users: Super Admins first, then Admins, then Users
+  // Sort users: Current user first, then Super Admins, then Admins, then Users
   const sortedUsers = [...users].sort((a, b) => {
+    // Current user always on top
+    if (a.id === currentUserId) return -1;
+    if (b.id === currentUserId) return 1;
+
     const roleOrder: Record<string, number> = {
       "super-admin": 0,
       admin: 1,
@@ -262,6 +268,9 @@ export default function UserManagementClient({
                       <div className="flex flex-col">
                         <span className="font-medium">
                           {user.display_name || user.first_name || "Unknown"}
+                          {user.id === currentUserId && (
+                            <span className="ml-2 text-xs text-muted-foreground">(You)</span>
+                          )}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {user.email}
@@ -290,14 +299,16 @@ export default function UserManagementClient({
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => handleDeleteClick(user)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {user.id !== currentUserId && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => handleDeleteClick(user)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   )}
