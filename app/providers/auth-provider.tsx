@@ -47,10 +47,11 @@ export const useAuth = () => {
   return context;
 };
 
-export function AuthProvider({ children , isSuper}: { children: ReactNode , isSuper: boolean}) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState({});
+  const [profile, setProfile] = useState<any>({});
+  const [isSuper, setIsSuper] = useState(false);
 
   const router = useRouter();
   useEffect(() => {
@@ -81,6 +82,7 @@ export function AuthProvider({ children , isSuper}: { children: ReactNode , isSu
           .single();
 
         setProfile({ ...user, profile: userProfile });
+        setIsSuper(userProfile?.role === "super-admin");
       }
       return null;
     };
@@ -92,7 +94,12 @@ export function AuthProvider({ children , isSuper}: { children: ReactNode , isSu
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        getUserWithRole();
+      }
       if (event === "SIGNED_OUT") {
+        setIsSuper(false);
+        setProfile({});
         router.push("/login");
       }
     });

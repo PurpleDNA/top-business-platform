@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { createClient } from "@/supabase/server";
@@ -20,14 +21,6 @@ export interface UserData {
 
 export async function getUsers() {
   const supabase = await createClient();
-
-  // RLS will handle visibility:
-  // - Super Admin sees all
-  // - Admin/User sees only themselves
-  // We don't need explicit role check here if RLS is set up,
-  // BUT to prevent UI confusion, we can check allowed roles if we want strict enforcement.
-  // For now, let's rely on RLS but sort by creation.
-
   const { data, error } = await supabase
     .from("users")
     .select("*")
@@ -159,6 +152,7 @@ export async function deleteUser(id: string) {
     revalidatePath("/settings/roles");
     return { success: true };
   } catch (error: any) {
+    console.log("ERROR>>>>>>>>>>>", error);
     return { success: false, error: error.message };
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 
-const Hero = ({profile}: {profile: any}) => {
+const Hero = ({ profile }: { profile: Record<string, string> }) => {
   return (
     <div className="space-y-2">
       <h1 className="text-xl lg:text-3xl font-bold text-foreground">

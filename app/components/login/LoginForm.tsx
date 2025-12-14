@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { LogIn } from "lucide-react";
@@ -7,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
 
-const LoginForm = ({user}: {user: any}) => {
+const LoginForm = ({ user }: { user: any }) => {
   const {
     signInWithGoogle,
     loading: googleLoading,
@@ -94,7 +95,9 @@ const LoginForm = ({user}: {user: any}) => {
             d="M24 46c6.8 0 12.6-2.2 16.8-6l-8-6.1c-2.3 1.5-5.3 2.5-8.8 2.5-6.1 0-11.2-3.5-13.9-8.6L3 36c3.9 8.2 11.7 13.5 21 13.5z"
           />
         </svg>
-        <span className="text-sm font-medium text-foreground">Continue with Google</span>
+        <span className="text-sm font-medium text-foreground">
+          Continue with Google
+        </span>
       </button>
 
       <div className="flex items-center my-3">

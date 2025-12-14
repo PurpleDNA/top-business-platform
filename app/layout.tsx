@@ -2,14 +2,9 @@ import type { Metadata } from "next";
 import { Rubik, Bungee } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./components/theme-provider";
-import { DashboardHeader } from "./components/dashboard/DashboardHeader";
-import { MobileBottomBar } from "./components/dashboard/MobileBottomBar";
 import { AuthProvider } from "./providers/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
-import { Sidebar } from "./components/dashboard/Sidebar";
-import { getUser } from "./services/roles";
-import { isSuperAdmin } from "./services/roles";
 
 const rubik = Rubik({
   variable: "--font-rubik",
@@ -30,36 +25,26 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const isSuper = await isSuperAdmin();
-  const profile = await getUser();
-
   return (
     <html lang="en" className={`${rubik.variable} ${bungee.variable}`}>
       <body
         className={`${rubik.className} antialiased overflow-hidden`}
         suppressHydrationWarning={true}
       >
-        <AuthProvider isSuper={isSuper}>
+        <AuthProvider>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
           >
-            <DashboardHeader profile={profile}/>
             <Toaster />
-            <div className="flex h-[calc(100vh-4rem)]">
-              <Sidebar />
-              <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
-                {children}
-              </main>
-            </div>
-            <MobileBottomBar />
+            {children}
             <Analytics />
           </ThemeProvider>
         </AuthProvider>

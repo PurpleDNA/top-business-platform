@@ -1,7 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
-import { UserData, createUser, updateUser, deleteUser, UserRole } from "@/app/services/users";
+import {
+  UserData,
+  createUser,
+  updateUser,
+  deleteUser,
+  UserRole,
+} from "@/app/services/users";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,7 +48,10 @@ interface UserManagementClientProps {
   currentUserRole?: string | null;
 }
 
-export default function UserManagementClient({ initialUsers, currentUserRole }: UserManagementClientProps) {
+export default function UserManagementClient({
+  initialUsers,
+  currentUserRole,
+}: UserManagementClientProps) {
   const [users, setUsers] = useState<UserData[]>(initialUsers);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -53,7 +63,11 @@ export default function UserManagementClient({ initialUsers, currentUserRole }: 
 
   // Sort users: Super Admins first, then Admins, then Users
   const sortedUsers = [...users].sort((a, b) => {
-    const roleOrder: Record<string, number> = { "super-admin": 0, admin: 1, user: 2 };
+    const roleOrder: Record<string, number> = {
+      "super-admin": 0,
+      admin: 1,
+      user: 2,
+    };
     return (roleOrder[a.role] ?? 99) - (roleOrder[b.role] ?? 99);
   });
 
@@ -61,7 +75,7 @@ export default function UserManagementClient({ initialUsers, currentUserRole }: 
     e.preventDefault();
     setIsLoading(true);
     const formData = new FormData(e.currentTarget);
-    
+
     try {
       const payload = {
         firstName: formData.get("firstName") as string,
@@ -139,9 +153,12 @@ export default function UserManagementClient({ initialUsers, currentUserRole }: 
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case "super-admin": return "bg-red-500 hover:bg-red-600";
-      case "admin": return "bg-blue-500 hover:bg-blue-600";
-      default: return "bg-gray-500 hover:bg-gray-600";
+      case "super-admin":
+        return "bg-red-500 hover:bg-red-600";
+      case "admin":
+        return "bg-blue-500 hover:bg-blue-600";
+      default:
+        return "bg-gray-500 hover:bg-gray-600";
     }
   };
 
@@ -168,7 +185,8 @@ export default function UserManagementClient({ initialUsers, currentUserRole }: 
               <DialogHeader>
                 <DialogTitle>Add New Team Member</DialogTitle>
                 <DialogDescription>
-                  Create a new user account. They will receive an email confirmation.
+                  Create a new user account. They will receive an email
+                  confirmation.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleCreateUser} className="space-y-4">
@@ -188,7 +206,13 @@ export default function UserManagementClient({ initialUsers, currentUserRole }: 
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" name="password" type="password" required minLength={6} />
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    minLength={6}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="role">Role</Label>
@@ -222,7 +246,9 @@ export default function UserManagementClient({ initialUsers, currentUserRole }: 
                 <TableHead>User</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Joined</TableHead>
-                {canManage && <TableHead className="text-right">Actions</TableHead>}
+                {canManage && (
+                  <TableHead className="text-right">Actions</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -234,8 +260,12 @@ export default function UserManagementClient({ initialUsers, currentUserRole }: 
                         <UserIcon className="h-4 w-4 text-muted-foreground" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="font-medium">{user.display_name || user.first_name || "Unknown"}</span>
-                        <span className="text-xs text-muted-foreground">{user.email}</span>
+                        <span className="font-medium">
+                          {user.display_name || user.first_name || "Unknown"}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {user.email}
+                        </span>
                       </div>
                     </div>
                   </TableCell>
@@ -250,8 +280,8 @@ export default function UserManagementClient({ initialUsers, currentUserRole }: 
                   {canManage && (
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="icon"
                           onClick={() => {
                             setEditingUser(user);
@@ -288,20 +318,20 @@ export default function UserManagementClient({ initialUsers, currentUserRole }: 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-firstName">First Name</Label>
-                  <Input 
-                    id="edit-firstName" 
-                    name="firstName" 
-                    defaultValue={editingUser.first_name} 
-                    required 
+                  <Input
+                    id="edit-firstName"
+                    name="firstName"
+                    defaultValue={editingUser.first_name}
+                    required
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-lastName">Last Name</Label>
-                  <Input 
-                    id="edit-lastName" 
-                    name="lastName" 
-                    defaultValue={editingUser.last_name} 
-                    required 
+                  <Input
+                    id="edit-lastName"
+                    name="lastName"
+                    defaultValue={editingUser.last_name}
+                    required
                   />
                 </div>
               </div>
@@ -329,7 +359,9 @@ export default function UserManagementClient({ initialUsers, currentUserRole }: 
       </Dialog>
 
       <DeleteUserDialog
-        userName={deletingUser?.display_name || deletingUser?.first_name || "this user"}
+        userName={
+          deletingUser?.display_name || deletingUser?.first_name || "this user"
+        }
         open={isDeleteOpen}
         onOpenChange={(open) => {
           setIsDeleteOpen(open);

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { usePathname } from "next/navigation";
@@ -36,7 +37,7 @@ export const bungee = Bungee({
   weight: ["400"],
 });
 
-export const DashboardHeader = ({profile}: {profile: any}) => {
+export const DashboardHeader = ({ profile }: { profile: any }) => {
   const router = useRouter();
   const { signOut } = useAuth();
   const pathname = usePathname();
@@ -209,9 +210,7 @@ export const DashboardHeader = ({profile}: {profile: any}) => {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">
-                    {profile?.display_name}
-                  </p>
+                  <p className="text-sm font-medium">{profile?.display_name}</p>
                   <p className="text-xs text-muted-foreground">
                     {profile?.email}
                   </p>

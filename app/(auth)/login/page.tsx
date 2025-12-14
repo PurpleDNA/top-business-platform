@@ -1,6 +1,6 @@
 import LoginForm from "@/app/components/login/LoginForm";
 import SignupForm from "@/app/components/login/SignupForm";
-import { getUser } from "../services/roles";
+import { getUser } from "@/app/services/roles";
 
 export default async function LoginPage() {
   const user = await getUser();

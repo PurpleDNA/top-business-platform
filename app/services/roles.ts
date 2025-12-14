@@ -1,9 +1,10 @@
 import { createClient } from "@/supabase/server";
+import { cache } from "react";
 
 export async function getCurrentUserRole() {
   const supabase = await createClient();
   const {
-    data:{user},
+    data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) return null;
@@ -23,17 +24,15 @@ export async function isSuperAdmin() {
 }
 
 export async function isAdmin() {
-    const role = await getCurrentUserRole();
-    return role === "admin" || role === "super-admin";
+  const role = await getCurrentUserRole();
+  return role === "admin" || role === "super-admin";
 }
 
-export async function getUser() {
+export const getUser = cache(async () => {
   const supabase = await createClient();
   const {
-    data:{user},
+    data: { user },
   } = await supabase.auth.getUser();
-
-  console.log("user>>>>>>>>",user)
 
   if (!user) return null;
 
@@ -44,4 +43,4 @@ export async function getUser() {
     .single();
 
   return userProfile;
-}
+});

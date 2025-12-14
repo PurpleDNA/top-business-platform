@@ -1,31 +1,20 @@
-// import { SalesChart } from "./components/dashboard/SalesChart";
-import { MetricsCard } from "./components/dashboard/MetricsCard";
-import { CustomersTable } from "./components/dashboard/CustomersTable";
-import { ProductionsTable } from "./components/dashboard/ProductionsTable";
-import { QuickActions } from "./components/dashboard/QuickActions";
-import {
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  Factory,
-  Users,
-  UserPlus,
-} from "lucide-react";
-import { getTotalBusinessOutstanding } from "./services/outstanding";
-import Hero from "./components/dashboard/Hero";
-import { getCustomerCount } from "./services/customers";
-import { getLatestProduction } from "./services/productions";
-import { ProductionCard } from "./components/dashboard/ProductionCard";
-import { Production } from "./services/productions";
-import { formatDate } from "./services/utils";
-import { getBreadPriceMultipliers } from "./services/bread_price";
-import { getUser } from "./services/roles";
+// import { SalesChart } from "@/app/components/dashboard/SalesChart";
+import { MetricsCard } from "@/app/components/dashboard/MetricsCard";
+import { CustomersTable } from "@/app/components/dashboard/CustomersTable";
+import { ProductionsTable } from "@/app/components/dashboard/ProductionsTable";
+import { DollarSign, Factory } from "lucide-react";
+import { getTotalBusinessOutstanding } from "@/app/services/outstanding";
+import Hero from "@/app/components/dashboard/Hero";
+import { getLatestProduction } from "@/app/services/productions";
+import { ProductionCard } from "@/app/components/dashboard/ProductionCard";
+import { Production } from "@/app/services/productions";
+import { formatDate } from "@/app/services/utils";
+import { getBreadPriceMultipliers } from "@/app/services/bread_price";
+import { getUser } from "@/app/services/roles";
 
 const Index = async () => {
   const profile = await getUser();
   const totalOutstanding = await getTotalBusinessOutstanding();
-  console.log(totalOutstanding);
-  const customerCount = await getCustomerCount();
   const latestProduction = (await getLatestProduction()) as Production;
   const multipliers = await getBreadPriceMultipliers();
   const breadTypes = Object.keys(multipliers);
@@ -47,7 +36,7 @@ const Index = async () => {
     <div className="min-h-screen bg-background">
       <main className="mx-auto p-6 space-y-6">
         {/* Hero Section */}
-        <Hero profile={profile}/>
+        <Hero profile={profile} />
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <MetricsCard
