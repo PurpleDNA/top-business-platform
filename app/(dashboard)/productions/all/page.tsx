@@ -44,17 +44,16 @@ const AllProductionsPage = async () => {
               Total: {productions.length} production batches
             </p>
           </div>
-            <Link href="/production/new">
-              <Button className="bg-primary hidden lg:flex">
-                <Factory className="h-4 w-4 mr-2" />
-                New Production
-              </Button>
-              <Button className="bg-primary lg:hidden">
-                <Plus className="h-4 w-4" />
-              </Button>
-            </Link>
+          <Link href="/production/new">
+            <Button className="bg-primary hidden lg:flex">
+              <Factory className="h-4 w-4 mr-2" />
+              New Production
+            </Button>
+            <Button className="bg-primary lg:hidden">
+              <Plus className="h-4 w-4" />
+            </Button>
+          </Link>
         </div>
-
 
         {/* Stats Cards - Hidden on Mobile */}
         <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -111,7 +110,10 @@ const AllProductionsPage = async () => {
                 </Link>
               </div>
             ) : (
-              <ProductionsTable productions={productions} multipliers={multipliers} />
+              <ProductionsTable
+                productions={productions}
+                multipliers={multipliers}
+              />
             )}
           </CardContent>
         </Card>
@@ -158,10 +160,13 @@ const AllProductionsPage = async () => {
                       </div>
                       <p className="text-sm text-muted-foreground">
                         {breadTypes.map((breadType, index) => {
-                          const totalQuantity = (production.quantity[breadType] || 0) + (production.old_bread[breadType] || 0);
+                          const totalQuantity =
+                            (production.quantity[breadType] || 0) +
+                            (production.old_bread[breadType] || 0);
                           return (
                             <span key={breadType}>
-                              {breadType.charAt(0).toUpperCase()}: {totalQuantity}
+                              {breadType.charAt(0).toUpperCase()}:{" "}
+                              {totalQuantity}
                               {index < breadTypes.length - 1 && " | "}
                             </span>
                           );
@@ -169,10 +174,7 @@ const AllProductionsPage = async () => {
                       </p>
                     </div>
                     <h3 className="font-semibold text-lg">
-                      ₦
-                      {calculateBreadTotal(
-                        production.quantity
-                      ).toLocaleString()}
+                      ₦{production.total}
                     </h3>
                   </div>
                 </Link>

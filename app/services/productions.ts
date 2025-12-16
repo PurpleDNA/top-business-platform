@@ -8,41 +8,16 @@ import { isSuperAdmin } from "./roles";
 
 export interface Production {
   id: string;
-  quantity: {
-    blue: number;
-    green: number;
-    orange: number;
-    [key: string]: number; 
-  };
-  old_bread: {
-    blue: number;
-    green: number;
-    orange: number;
-    [key: string]: number;
-  };
-  sold_bread: {
-    blue: number;
-    green: number;
-    orange: number;
-    [key: string]: number;
-  };
-  bread_price: {
-    blue: number;
-    green: number;
-    orange: number;
-    [key: string]: number;
-  };
+  quantity: Record<string, number>;
+  old_bread: Record<string, number>;
+  sold_bread: Record<string, number>;
+  bread_price: Record<string, number>;
   total: number;
   cash: number;
   created_at: string;
   updated_at: string;
   open: boolean;
-  remaining_bread?: {
-    blue: number;
-    green: number;
-    orange: number;
-    [key: string]: number;
-  };
+  remaining_bread?: Record<string, number>;
 }
 
 interface Create {
@@ -398,7 +373,7 @@ export const updateProduction = async (
  */
 export const updateSoldBread = async (
   _productionId: string,
-  _soldQuantity: { orange?: number; blue?: number; green?: number }
+  _soldQuantity: Record<string, number>
 ) => {
   console.warn(
     "updateSoldBread is deprecated. The database trigger handles sold_bread updates automatically."

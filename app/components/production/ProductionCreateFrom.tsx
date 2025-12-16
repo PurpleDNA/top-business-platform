@@ -28,11 +28,9 @@ const validateCreate = z.object({
 });
 
 interface Props {
-  multipliers?: Record<string, number>;
+  multipliers: Record<string, number>;
 }
-const ProductionFrom = ({
-  multipliers = { orange: 1200, blue: 1000, green: 650 },
-}: Props) => {
+const ProductionFrom = ({ multipliers }: Props) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showOldBread, setShowOldBread] = useState(false);
 

@@ -2,10 +2,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Color map for Tailwind static class names
+const getTextColorClass = (color: string) => {
+  const colorMap: Record<string, string> = {
+    orange: "text-orange-500",
+    blue: "text-blue-500",
+    green: "text-green-500",
+    white: "text-slate-500",
+    brown: "text-amber-700",
+    pink: "text-pink-500",
+  };
+  return colorMap[color.toLowerCase()] || "text-gray-500";
+};
+
 interface ProductionCardProps {
   title: string;
   value: Record<string, string>;
-  multipliers?: Record<string, number>;
+  multipliers: Record<string, number>;
   total: string;
   icon: LucideIcon;
   description?: string;
@@ -14,7 +27,7 @@ interface ProductionCardProps {
 export const ProductionCard = ({
   title,
   value,
-  multipliers = { orange: 1200, blue: 1000, green: 650 },
+  multipliers,
   total,
   icon: Icon,
   description,
@@ -34,7 +47,9 @@ export const ProductionCard = ({
           {breadTypes.map((breadType) => (
             <div
               key={breadType}
-              className={`text-2xl font-bold mb-1 text-${breadType}-500 ${Number(value[breadType]) > 0 ? "" : "hidden"}`}
+              className={`text-2xl font-bold mb-1 ${getTextColorClass(breadType)} ${
+                Number(value[breadType]) > 0 ? "" : "hidden"
+              }`}
             >
               {value[breadType] || 0}
             </div>

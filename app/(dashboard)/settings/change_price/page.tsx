@@ -10,9 +10,7 @@ export default async function ChangePricePage() {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Bread Prices</h1>
-        <p className="text-muted-foreground">
-          Manage bread prices for orange, blue, and green varieties
-        </p>
+        <p className="text-muted-foreground">Manage bread prices</p>
       </div>
 
       <BreadPriceList initialPrices={breadPrices} canManage={isSuper} />

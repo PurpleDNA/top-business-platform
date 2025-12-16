@@ -54,6 +54,18 @@ const getColorClasses = (color: string) => {
       bg: "bg-green-200",
       darkBg: "dark:bg-green-500",
     },
+    white: {
+      bg: "bg-slate-100",
+      darkBg: "dark:bg-slate-400",
+    },
+    brown: {
+      bg: "bg-amber-200",
+      darkBg: "dark:bg-amber-700",
+    },
+    pink: {
+      bg: "bg-pink-200",
+      darkBg: "dark:bg-pink-500",
+    },
   };
 
   return (
@@ -66,11 +78,7 @@ const getColorClasses = (color: string) => {
 
 const SalesCreateForm = ({ productions, customer, production }: Props) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [multipliers, setMultipliers] = useState<Record<string, number>>({
-    orange: 1200,
-    blue: 1000,
-    green: 650,
-  });
+  const [multipliers, setMultipliers] = useState<Record<string, number>>({});
   const [selected, setSelected] = useState({
     production: production
       ? production
@@ -96,13 +104,7 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
     quantity: initialQuantity,
   });
   const [amountPaid, setAmountPaid] = useState<string>("");
-  const [quantity, setQuantity] = useState<{
-    [key: string]: string;
-  }>({
-    orange: "",
-    blue: "",
-    green: "",
-  });
+  const [quantity, setQuantity] = useState<Record<string, string>>({});
   const [searchResults, setSearchResuls] = useState<Customer[]>([]);
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);

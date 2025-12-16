@@ -6,6 +6,7 @@ import {
   getProductionPaidOutstanding,
   calculateBreadTotal,
 } from "@/app/services/productions";
+import { getBreadPriceMultipliers } from "@/app/services/bread_price";
 import { OutstandingSection } from "@/app/components/productions/OutstandingSection";
 import { ExpenseDropdown } from "@/app/components/productions/ExpenseDropdown";
 import { RemainingBreadDropdown } from "@/app/components/productions/RemainingBreadDropdown";
@@ -37,6 +38,8 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const expenses = await getExpensesByProdId(id);
   const sales = await fetchSalesByProductionId(id);
   const isSuper = await isSuperAdmin();
+  const multipliers = await getBreadPriceMultipliers();
+  const breadTypes = Object.keys(multipliers);
 
   if (!production) {
     return (
@@ -129,14 +132,10 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const statusConfig = getStatusConfig();
   const StatusIcon = statusConfig.icon;
 
-  // Calculate total quantity
-  const totalQuantity =
-    quantity.blue +
-    quantity.green +
-    quantity.orange +
-    old_bread.blue +
-    old_bread.green +
-    old_bread.orange;
+  // Calculate total quantity dynamically from all bread types
+  const totalQuantity = breadTypes.reduce((sum, type) => {
+    return sum + (quantity[type] || 0) + (old_bread[type] || 0);
+  }, 0);
 
   // Format production ID (show first 8 chars)
   const shortId = id.substring(0, 8).toUpperCase();
@@ -211,35 +210,17 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                       Production
                     </dt>
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-                          <span className="text-sm text-foreground">Blue</span>
-                        </div>
-                        <span className="text-sm font-semibold text-foreground">
-                          {quantity.blue.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                          <span className="text-sm text-foreground">Green</span>
-                        </div>
-                        <span className="text-sm font-semibold text-foreground">
-                          {quantity.green.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="h-3 w-3 rounded-full bg-orange-500"></div>
-                          <span className="text-sm text-foreground">
-                            Orange
+                      {breadTypes.map((breadType) => (
+                        <div key={breadType} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className={`h-3 w-3 rounded-full bg-${breadType}-500`}></div>
+                            <span className="text-sm text-foreground capitalize">{breadType}</span>
+                          </div>
+                          <span className="text-sm font-semibold text-foreground">
+                            {(quantity[breadType] || 0).toLocaleString()}
                           </span>
                         </div>
-                        <span className="text-sm font-semibold text-foreground">
-                          {quantity.orange.toLocaleString()}
-                        </span>
-                      </div>
+                      ))}
                     </div>
                   </div>
                   {isOldBread && (
@@ -248,39 +229,19 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                         Old Bread
                       </dt>
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-                            <span className="text-sm text-foreground">
-                              Blue
+                        {breadTypes.map((breadType) => (
+                          <div key={breadType} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className={`h-3 w-3 rounded-full bg-${breadType}-500`}></div>
+                              <span className="text-sm text-foreground capitalize">
+                                {breadType}
+                              </span>
+                            </div>
+                            <span className="text-sm font-semibold text-foreground">
+                              {(old_bread[breadType] || 0).toLocaleString()}
                             </span>
                           </div>
-                          <span className="text-sm font-semibold text-foreground">
-                            {old_bread.blue.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                            <span className="text-sm text-foreground">
-                              Green
-                            </span>
-                          </div>
-                          <span className="text-sm font-semibold text-foreground">
-                            {old_bread.green.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="h-3 w-3 rounded-full bg-orange-500"></div>
-                            <span className="text-sm text-foreground">
-                              Orange
-                            </span>
-                          </div>
-                          <span className="text-sm font-semibold text-foreground">
-                            {old_bread.orange.toLocaleString()}
-                          </span>
-                        </div>
+                        ))}
                       </div>
                     </div>
                   )}

@@ -188,7 +188,7 @@ export const getBreadPriceCount = async (): Promise<number> => {
 
 /**
  * Get bread prices as multipliers mapped by color
- * Returns a Record object like { orange: 1200, blue: 1000, green: 650 }
+ * Returns a Record object dynamically based on bread_price table entries
  * Cached indefinitely until revalidation via tag: "bread_prices"
  */
 export const getBreadPriceMultipliers = unstable_cache(
@@ -207,12 +207,8 @@ export const getBreadPriceMultipliers = unstable_cache(
       return multipliers;
     } catch (error) {
       console.error("Unexpected error in getBreadPriceMultipliers:", error);
-      // Return default fallback values if database fetch fails
-      return {
-        orange: 1200,
-        blue: 1000,
-        green: 650,
-      };
+      // Return empty object on error - calling code should handle empty state
+      return {};
     }
   },
   ["bread-price-multipliers"],
