@@ -27,6 +27,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
+import { isSuperAdmin } from "@/app/services/roles";
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
@@ -35,6 +36,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const paidOutstandingList = (await getProductionPaidOutstanding(id)) || [];
   const expenses = await getExpensesByProdId(id);
   const sales = await fetchSalesByProductionId(id);
+  const isSuper = await isSuperAdmin();
 
   if (!production) {
     return (
@@ -164,6 +166,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                 productionId={id}
                 initialOpenStatus={production.open}
                 production={production}
+                isSuper={isSuper}
               />
             </div>
           </div>
