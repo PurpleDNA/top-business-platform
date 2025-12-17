@@ -75,7 +75,7 @@ export const createBreadPrice = async (payload: CreateBreadPrice) => {
   try {
     const isAllowed = await isSuperAdmin();
     if (!isAllowed) {
-       throw new Error("Unauthorized: Only Super Admins can manage prices.");
+      throw new Error("Unauthorized: Only Super Admins can manage prices.");
     }
 
     const { data: breadPriceData, error } = await supabase
@@ -111,7 +111,7 @@ export const updateBreadPrice = async (
   try {
     const isAllowed = await isSuperAdmin();
     if (!isAllowed) {
-       throw new Error("Unauthorized: Only Super Admins can manage prices.");
+      throw new Error("Unauthorized: Only Super Admins can manage prices.");
     }
 
     const { data: updatedBreadPrice, error } = await supabase
@@ -142,7 +142,7 @@ export const deleteBreadPrice = async (breadPriceId: number) => {
   try {
     const isAllowed = await isSuperAdmin();
     if (!isAllowed) {
-       throw new Error("Unauthorized: Only Super Admins can manage prices.");
+      throw new Error("Unauthorized: Only Super Admins can manage prices.");
     }
 
     const { error } = await supabase
@@ -214,6 +214,6 @@ export const getBreadPriceMultipliers = unstable_cache(
   ["bread-price-multipliers"],
   {
     tags: ["bread_prices"],
-    revalidate: 60 * 60 * 24,
+    revalidate: 300,
   }
 );

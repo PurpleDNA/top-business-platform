@@ -68,7 +68,6 @@ export interface PaymentWithDetails {
     id: string;
     created_at: string;
   } | null;
-
 }
 
 export interface FilteredPayment {
@@ -156,7 +155,7 @@ export const fetchAllPaymentsWithDetails = unstable_cache(
   [],
   {
     tags: ["payments"],
-    revalidate: 600,
+    revalidate: 300,
   }
 );
 

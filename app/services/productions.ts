@@ -47,7 +47,6 @@ interface SaleWithCustomer {
 
 export const createProduction = async (payload: Create) => {
   try {
-
     const quantity = Object.fromEntries(
       Object.entries(payload.quantity).map(([key, value]) => [
         key,
@@ -114,7 +113,7 @@ export const getLatestProduction = unstable_cache(
     }
   },
   [],
-  { tags: ["latestProd"], revalidate: 3600 }
+  { tags: ["latestProd"], revalidate: 300 }
 );
 
 export const getLast10Productions = unstable_cache(
@@ -133,7 +132,7 @@ export const getLast10Productions = unstable_cache(
     }
   },
   [],
-  { tags: ["last10"], revalidate: 3600 }
+  { tags: ["last10"], revalidate: 300 }
 );
 
 export const getProductionById = async (id: string) => {
@@ -215,7 +214,7 @@ export const fetchAllProductions = unstable_cache(
     }
   },
   [],
-  { tags: ["productions"], revalidate: 3600 }
+  { tags: ["productions"], revalidate: 300 }
 );
 
 export const getProductionOutstanding = async (productionId: string) => {
@@ -272,7 +271,8 @@ export const getProductionPaidOutstanding = async (productionId: string) => {
         )
       `
       )
-      .eq("production_id", productionId).eq("type", "after")
+      .eq("production_id", productionId)
+      .eq("type", "after")
       .order("paid_at", { ascending: false });
 
     if (error) {
@@ -299,7 +299,9 @@ export const toggleProdStatus = async (productionId: string) => {
   try {
     const isAllowed = await isSuperAdmin();
     if (!isAllowed) {
-       throw new Error("Unauthorized: Only Super Admins can open/close productions.");
+      throw new Error(
+        "Unauthorized: Only Super Admins can open/close productions."
+      );
     }
 
     // Call atomic RPC function
