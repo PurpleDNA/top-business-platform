@@ -1,10 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef, Suspense } from "react";
-import {
-  fetchFilteredSales,
-  FilteredSale,
-} from "@/app/services/sales";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { fetchFilteredSales, FilteredSale } from "@/app/services/sales";
 import { fetchAllCustomers, Customer } from "@/app/services/customers";
 import { fetchAllProductions, Production } from "@/app/services/productions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +42,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 
@@ -72,12 +70,15 @@ function AllSalesContent() {
     productionId: null,
   });
 
-  const [cache, setCache] = useState<Record<string, (FilteredSale | undefined)[]>>({});
+  const [cache, setCache] = useState<
+    Record<string, (FilteredSale | undefined)[]>
+  >({});
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [productions, setProductions] = useState<Production[]>([]);
+  const [totalCounts, setTotalCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
-  
-  // We handle editing/deleting using the same modals. 
+
+  // We handle editing/deleting using the same modals.
   // We cast FilteredSale to SaleWithDetails where needed or adjust the type locally if structure matches enough.
   const [editingSale, setEditingSale] = useState<FilteredSale | null>(null);
   const [deletingSale, setDeletingSale] = useState<{
@@ -89,12 +90,14 @@ function AllSalesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const page = Number(searchParams.get("page")) || 1;
-  
+
   // Map<filterKey, Set<batchNumber>>
   const fetchedBatches = useRef<Map<string, Set<number>>>(new Map());
 
   // Generate unique key for current filter state
-  const filterKey = `${filters.customerId || "all"}-${filters.productionId || "all"}`;
+  const filterKey = `${filters.customerId || "all"}-${
+    filters.productionId || "all"
+  }`;
 
   // Fetch customers and productions once
   useEffect(() => {
@@ -138,17 +141,18 @@ function AllSalesContent() {
         const newData = [...existingData];
         // Ensure array is large enough before splicing
         while (newData.length < startIndex) {
-            newData.push(undefined); 
+          newData.push(undefined);
         }
         newData.splice(startIndex, salesData.length, ...salesData);
-        // Clean up any undefined holes if we want, but splicing typically handles it by expanding.
-        // Actually, if we jump straight to page 6 (batch 2), index 0-49 might be empty.
-        // The slice logic locally handles holes, but let's be safe:
-        // Filter out undefined if we strictly want a clean list, BUT we rely on index positioning.
-        // It's safer to keep the holes if we want strict index mapping, 
-        // OR we can just append if we assume sequential navigation, but user asked for robust pagination.
-        // Since we insert at specific index, `newData` will have empty slots if we skipped batches.
-        
+
+        // If we got fewer items than requested, we reached the end
+        if (salesData.length < 50) {
+          setTotalCounts((prev) => ({
+            ...prev,
+            [filterKey]: startIndex + salesData.length,
+          }));
+        }
+
         return { ...prev, [filterKey]: newData };
       });
 
@@ -159,7 +163,10 @@ function AllSalesContent() {
     fetchBatch();
   }, [page, filterKey, filters.customerId, filters.productionId]);
 
-  const handleFilterChange = (type: "customer" | "production", value: string) => {
+  const handleFilterChange = (
+    type: "customer" | "production",
+    value: string
+  ) => {
     const newFilters = {
       ...filters,
       [type === "customer" ? "customerId" : "productionId"]:
@@ -171,29 +178,31 @@ function AllSalesContent() {
 
   // Get data for current filter
   const currentFilterData = cache[filterKey] || [];
-  
+
   // Important: currentFilterData might have holes if we fetched batch 2 but not batch 1.
   // We need to handle that gracefully or ensure we just render what we have.
   // However, the standard behavior is that the cache stores objects at their correct data-index.
-  
+
   const startIndex = (page - 1) * 10;
   const endIndex = startIndex + 10;
   const paginatedSales = currentFilterData
     .slice(startIndex, endIndex)
     .filter((sale): sale is FilteredSale => !!sale);
 
+  const isFirstPage = page === 1;
+  const totalCount = totalCounts[filterKey];
+  const isLastPage = totalCount !== undefined ? endIndex >= totalCount : false;
+
   // Calculate totals - ONLY for loaded data in this filter context
-  // Note: Calculating "Total Sales Amount" for *all* data matching a filter would require 
-  // a separate aggregate query to the DB if we haven't loaded all batches. 
+  // Note: Calculating "Total Sales Amount" for *all* data matching a filter would require
+  // a separate aggregate query to the DB if we haven't loaded all batches.
   // For now, we sum what we have loaded.
-  const totalSalesAmount = currentFilterData.filter(Boolean).reduce(
-    (sum, sale) => sum + (sale?.amount || 0),
-    0
-  );
-  const totalOutstanding = currentFilterData.filter(Boolean).reduce(
-    (sum, sale) => sum + (sale?.outstanding || 0),
-    0
-  );
+  const totalSalesAmount = currentFilterData
+    .filter(Boolean)
+    .reduce((sum, sale) => sum + (sale?.amount || 0), 0);
+  const totalOutstanding = currentFilterData
+    .filter(Boolean)
+    .reduce((sum, sale) => sum + (sale?.outstanding || 0), 0);
 
   if (loading && !cache[filterKey]) {
     // Show table skeleton when initial data for filter is loading
@@ -230,28 +239,21 @@ function AllSalesContent() {
 
         {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Filter by Customer</label>
-            <Select
+          <div className="space-y-2 flex flex-col">
+            <label className="text-sm font-medium">Customer</label>
+            <SearchableSelect
               value={filters.customerId || "all"}
               onValueChange={(val) => handleFilterChange("customer", val)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All Customers" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Customers</SelectItem>
-                {customers.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>
-                    {customer.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="All Customers"
+              options={[
+                { value: "all", label: "All Customers" },
+                ...customers.map((c) => ({ value: c.id, label: c.name })),
+              ]}
+            />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Filter by Production</label>
+            <label className="text-sm font-medium">Production</label>
             <Select
               value={filters.productionId || "all"}
               onValueChange={(val) => handleFilterChange("production", val)}
@@ -259,7 +261,7 @@ function AllSalesContent() {
               <SelectTrigger>
                 <SelectValue placeholder="All Productions" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[320px]">
                 <SelectItem value="all">All Productions</SelectItem>
                 {productions.map((production) => (
                   <SelectItem key={production.id} value={production.id}>
@@ -355,9 +357,7 @@ function AllSalesContent() {
                         {sale.customer_name || "Unknown"}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {formatDate(
-                          sale.production_date || sale.created_at
-                        )}
+                        {formatDate(sale.production_date || sale.created_at)}
                       </TableCell>
                       <TableCell className="font-semibold">
                         ₦{sale.amount.toLocaleString()}
@@ -395,10 +395,10 @@ function AllSalesContent() {
                             className="bg-background"
                           >
                             <Link href={`/customers/page/${sale.customer_id}`}>
-                                <DropdownMenuItem>
+                              <DropdownMenuItem>
                                 <User className="mr-2 h-4 w-4" />
                                 View Customer
-                                </DropdownMenuItem>
+                              </DropdownMenuItem>
                             </Link>
                             <DropdownMenuItem
                               onClick={() => setEditingSale(sale)}
@@ -411,8 +411,7 @@ function AllSalesContent() {
                               onClick={() =>
                                 setDeletingSale({
                                   id: sale.id,
-                                  customerName:
-                                    sale.customer_name || "Unknown",
+                                  customerName: sale.customer_name || "Unknown",
                                 })
                               }
                             >
@@ -433,11 +432,11 @@ function AllSalesContent() {
         {/* Mobile View */}
         <div className="lg:hidden space-y-4">
           {loading && !paginatedSales.length ? (
-             <div className="space-y-4">
-               {Array.from({length: 5}).map((_, i) => (
-                 <Skeleton key={i} className="h-24 w-full" />
-               ))}
-             </div>
+            <div className="space-y-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-24 w-full" />
+              ))}
+            </div>
           ) : paginatedSales.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <ShoppingCart className="h-12 w-12 text-muted-foreground mb-4" />
@@ -492,12 +491,12 @@ function AllSalesContent() {
                         align="end"
                         className="bg-background"
                       >
-                         <Link href={`/customers/page/${sale.customer_id}`}>
-                            <DropdownMenuItem>
-                                <User className="mr-2 h-4 w-4" />
-                                View Customer
-                            </DropdownMenuItem>
-                         </Link>
+                        <Link href={`/customers/page/${sale.customer_id}`}>
+                          <DropdownMenuItem>
+                            <User className="mr-2 h-4 w-4" />
+                            View Customer
+                          </DropdownMenuItem>
+                        </Link>
                         <DropdownMenuItem onClick={() => setEditingSale(sale)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
@@ -525,26 +524,27 @@ function AllSalesContent() {
 
         {/* Pagination Controls */}
         <div className="flex flex-col items-center gap-2 pt-4">
-            <div className="flex items-center gap-2">
-                <Button 
-                    variant="outline" 
-                    size="sm" 
-                    disabled={page === 1}
-                    onClick={() => router.push(`${pathname}?page=${Math.max(1, page - 1)}`)}
-                >
-                    <ChevronLeft className="h-4 w-4 mr-1" />
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                    Page {page}
-                </span>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => router.push(`${pathname}?page=${page + 1}`)}
-                >
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-            </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isFirstPage}
+              onClick={() =>
+                router.push(`${pathname}?page=${Math.max(1, page - 1)}`)
+              }
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+            </Button>
+            <span className="text-sm text-muted-foreground">Page {page}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isLastPage}
+              onClick={() => router.push(`${pathname}?page=${page + 1}`)}
+            >
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
         </div>
       </div>
 
