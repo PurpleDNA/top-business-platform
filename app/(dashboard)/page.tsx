@@ -33,7 +33,7 @@ const Index = async () => {
     0;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-full bg-background">
       <main className="mx-auto p-6 space-y-6">
         {/* Hero Section */}
         <Hero profile={profile} />

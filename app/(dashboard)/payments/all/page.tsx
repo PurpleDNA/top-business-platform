@@ -187,7 +187,7 @@ function AllPaymentsContent() {
   // The skeleton logic handles the data loading visualization.
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-full bg-background p-4">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">
@@ -586,7 +586,7 @@ export default function AllPaymentsPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="min-h-full bg-background flex items-center justify-center">
           <p className="text-muted-foreground">Loading payments...</p>
         </div>
       }

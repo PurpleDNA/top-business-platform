@@ -43,7 +43,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
   if (!production) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-full bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-2">
             Production Not Found
@@ -142,7 +142,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
   return (
     <div className="bg-background text-foreground antialiased selection:bg-primary/20 scrollbar-hide">
-      <div className="min-h-screen">
+      <div className="min-h-full">
         {/* Header */}
         <header className="sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-background/60 bg-background/80 border-b border-border">
           <div className="max-w-7xl mx-auto px-6">

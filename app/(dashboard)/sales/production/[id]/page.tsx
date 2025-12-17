@@ -17,7 +17,7 @@ const AllSalesPage = async ({
 
   if (!production) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-full bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-2">
             Production Not Found
@@ -58,7 +58,7 @@ const AllSalesPage = async ({
   const paidSalesCount = sales.filter((sale) => sale.paid).length;
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-full bg-background p-4">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">

@@ -61,14 +61,19 @@ const PurchaseHistory = ({ sales }: { sales: any[] }) => {
                     },
                     index: number
                   ) => (
-                    <tr className="hover:bg-foreground/5 transition rounded-md" key={index}>
+                    <tr
+                      className="hover:bg-foreground/5 transition rounded-md"
+                      key={index}
+                    >
                       <td className="px-3 py-3 text-foreground">
                         {formatDate(sale.created_at)}
                       </td>
                       <td className="px-3 py-3 text-foreground">
                         ₦{sale.amount}
                       </td>
-                      <td className="px-3 py-3 text-foreground">₦{sale.remaining}</td>
+                      <td className="px-3 py-3 text-foreground">
+                        ₦{sale.remaining}
+                      </td>
                       <td className="px-5 py-3 text-foreground text-right">
                         {sale.paid ? (
                           <Check
@@ -115,17 +120,15 @@ const PurchaseHistory = ({ sales }: { sales: any[] }) => {
                 className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md bg-neutral-900 border border-white/10 hover:bg-neutral-800 hover:border-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-neutral-900"
               >
                 <ChevronLeft size={14} />
-                Previous
               </button>
               <div className="text-xs text-neutral-400">
-                Page {currentPage} of {totalPages}
+                {currentPage} / {totalPages}
               </div>
               <button
                 onClick={goToNextPage}
                 disabled={currentPage === totalPages}
                 className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md bg-neutral-900 border border-white/10 hover:bg-neutral-800 hover:border-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-neutral-900"
               >
-                Next
                 <ChevronRight size={14} />
               </button>
             </div>

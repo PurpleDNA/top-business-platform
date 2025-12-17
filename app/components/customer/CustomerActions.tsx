@@ -112,6 +112,31 @@ export const CustomerActions = ({
             </DrawerClose>
           </DrawerHeader>
           <div className="px-4 pb-4 space-y-3">
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={() => {
+                setOpen(false);
+                setEditModalOpen(true);
+              }}
+            >
+              <Edit className="h-4 w-4" />
+              Edit Customer
+            </Button>
+            <Button
+              variant="destructive"
+              className="w-full gap-2"
+              onClick={() => {
+                setOpen(false);
+                setDeleteDialogOpen(true);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete Customer
+            </Button>
+            {/* <button className="w-full inline-flex items-center justify-center gap-2 text-sm px-3 py-2 rounded-md bg-muted border border-border hover:bg-accent transition">
+              Export
+            </button> */}
             <Link
               href={{
                 pathname: "/sale/new",
@@ -138,31 +163,6 @@ export const CustomerActions = ({
                 New Payment
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              className="w-full gap-2"
-              onClick={() => {
-                setOpen(false);
-                setEditModalOpen(true);
-              }}
-            >
-              <Edit className="h-4 w-4" />
-              Edit Customer
-            </Button>
-            <Button
-              variant="destructive"
-              className="w-full gap-2"
-              onClick={() => {
-                setOpen(false);
-                setDeleteDialogOpen(true);
-              }}
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete Customer
-            </Button>
-            <button className="w-full inline-flex items-center justify-center gap-2 text-sm px-3 py-2 rounded-md bg-muted border border-border hover:bg-accent transition">
-              Export
-            </button>
           </div>
         </DrawerContent>
       </Drawer>

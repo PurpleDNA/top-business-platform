@@ -36,7 +36,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
   return (
     <div className="bg-background text-foreground antialiased selection:bg-primary/20 scrollbar-hide">
-      <div className="min-h-screen">
+      <div className="min-h-full">
         {/* <!-- Topbar --> */}
         <header className="sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-background/60 bg-background/80 border-b border-border">
           <div className="max-w-7xl mx-auto px-6">
@@ -71,7 +71,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                       </h1>
                       <span
                         id="debtStatusBadge"
-                        className={`inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-md bg-amber-500/10 ${
+                        className={`inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-md bg-amber-500/10 whitespace-nowrap ${
                           has_debt ? `text-amber-500` : `text-green-500`
                         } ring-1 ring-amber-300/20`}
                       >

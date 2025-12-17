@@ -89,10 +89,9 @@ export const ExpenseDropdown = ({
                     disabled={currentPage === 1}
                   >
                     <ChevronLeft className="h-4 w-4 mr-1" />
-                    Previous
                   </Button>
                   <span className="text-sm text-muted-foreground">
-                    Page {currentPage} of {totalPages}
+                    {currentPage} / {totalPages}
                   </span>
                   <Button
                     variant="outline"
@@ -100,7 +99,6 @@ export const ExpenseDropdown = ({
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
                   >
-                    Next
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 </div>

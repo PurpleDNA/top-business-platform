@@ -120,7 +120,7 @@ export const ProductionActions = ({
             </DrawerClose>
           </DrawerHeader>
           <div className="px-4 pb-4 space-y-3 flex-col flex">
-            <Link
+            {/* <Link
               href={{
                 pathname: "/sale/new",
                 query: { production_id: productionId },
@@ -132,7 +132,7 @@ export const ProductionActions = ({
                 <ShoppingCart className="h-4 w-4" />
                 New Sale
               </Button>
-            </Link>
+            </Link> */}
             <ExpenseModal productionId={productionId} />
             <Button
               variant="outline"
@@ -156,9 +156,9 @@ export const ProductionActions = ({
               <Trash2 className="h-4 w-4" />
               Delete Production
             </Button>
-            <button className="w-full inline-flex items-center justify-center gap-2 text-sm px-3 py-2 rounded-md bg-muted border border-border hover:bg-accent transition">
+            {/* <button className="w-full inline-flex items-center justify-center gap-2 text-sm px-3 py-2 rounded-md bg-muted border border-border hover:bg-accent transition">
               Export
-            </button>
+            </button> */}
             {isSuper && (
               <ProductionToggle
                 productionId={productionId}

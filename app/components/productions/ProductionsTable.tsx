@@ -19,14 +19,21 @@ import { DeleteProductionDialog } from "@/app/components/productions/DeleteProdu
 // Color map for Tailwind static class names (Badge styling)
 const getBadgeColorClasses = (color: string) => {
   const colorMap: Record<string, string> = {
-    orange: "bg-orange-200 text-orange-900 dark:bg-orange-500/20 dark:text-orange-400",
+    orange:
+      "bg-orange-200 text-orange-900 dark:bg-orange-500/20 dark:text-orange-400",
     blue: "bg-blue-200 text-blue-900 dark:bg-blue-500/20 dark:text-blue-400",
-    green: "bg-green-200 text-green-900 dark:bg-green-500/20 dark:text-green-400",
-    white: "bg-slate-200 text-slate-900 dark:bg-slate-500/20 dark:text-slate-400",
-    brown: "bg-amber-200 text-amber-900 dark:bg-amber-500/20 dark:text-amber-400",
+    green:
+      "bg-green-200 text-green-900 dark:bg-green-500/20 dark:text-green-400",
+    white:
+      "bg-slate-200 text-slate-900 dark:bg-slate-500/20 dark:text-slate-400",
+    brown:
+      "bg-amber-200 text-amber-900 dark:bg-amber-500/20 dark:text-amber-400",
     pink: "bg-pink-200 text-pink-900 dark:bg-pink-500/20 dark:text-pink-400",
   };
-  return colorMap[color.toLowerCase()] || "bg-gray-200 text-gray-900 dark:bg-gray-500/20 dark:text-gray-400";
+  return (
+    colorMap[color.toLowerCase()] ||
+    "bg-gray-200 text-gray-900 dark:bg-gray-500/20 dark:text-gray-400"
+  );
 };
 
 const formatDate = (dateString: string) => {
@@ -40,14 +47,16 @@ const formatDate = (dateString: string) => {
 
 const ProductionsTable = ({
   productions,
-  multipliers
+  multipliers,
 }: {
   productions: Production[];
   multipliers: Record<string, number>;
 }) => {
   const breadTypes = Object.keys(multipliers);
   const [currentPage, setCurrentPage] = useState(1);
-  const [editingProduction, setEditingProduction] = useState<Production | null>(null);
+  const [editingProduction, setEditingProduction] = useState<Production | null>(
+    null
+  );
   const [deletingProduction, setDeletingProduction] = useState<{
     id: string;
     date: string;
@@ -95,7 +104,9 @@ const ProductionsTable = ({
                   <TableCell>
                     <div className="flex gap-2 flex-wrap">
                       {breadTypes.map((breadType) => {
-                        const totalQuantity = (production.quantity[breadType] || 0) + (production.old_bread[breadType] || 0);
+                        const totalQuantity =
+                          (production.quantity[breadType] || 0) +
+                          (production.old_bread[breadType] || 0);
                         if (totalQuantity === 0) return null;
 
                         return (
@@ -164,10 +175,9 @@ const ProductionsTable = ({
                 disabled={currentPage === 1}
               >
                 <ChevronLeft className="h-4 w-4 mr-1" />
-                Previous
               </Button>
               <span className="text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages}
+                {currentPage} / {totalPages}
               </span>
               <Button
                 variant="outline"
@@ -175,7 +185,6 @@ const ProductionsTable = ({
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
               >
-                Next
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
