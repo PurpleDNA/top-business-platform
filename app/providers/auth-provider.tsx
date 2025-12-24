@@ -25,7 +25,7 @@ interface AuthContextProps {
   signUpNewUser: (payload: Payload) => void;
   signInWithEmail: (payload: LoginPayload) => void;
   profile: any;
-  isSuper:boolean;
+  isSuper: boolean;
   resetPassword: (email: string) => Promise<void>;
   updateAppPassword: (password: string) => Promise<void>;
 }
@@ -39,7 +39,7 @@ const AuthContext = createContext<AuthContextProps>({
   signInWithEmail: () => {},
 
   profile: null,
-  isSuper:false,
+  isSuper: false,
   resetPassword: async () => {},
   updateAppPassword: async () => {},
 });
@@ -111,7 +111,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription?.unsubscribe();
   }, [router]);
-
 
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -195,8 +194,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     resetPassword,
     updateAppPassword,
   };
-  
-  console.log("AuthProvider value:", { ...value, user: value.user?.email });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

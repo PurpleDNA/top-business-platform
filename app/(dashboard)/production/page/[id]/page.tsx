@@ -210,17 +210,27 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                       Production
                     </dt>
                     <div className="space-y-3">
-                      {breadTypes.map((breadType) => (
-                        <div key={breadType} className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className={`h-3 w-3 rounded-full bg-${breadType}-500`}></div>
-                            <span className="text-sm text-foreground capitalize">{breadType}</span>
-                          </div>
-                          <span className="text-sm font-semibold text-foreground">
-                            {(quantity[breadType] || 0).toLocaleString()}
-                          </span>
-                        </div>
-                      ))}
+                      {Object.keys(quantity).map(
+                        (breadType) =>
+                          quantity[breadType] > 0 && (
+                            <div
+                              key={breadType}
+                              className="flex items-center justify-between"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`h-3 w-3 rounded-full bg-${breadType}-500`}
+                                ></div>
+                                <span className="text-sm text-foreground capitalize">
+                                  {breadType}
+                                </span>
+                              </div>
+                              <span className="text-sm font-semibold text-foreground">
+                                {(quantity[breadType] || 0).toLocaleString()}
+                              </span>
+                            </div>
+                          )
+                      )}
                     </div>
                   </div>
                   {isOldBread && (
@@ -229,19 +239,27 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                         Old Bread
                       </dt>
                       <div className="space-y-3">
-                        {breadTypes.map((breadType) => (
-                          <div key={breadType} className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className={`h-3 w-3 rounded-full bg-${breadType}-500`}></div>
-                              <span className="text-sm text-foreground capitalize">
-                                {breadType}
-                              </span>
-                            </div>
-                            <span className="text-sm font-semibold text-foreground">
-                              {(old_bread[breadType] || 0).toLocaleString()}
-                            </span>
-                          </div>
-                        ))}
+                        {Object.keys(old_bread).map(
+                          (breadType) =>
+                            old_bread[breadType] > 0 && (
+                              <div
+                                key={breadType}
+                                className="flex items-center justify-between"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <div
+                                    className={`h-3 w-3 rounded-full bg-${breadType}-500`}
+                                  ></div>
+                                  <span className="text-sm text-foreground capitalize">
+                                    {breadType}
+                                  </span>
+                                </div>
+                                <span className="text-sm font-semibold text-foreground">
+                                  {(old_bread[breadType] || 0).toLocaleString()}
+                                </span>
+                              </div>
+                            )
+                        )}
                       </div>
                     </div>
                   )}

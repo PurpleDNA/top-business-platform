@@ -2,6 +2,7 @@
 import { MetricsCard } from "@/app/components/dashboard/MetricsCard";
 import { CustomersTable } from "@/app/components/dashboard/CustomersTable";
 import { ProductionsTable } from "@/app/components/dashboard/ProductionsTable";
+import { SalesTable } from "@/app/components/dashboard/SalesTable";
 import { DollarSign, Factory } from "lucide-react";
 import { getTotalBusinessOutstanding } from "@/app/services/outstanding";
 import Hero from "@/app/components/dashboard/Hero";
@@ -60,6 +61,7 @@ const Index = async () => {
 
         {/* Charts and Tables Section */}
         <div className="lg:col-span-3 space-y-6 lg:px-6">
+          <SalesTable />
           <ProductionsTable />
           <CustomersTable />
         </div>

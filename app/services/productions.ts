@@ -24,6 +24,7 @@ interface Create {
   quantity: Record<string, string>;
   total: string;
   old_bread: Record<string, string>;
+  bread_price: Record<string, number>;
 }
 
 interface PaymentWithCustomer {

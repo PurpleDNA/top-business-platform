@@ -15,26 +15,7 @@ import { Production } from "@/app/services/productions";
 import { useState } from "react";
 import { EditProductionModal } from "@/app/components/productions/EditProductionModal";
 import { DeleteProductionDialog } from "@/app/components/productions/DeleteProductionDialog";
-
-// Color map for Tailwind static class names (Badge styling)
-const getBadgeColorClasses = (color: string) => {
-  const colorMap: Record<string, string> = {
-    orange:
-      "bg-orange-200 text-orange-900 dark:bg-orange-500/20 dark:text-orange-400",
-    blue: "bg-blue-200 text-blue-900 dark:bg-blue-500/20 dark:text-blue-400",
-    green:
-      "bg-green-200 text-green-900 dark:bg-green-500/20 dark:text-green-400",
-    white:
-      "bg-slate-200 text-slate-900 dark:bg-slate-500/20 dark:text-slate-400",
-    brown:
-      "bg-amber-200 text-amber-900 dark:bg-amber-500/20 dark:text-amber-400",
-    pink: "bg-pink-200 text-pink-900 dark:bg-pink-500/20 dark:text-pink-400",
-  };
-  return (
-    colorMap[color.toLowerCase()] ||
-    "bg-gray-200 text-gray-900 dark:bg-gray-500/20 dark:text-gray-400"
-  );
-};
+import { getBadgeColorClasses } from "@/lib/utils";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
+import { getColorClasses as getColorClass } from "@/lib/utils";
 
 interface RemainingBreadDropdownProps {
   quantity: {
@@ -42,24 +43,16 @@ export const RemainingBreadDropdown = ({
       (quantity[color] || 0) + (oldBread[color] || 0) - (soldBread[color] || 0);
   });
 
-  // Convert remaining_bread object to array for easier display
-  const breadItems = Object.entries(remainingBread).map(([color, quantity]) => ({
-    color,
-    quantity,
-  }));
+  // Convert remaining_bread object to array for easier display and filter zero quantities
+  const breadItems = Object.entries(remainingBread)
+    .map(([color, quantity]) => ({
+      color,
+      quantity,
+    }))
+    .filter((item) => item.quantity > 0);
 
   // Calculate total units
   const totalUnits = breadItems.reduce((sum, item) => sum + item.quantity, 0);
-
-  // Color styling helper
-  const getColorClass = (color: string) => {
-    const colorMap: { [key: string]: string } = {
-      orange: "bg-orange-500",
-      blue: "bg-blue-500",
-      green: "bg-green-500",
-    };
-    return colorMap[color.toLowerCase()] || "bg-gray-500";
-  };
 
   return (
     <Card>
@@ -67,9 +60,7 @@ export const RemainingBreadDropdown = ({
         className="flex flex-row items-center justify-between cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <CardTitle className="text-lg font-semibold">
-          Remaining Bread
-        </CardTitle>
+        <CardTitle className="text-lg font-semibold">Remaining Bread</CardTitle>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">
             {totalUnits} {totalUnits === 1 ? "unit" : "units"}
@@ -99,9 +90,9 @@ export const RemainingBreadDropdown = ({
                   >
                     <div className="flex items-center gap-2">
                       <div
-                        className={`h-3 w-3 rounded-full ${getColorClass(
-                          item.color
-                        )}`}
+                        className={`h-3 w-3 rounded-full ${
+                          getColorClass(item.color).bg
+                        }`}
                       ></div>
                       <span className="font-medium capitalize">
                         {item.color}
@@ -115,9 +106,7 @@ export const RemainingBreadDropdown = ({
               </div>
               <div className="mt-4 pt-4 border-t">
                 <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                  <span className="font-semibold text-sm">
-                    Total Value
-                  </span>
+                  <span className="font-semibold text-sm">Total Value</span>
                   <span className="font-bold text-lg">
                     ₦{remainingBreadTotal.toLocaleString()}
                   </span>
