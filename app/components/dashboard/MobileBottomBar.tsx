@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  Users,
-  Factory,
-  Home,
-} from "lucide-react";
+import { Users, Factory, Home } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -35,7 +31,7 @@ export const MobileBottomBar = () => {
   ];
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border shadow-lg pb-[var(--safe-area-inset-bottom)]">
+    <div className="md:hidden max-h-16 fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border shadow-lg pb-[var(--safe-area-inset-bottom)]">
       <div className="flex items-center justify-around px-2 py-3">
         {actions.map((action) => {
           const Icon = action.icon;
