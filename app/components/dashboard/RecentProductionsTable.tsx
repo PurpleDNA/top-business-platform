@@ -9,6 +9,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -21,6 +22,7 @@ import { Production } from "@/app/services/productions";
 import Link from "next/link";
 import { EditProductionModal } from "@/app/components/productions/EditProductionModal";
 import { DeleteProductionDialog } from "@/app/components/productions/DeleteProductionDialog";
+import { getBadgeColorClasses } from "@/lib/utils";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -53,15 +55,8 @@ const RecentProductionsTable = ({
         <TableHeader>
           <TableRow>
             <TableHead>Date</TableHead>
-            {breadTypes.map((breadType) => (
-              <TableHead
-                key={breadType}
-                className="hidden lg:table-cell capitalize"
-              >
-                {breadType}
-              </TableHead>
-            ))}
-            <TableHead>Total</TableHead>
+            <TableHead>Quantities</TableHead>
+            <TableHead>Total Value</TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -77,15 +72,26 @@ const RecentProductionsTable = ({
               <TableCell className="font-medium">
                 {formatDate(production.created_at)}
               </TableCell>
-              {breadTypes.map((breadType) => (
-                <TableCell
-                  key={breadType}
-                  className="text-muted-foreground hidden lg:table-cell"
-                >
-                  {production.quantity[breadType] +
-                    production.old_bread[breadType] || 0}
-                </TableCell>
-              ))}
+              <TableCell>
+                <div className="flex gap-2 flex-wrap">
+                  {Object.keys(production.bread_price).map((breadType) => {
+                    const totalQuantity =
+                      (production.quantity[breadType] || 0) +
+                      (production.old_bread[breadType] || 0);
+                    if (totalQuantity === 0) return null;
+
+                    return (
+                      <Badge
+                        key={breadType}
+                        variant="secondary"
+                        className={getBadgeColorClasses(breadType)}
+                      >
+                        {breadType.charAt(0).toUpperCase()}: {totalQuantity}
+                      </Badge>
+                    );
+                  })}
+                </div>
+              </TableCell>
               <TableCell className="font-semibold">
                 ₦{production.total.toLocaleString()}
               </TableCell>

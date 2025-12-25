@@ -52,7 +52,7 @@ export const fetchAllCustomers = unstable_cache(
     }
   },
   [],
-  { tags: ["customers"] }
+  { tags: ["customers"], revalidate: 300 }
 );
 
 export const getCustomerCount = unstable_cache(
@@ -72,6 +72,7 @@ export const getCustomerCount = unstable_cache(
   [],
   {
     tags: ["customers_count"],
+    revalidate: 300,
   }
 );
 

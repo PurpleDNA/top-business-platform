@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { getColorClasses } from "@/lib/utils";
 
 const validate = z.object({
   customer_id: z.string().min(1, "Customer ID is required"),
@@ -38,43 +39,6 @@ interface Props {
   customer?: Customer;
   production?: Production;
 }
-
-// Helper function to get color-specific CSS classes
-const getColorClasses = (color: string) => {
-  const colorMap: Record<string, { bg: string; darkBg: string }> = {
-    orange: {
-      bg: "bg-orange-200",
-      darkBg: "dark:bg-orange-500",
-    },
-    blue: {
-      bg: "bg-blue-200",
-      darkBg: "dark:bg-blue-500",
-    },
-    green: {
-      bg: "bg-green-200",
-      darkBg: "dark:bg-green-500",
-    },
-    white: {
-      bg: "bg-slate-100",
-      darkBg: "dark:bg-slate-400",
-    },
-    brown: {
-      bg: "bg-amber-200",
-      darkBg: "dark:bg-amber-700",
-    },
-    pink: {
-      bg: "bg-pink-200",
-      darkBg: "dark:bg-pink-500",
-    },
-  };
-
-  return (
-    colorMap[color.toLowerCase()] || {
-      bg: "bg-gray-200",
-      darkBg: "dark:bg-gray-500",
-    }
-  );
-};
 
 const SalesCreateForm = ({ productions, customer, production }: Props) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -369,23 +333,23 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
             const hasError = !!inventoryErrors[color];
             return (
               remainingBread[color] !== undefined && (
-              <div key={color} className="flex flex-col items-center gap-1">
-                <span className="text-sm capitalize">{color}</span>
-                <Input
-                  className={`w-[60px] h-[60px] ${
-                    colorClasses.bg
-                  } text-center no-spinners ${colorClasses.darkBg} ${
-                    hasError
-                      ? "border-2 border-red-500 ring-2 ring-red-200"
-                      : ""
-                  }`}
-                  name={color}
-                  type="number"
-                  value={quantity[color] || ""}
-                  onChange={(e) =>
-                    handleQuantityChange(e.target.name, e.target.value)
-                  }
-                />
+                <div key={color} className="flex flex-col items-center gap-1">
+                  <span className="text-sm capitalize">{color}</span>
+                  <Input
+                    className={`w-[60px] h-[60px] ${
+                      colorClasses.bg
+                    } text-center no-spinners ${colorClasses.darkBg} ${
+                      hasError
+                        ? "border-2 border-red-500 ring-2 ring-red-200"
+                        : ""
+                    }`}
+                    name={color}
+                    type="number"
+                    value={quantity[color] || ""}
+                    onChange={(e) =>
+                      handleQuantityChange(e.target.name, e.target.value)
+                    }
+                  />
                   <span
                     className={`text-xs text-muted-foreground ${
                       hasError ? "text-red-500" : ""
@@ -393,7 +357,7 @@ const SalesCreateForm = ({ productions, customer, production }: Props) => {
                   >
                     Available: {remainingBread[color]}
                   </span>
-              </div>
+                </div>
               )
             );
           })}

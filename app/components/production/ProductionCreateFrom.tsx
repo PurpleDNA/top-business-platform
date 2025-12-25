@@ -9,6 +9,7 @@ import { LoaderCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { getColorClasses } from "@/lib/utils";
 
 const validateCreate = z.object({
   quantity: z.record(z.string(), z.coerce.number()).refine(
@@ -25,6 +26,7 @@ const validateCreate = z.object({
   ),
   total: z.coerce.number().min(1, "total is required"),
   old_bread: z.record(z.string(), z.coerce.number().optional()).optional(),
+  bread_price: z.record(z.string(), z.coerce.number()),
 });
 
 interface Props {
@@ -33,6 +35,8 @@ interface Props {
 const ProductionFrom = ({ multipliers }: Props) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showOldBread, setShowOldBread] = useState(false);
+
+  console.log(multipliers);
 
   // Initialize state dynamically based on multipliers
   const initialQuantity = useMemo(() => {
@@ -47,6 +51,7 @@ const ProductionFrom = ({ multipliers }: Props) => {
     quantity: initialQuantity,
     total: "",
     old_bread: { ...initialQuantity },
+    bread_price: multipliers,
   });
 
   function handleQuantityChange(name: string, value: string) {
@@ -109,6 +114,7 @@ const ProductionFrom = ({ multipliers }: Props) => {
       quantity,
       total: formData.get("total") as string,
       old_bread,
+      bread_price: multipliers,
     };
 
     setErrors({});
@@ -122,6 +128,7 @@ const ProductionFrom = ({ multipliers }: Props) => {
           quantity: { ...initialQuantity },
           total: "",
           old_bread: { ...initialQuantity },
+          bread_price: multipliers,
         });
         setShowOldBread(false);
       }
@@ -151,7 +158,9 @@ const ProductionFrom = ({ multipliers }: Props) => {
               <div key={color} className="flex flex-col items-center gap-1">
                 <span className="text-sm capitalize">{color}</span>
                 <Input
-                  className={`w-[60px] h-[60px] bg-${color}-200 dark:bg-${color}-500 text-center no-spinners`}
+                  className={`w-[60px] h-[60px] ${getColorClasses(color).bg} ${
+                    getColorClasses(color).darkBg
+                  } text-center no-spinners`}
                   name={color}
                   type="number"
                   onChange={(e) =>
@@ -195,7 +204,11 @@ const ProductionFrom = ({ multipliers }: Props) => {
                 <div key={color} className="flex flex-col items-center gap-1">
                   <span className="text-sm capitalize">{color}</span>
                   <Input
-                    className={`w-[60px] h-[60px] bg-${color}-200 dark:bg-${color}-500 text-center no-spinners opacity-75`}
+                    className={`w-[60px] h-[60px] ${
+                      getColorClasses(color).bg
+                    } ${
+                      getColorClasses(color).darkBg
+                    } text-center no-spinners opacity-75`}
                     name={`old_bread_${color}`}
                     type="number"
                     onChange={(e) =>

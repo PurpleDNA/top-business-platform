@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { getColorClasses } from "@/lib/utils";
 
 interface EditSaleModalProps {
   sale: {
@@ -26,31 +27,6 @@ interface EditSaleModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-// Helper function to get color-specific CSS classes
-const getColorClasses = (color: string) => {
-  const colorMap: Record<string, { bg: string; darkBg: string }> = {
-    orange: {
-      bg: "bg-orange-200",
-      darkBg: "dark:bg-orange-500",
-    },
-    blue: {
-      bg: "bg-blue-200",
-      darkBg: "dark:bg-blue-500",
-    },
-    green: {
-      bg: "bg-green-200",
-      darkBg: "dark:bg-green-500",
-    },
-  };
-
-  return (
-    colorMap[color.toLowerCase()] || {
-      bg: "bg-gray-200",
-      darkBg: "dark:bg-gray-500",
-    }
-  );
-};
 
 export const EditSaleModal = ({
   sale,
@@ -75,14 +51,16 @@ export const EditSaleModal = ({
       // Initialize quantity from sale data or default to 0 for available colors
       const initialQuantity: { [key: string]: string } = {};
       Object.keys(prices).forEach((color) => {
-        initialQuantity[color] = (sale.quantity_bought?.[color] || 0).toString();
+        initialQuantity[color] = (
+          sale.quantity_bought?.[color] || 0
+        ).toString();
       });
       setQuantity(initialQuantity);
     };
     fetchMultipliers();
   }, [sale]);
 
-    const handleQuantityChange = (name: string, value: string) => {
+  const handleQuantityChange = (name: string, value: string) => {
     // Update quantity state
     const updatedQty = {
       ...quantity,
@@ -128,7 +106,7 @@ export const EditSaleModal = ({
 
       const quantityPayload: { [key: string]: number } = {};
       Object.entries(quantity).forEach(([key, value]) => {
-          quantityPayload[key] = Number(value);
+        quantityPayload[key] = Number(value);
       });
 
       const payload: Partial<Sale> = {
@@ -212,7 +190,7 @@ export const EditSaleModal = ({
               placeholder="Enter amount paid"
               required
             />
-             {Number(formData.amount_paid) > Number(formData.amount) && (
+            {Number(formData.amount_paid) > Number(formData.amount) && (
               <p className="text-sm text-red-500">
                 Amount paid cannot exceed total amount
               </p>

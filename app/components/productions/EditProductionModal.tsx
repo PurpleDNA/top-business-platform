@@ -17,37 +17,13 @@ import { Production, updateProduction } from "@/app/services/productions";
 import { getBreadPriceMultipliers } from "@/app/services/bread_price";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { getColorClasses } from "@/lib/utils";
 
 interface EditProductionModalProps {
   production: Production;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-// Helper function to get color-specific CSS classes
-const getColorClasses = (color: string) => {
-  const colorMap: Record<string, { bg: string; text: string }> = {
-    orange: {
-      bg: "bg-orange-100",
-      text: "text-orange-900",
-    },
-    blue: {
-      bg: "bg-blue-100",
-      text: "text-blue-900",
-    },
-    green: {
-      bg: "bg-green-100",
-      text: "text-green-900",
-    },
-  };
-
-  return (
-    colorMap[color.toLowerCase()] || {
-      bg: "bg-gray-100",
-      text: "text-gray-900",
-    }
-  );
-};
 
 export const EditProductionModal = ({
   production,
@@ -76,7 +52,9 @@ export const EditProductionModal = ({
     const data: Record<string, string> = {};
     Object.keys(multipliers).forEach((color) => {
       data[`quantity_${color}`] = (production.quantity[color] || 0).toString();
-      data[`old_bread_${color}`] = (production.old_bread[color] || 0).toString();
+      data[`old_bread_${color}`] = (
+        production.old_bread[color] || 0
+      ).toString();
     });
     data.cash = production.cash.toString();
     return data;

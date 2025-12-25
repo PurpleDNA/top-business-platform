@@ -11,8 +11,8 @@ import { LoaderCircle } from "lucide-react";
 
 const LoginForm = ({ user }: { user: any }) => {
   const {
-    signInWithGoogle,
-    loading: googleLoading,
+    // signInWithGoogle,
+    // loading: googleLoading,
     signInWithEmail,
   } = useAuth();
 
@@ -29,21 +29,23 @@ const LoginForm = ({ user }: { user: any }) => {
     router.push("/forgot-password");
   };
 
-  const handleGoogle = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      console.error("Error logging in with Google:", error);
-    } finally {
-      console.log("google login");
-    }
-  };
+  // const handleGoogle = async () => {
+  //   try {
+  //     await signInWithGoogle();
+  //   } catch (error) {
+  //     console.error("Error logging in with Google:", error);
+  //   } finally {
+  //     console.log("google login");
+  //   }
+  // };
 
   useEffect(() => {
-    if (user && !googleLoading) {
+    // if (user && !googleLoading) {
+    if (user) {
       router.push("/");
     }
-  }, [user, googleLoading, router]);
+    // }, [user, googleLoading, router]);
+  }, [user, router]);
 
   const signIn = async () => {
     setLoading(true);
@@ -67,7 +69,7 @@ const LoginForm = ({ user }: { user: any }) => {
         <h3 className="text-2xl font-bold text-foreground">Login to Admin</h3>
       </div>
 
-      <button
+      {/* <button
         type="button"
         onClick={handleGoogle}
         className="flex items-center justify-center gap-3 mb-4 px-4 py-2 rounded-md border border-border shadow-sm hover:shadow-md transition-shadow bg-muted hover:bg-accent cursor-pointer"
@@ -103,7 +105,7 @@ const LoginForm = ({ user }: { user: any }) => {
         <div className="flex-1 h-px bg-border" />
         <span className="px-3 text-xs text-muted-foreground">or</span>
         <div className="flex-1 h-px bg-border" />
-      </div>
+      </div> */}
 
       <form className="flex flex-col gap-3">
         <input

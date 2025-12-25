@@ -47,9 +47,9 @@ export const ProductionCard = ({
           {breadTypes.map((breadType) => (
             <div
               key={breadType}
-              className={`text-2xl font-bold mb-1 ${getTextColorClass(breadType)} ${
-                Number(value[breadType]) > 0 ? "" : "hidden"
-              }`}
+              className={`text-2xl font-bold mb-1 ${getTextColorClass(
+                breadType
+              )} ${Number(value[breadType]) > 0 ? "" : "hidden"}`}
             >
               {value[breadType] || 0}
             </div>
