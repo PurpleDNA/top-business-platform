@@ -2,6 +2,7 @@ import React from "react";
 import {
   fetchCustomerById,
   fetchCustomerTotalSpent,
+  fetchCustomerMonthlyPurchases,
 } from "@/app/services/customers";
 import { fetchSalesByCustomerId } from "@/app/services/sales";
 import { formatDate } from "@/app/services/utils";
@@ -21,6 +22,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const total_spent = await fetchCustomerTotalSpent(id);
   // Fetch all payment history (using a high limit to get all records)
   const payment_history = await getPaymentsByCustomerID(id, 1000);
+  const monthlyPurchases = await fetchCustomerMonthlyPurchases(id);
 
   // Helper function to get initials from full name
   const getInitials = (fullName: string) => {
@@ -221,7 +223,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                         id="purchasesChart"
                         className="w-full h-full"
                       ></canvas> */}
-                      <CartesianGrid />
+                      <CartesianGrid data={monthlyPurchases} />
                     </div>
                   </div>
                 </div>
