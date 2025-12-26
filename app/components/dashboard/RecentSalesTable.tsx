@@ -48,7 +48,7 @@ const RecentSalesTable = ({ sales }: { sales: SaleWithDetails[] }) => {
               {sale.customers?.name || "Unknown"}
             </TableCell>
             <TableCell>
-              <div className="flex gap-1.5 flex-wrap">
+              <div className="flex gap-1.5 flex-wrap justify-center lg:justify-start">
                 {Object.entries(sale.quantity_bought || {}).map(
                   ([type, qty]) => {
                     if (qty === 0) return null;

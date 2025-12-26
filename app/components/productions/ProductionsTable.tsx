@@ -26,14 +26,7 @@ const formatDate = (dateString: string) => {
   });
 };
 
-const ProductionsTable = ({
-  productions,
-  multipliers,
-}: {
-  productions: Production[];
-  multipliers: Record<string, number>;
-}) => {
-  const breadTypes = Object.keys(multipliers);
+const ProductionsTable = ({ productions }: { productions: Production[] }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [editingProduction, setEditingProduction] = useState<Production | null>(
     null
@@ -84,22 +77,24 @@ const ProductionsTable = ({
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2 flex-wrap">
-                      {breadTypes.map((breadType) => {
-                        const totalQuantity =
-                          (production.quantity[breadType] || 0) +
-                          (production.old_bread[breadType] || 0);
-                        if (totalQuantity === 0) return null;
+                      {Object.entries(production.quantity).map(
+                        ([breadType, qty]) => {
+                          const totalQuantity =
+                            (qty || 0) + (production.old_bread[breadType] || 0);
+                          if (totalQuantity === 0) return null;
 
-                        return (
-                          <Badge
-                            key={breadType}
-                            variant="secondary"
-                            className={getBadgeColorClasses(breadType)}
-                          >
-                            {breadType.charAt(0).toUpperCase()}: {totalQuantity}
-                          </Badge>
-                        );
-                      })}
+                          return (
+                            <Badge
+                              key={breadType}
+                              variant="secondary"
+                              className={getBadgeColorClasses(breadType)}
+                            >
+                              {breadType.charAt(0).toUpperCase()}:{" "}
+                              {totalQuantity}
+                            </Badge>
+                          );
+                        }
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="font-semibold">

@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { fetchAllProductions, Production } from "@/app/services/productions";
-import { getBreadPriceMultipliers } from "@/app/services/bread_price";
 import Link from "next/link";
 import RecentProductionsTable from "./RecentProductionsTable";
 
@@ -9,7 +8,6 @@ export const ProductionsTable = async () => {
   const allProductions = (await fetchAllProductions()) as Production[];
   // Get the 5 most recent productions
   const productions = allProductions.slice(0, 5);
-  const multipliers = await getBreadPriceMultipliers();
 
   return (
     <Card>
@@ -34,7 +32,7 @@ export const ProductionsTable = async () => {
             </Link>
           </div>
         ) : (
-          <RecentProductionsTable productions={productions} multipliers={multipliers} />
+          <RecentProductionsTable productions={productions} />
         )}
       </CardContent>
     </Card>

@@ -10,15 +10,13 @@ import { getLatestProduction } from "@/app/services/productions";
 import { ProductionCard } from "@/app/components/dashboard/ProductionCard";
 import { Production } from "@/app/services/productions";
 import { formatDate } from "@/app/services/utils";
-import { getBreadPriceMultipliers } from "@/app/services/bread_price";
 import { getUser } from "@/app/services/roles";
 
 const Index = async () => {
   const profile = await getUser();
   const totalOutstanding = await getTotalBusinessOutstanding();
   const latestProduction = (await getLatestProduction()) as Production;
-  const multipliers = await getBreadPriceMultipliers();
-  const breadTypes = Object.keys(multipliers);
+  const breadTypes = Object.keys(latestProduction.bread_price);
 
   // Dynamically build value object from bread types (quantity + old_bread)
   const productionValue = breadTypes.reduce((acc, breadType) => {
@@ -52,7 +50,7 @@ const Index = async () => {
           <ProductionCard
             title={`Latest Production - ${date}`}
             value={productionValue}
-            multipliers={multipliers}
+            multipliers={latestProduction.bread_price}
             total={`₦${latestProduction?.total}`}
             icon={Factory}
             description="Manufacturing output"

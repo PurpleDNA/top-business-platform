@@ -3,7 +3,6 @@ import {
   fetchAllProductions,
   Production,
 } from "@/app/services/productions";
-import { getBreadPriceMultipliers } from "@/app/services/bread_price";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Factory, ArrowLeft, Plus, LockOpen, Lock } from "lucide-react";
@@ -12,8 +11,6 @@ import ProductionsTable from "@/app/components/productions/ProductionsTable";
 
 const AllProductionsPage = async () => {
   const productions = (await fetchAllProductions()) as Production[];
-  const multipliers = await getBreadPriceMultipliers();
-  const breadTypes = Object.keys(multipliers);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -110,10 +107,7 @@ const AllProductionsPage = async () => {
                 </Link>
               </div>
             ) : (
-              <ProductionsTable
-                productions={productions}
-                multipliers={multipliers}
-              />
+              <ProductionsTable productions={productions} />
             )}
           </CardContent>
         </Card>
@@ -159,18 +153,24 @@ const AllProductionsPage = async () => {
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {breadTypes.map((breadType, index) => {
-                          const totalQuantity =
-                            (production.quantity[breadType] || 0) +
-                            (production.old_bread[breadType] || 0);
-                          return (
-                            <span key={breadType}>
-                              {breadType.charAt(0).toUpperCase()}:{" "}
-                              {totalQuantity}
-                              {index < breadTypes.length - 1 && " | "}
-                            </span>
-                          );
-                        })}
+                        {Object.keys(production.quantity).map(
+                          (breadType, index) => {
+                            const totalQuantity =
+                              (production.quantity[breadType] || 0) +
+                              (production.old_bread[breadType] || 0);
+                            return (
+                              totalQuantity > 0 && (
+                                <span key={breadType}>
+                                  {breadType.charAt(0).toUpperCase()}:{" "}
+                                  {totalQuantity}
+                                  {index <
+                                    Object.keys(production.quantity).length -
+                                      1 && " | "}
+                                </span>
+                              )
+                            );
+                          }
+                        )}
                       </p>
                     </div>
                     <h3 className="font-semibold text-lg">

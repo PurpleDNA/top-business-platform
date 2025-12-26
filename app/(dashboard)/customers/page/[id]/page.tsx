@@ -56,7 +56,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
         {/* <!-- Main --> */}
         <main className="max-w-7xl mx-auto px-6 py-8">
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="flex flex-col lg:flex-row  gap-6">
             {/* <!-- Customer Overview --> */}
             <section className="xl:col-span-1 rounded-xl border border-border bg-card">
               <div className="p-5 border-b border-border">

@@ -5,51 +5,28 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import { getColorClasses as getColorClass } from "@/lib/utils";
+import { getSortedBreadItems } from "@/lib/utils";
 
 interface RemainingBreadDropdownProps {
-  quantity: {
-    orange: number;
-    blue: number;
-    green: number;
-    [key: string]: number;
-  };
-  oldBread: {
-    orange: number;
-    blue: number;
-    green: number;
-    [key: string]: number;
-  };
-  soldBread: {
-    orange: number;
-    blue: number;
-    green: number;
-    [key: string]: number;
-  };
   remainingBreadTotal: number;
+  remainingBread: {
+    orange: number;
+    blue: number;
+    green: number;
+    [key: string]: number;
+  };
+  multipliers: Record<string, number>;
 }
 
 export const RemainingBreadDropdown = ({
-  quantity,
-  oldBread,
-  soldBread,
   remainingBreadTotal,
+  remainingBread,
+  multipliers,
 }: RemainingBreadDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Calculate remaining bread: quantity + old_bread - sold_bread
-  const remainingBread: { [key: string]: number } = {};
-  Object.keys(quantity).forEach((color) => {
-    remainingBread[color] =
-      (quantity[color] || 0) + (oldBread[color] || 0) - (soldBread[color] || 0);
-  });
-
   // Convert remaining_bread object to array for easier display and filter zero quantities
-  const breadItems = Object.entries(remainingBread)
-    .map(([color, quantity]) => ({
-      color,
-      quantity,
-    }))
-    .filter((item) => item.quantity > 0);
+  const breadItems = getSortedBreadItems(remainingBread, multipliers);
 
   // Calculate total units
   const totalUnits = breadItems.reduce((sum, item) => sum + item.quantity, 0);

@@ -6,7 +6,6 @@ import {
   getProductionPaidOutstanding,
   calculateBreadTotal,
 } from "@/app/services/productions";
-import { getBreadPriceMultipliers } from "@/app/services/bread_price";
 import { OutstandingSection } from "@/app/components/productions/OutstandingSection";
 import { ExpenseDropdown } from "@/app/components/productions/ExpenseDropdown";
 import { RemainingBreadDropdown } from "@/app/components/productions/RemainingBreadDropdown";
@@ -29,6 +28,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { isSuperAdmin } from "@/app/services/roles";
+import { getSortedBreadItems } from "@/lib/utils";
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
@@ -38,8 +38,6 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const expenses = await getExpensesByProdId(id);
   const sales = await fetchSalesByProductionId(id);
   const isSuper = await isSuperAdmin();
-  const multipliers = await getBreadPriceMultipliers();
-  const breadTypes = Object.keys(multipliers);
 
   if (!production) {
     return (
@@ -133,12 +131,17 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const StatusIcon = statusConfig.icon;
 
   // Calculate total quantity dynamically from all bread types
-  const totalQuantity = breadTypes.reduce((sum, type) => {
+  const totalQuantity = Object.keys(quantity).reduce((sum, type) => {
     return sum + (quantity[type] || 0) + (old_bread[type] || 0);
   }, 0);
 
   // Format production ID (show first 8 chars)
   const shortId = id.substring(0, 8).toUpperCase();
+
+  const sortedQuantity = getSortedBreadItems(quantity, production.bread_price);
+  console.log(sortedQuantity);
+  console.log(quantity);
+  const sortedOldBread = getSortedBreadItems(old_bread, production.bread_price);
 
   return (
     <div className="bg-background text-foreground antialiased selection:bg-primary/20 scrollbar-hide">
@@ -173,7 +176,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-6 py-8">
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             {/* Production Overview */}
             <section className="xl:col-span-1 rounded-xl border border-border bg-card">
               <div className="p-5 border-b border-border">
@@ -210,23 +213,23 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                       Production
                     </dt>
                     <div className="space-y-3">
-                      {Object.keys(quantity).map(
+                      {sortedQuantity.map(
                         (breadType) =>
-                          quantity[breadType] > 0 && (
+                          breadType.quantity > 0 && (
                             <div
-                              key={breadType}
+                              key={breadType.color}
                               className="flex items-center justify-between"
                             >
                               <div className="flex items-center gap-2">
                                 <div
-                                  className={`h-3 w-3 rounded-full bg-${breadType}-500`}
+                                  className={`h-3 w-3 rounded-full bg-${breadType.color}-500`}
                                 ></div>
                                 <span className="text-sm text-foreground capitalize">
-                                  {breadType}
+                                  {breadType.color}
                                 </span>
                               </div>
                               <span className="text-sm font-semibold text-foreground">
-                                {(quantity[breadType] || 0).toLocaleString()}
+                                {breadType.quantity.toLocaleString()}
                               </span>
                             </div>
                           )
@@ -239,23 +242,23 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                         Old Bread
                       </dt>
                       <div className="space-y-3">
-                        {Object.keys(old_bread).map(
+                        {sortedOldBread.map(
                           (breadType) =>
-                            old_bread[breadType] > 0 && (
+                            breadType.quantity > 0 && (
                               <div
-                                key={breadType}
+                                key={breadType.color}
                                 className="flex items-center justify-between"
                               >
                                 <div className="flex items-center gap-2">
                                   <div
-                                    className={`h-3 w-3 rounded-full bg-${breadType}-500`}
+                                    className={`h-3 w-3 rounded-full bg-${breadType.color}-500`}
                                   ></div>
                                   <span className="text-sm text-foreground capitalize">
-                                    {breadType}
+                                    {breadType.color}
                                   </span>
                                 </div>
                                 <span className="text-sm font-semibold text-foreground">
-                                  {(old_bread[breadType] || 0).toLocaleString()}
+                                  {breadType.quantity.toLocaleString()}
                                 </span>
                               </div>
                             )
@@ -268,7 +271,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                   <div className="rounded-lg bg-muted/50 ring-1 ring-border p-4">
                     <dt className="text-xs text-muted-foreground flex items-center gap-2">
                       <Package className="h-3 w-3" />
-                      Total Units
+                      Total Bread
                     </dt>
                     <dd className="mt-1 text-sm text-foreground font-semibold">
                       {totalQuantity.toLocaleString()}
@@ -305,10 +308,9 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
               <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <ExpenseDropdown data={expenses} />
                 <RemainingBreadDropdown
-                  quantity={quantity}
-                  oldBread={old_bread}
-                  soldBread={sold_bread}
                   remainingBreadTotal={remainingBreadTotal}
+                  remainingBread={remaining_bread}
+                  multipliers={production.bread_price}
                 />
               </div>
 

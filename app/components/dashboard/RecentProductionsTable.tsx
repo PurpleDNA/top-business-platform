@@ -23,6 +23,7 @@ import Link from "next/link";
 import { EditProductionModal } from "@/app/components/productions/EditProductionModal";
 import { DeleteProductionDialog } from "@/app/components/productions/DeleteProductionDialog";
 import { getBadgeColorClasses } from "@/lib/utils";
+import { useIsMobile } from "@/app/hooks/use-mobile";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -35,12 +36,9 @@ const formatDate = (dateString: string) => {
 
 const RecentProductionsTable = ({
   productions,
-  multipliers,
 }: {
   productions: Production[];
-  multipliers: Record<string, number>;
 }) => {
-  const breadTypes = Object.keys(multipliers);
   const [editingProduction, setEditingProduction] = useState<Production | null>(
     null
   );
@@ -48,6 +46,7 @@ const RecentProductionsTable = ({
     id: string;
     date: string;
   } | null>(null);
+  const isMobile = useIsMobile();
 
   return (
     <>
@@ -70,10 +69,12 @@ const RecentProductionsTable = ({
               }
             >
               <TableCell className="font-medium">
-                {formatDate(production.created_at)}
+                {isMobile
+                  ? formatDate(production.created_at).slice(0, 6)
+                  : formatDate(production.created_at)}
               </TableCell>
               <TableCell>
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-2 flex-wrap justify-center lg:justify-start">
                   {Object.keys(production.bread_price).map((breadType) => {
                     const totalQuantity =
                       (production.quantity[breadType] || 0) +
@@ -84,7 +85,9 @@ const RecentProductionsTable = ({
                       <Badge
                         key={breadType}
                         variant="secondary"
-                        className={getBadgeColorClasses(breadType)}
+                        className={`${getBadgeColorClasses(
+                          breadType
+                        )} text-[10px] px-1.5 py-0 h-5`}
                       >
                         {breadType.charAt(0).toUpperCase()}: {totalQuantity}
                       </Badge>

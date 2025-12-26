@@ -1,6 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { fetchAllSalesWithDetails, SaleWithDetails } from "@/app/services/sales";
+import {
+  fetchAllSalesWithDetails,
+  SaleWithDetails,
+} from "@/app/services/sales";
 import Link from "next/link";
 import RecentSalesTable from "./RecentSalesTable";
 
@@ -11,9 +14,7 @@ export const SalesTable = async () => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-semibold">
-          Recent Sales
-        </CardTitle>
+        <CardTitle className="text-lg font-semibold">Recent Sales</CardTitle>
         <Link href="/sales/all">
           <Button variant="outline" size="sm">
             View All

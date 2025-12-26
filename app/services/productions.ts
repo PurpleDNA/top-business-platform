@@ -73,6 +73,8 @@ export const createProduction = async (payload: Create) => {
         quantity: quantity,
         old_bread: old_bread,
         sold_bread: sold_bread,
+        bread_price: payload.bread_price,
+        cash: 0,
         open: true,
       })
       .select();

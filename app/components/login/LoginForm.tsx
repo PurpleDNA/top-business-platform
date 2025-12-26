@@ -64,7 +64,7 @@ const LoginForm = ({ user }: { user: any }) => {
   };
 
   return (
-    <div className="w-[90%] lg:w-96 p-6 border border-border/50 rounded-lg shadow-xl flex flex-col bg-card/95 backdrop-blur-sm">
+    <div className="w-full lg:w-96 p-6 border border-border/50 rounded-lg shadow-xl flex flex-col bg-card/95 backdrop-blur-sm">
       <div className="flex flex-col items-center gap-2 mb-8">
         <h3 className="text-2xl font-bold text-foreground">Login to Admin</h3>
       </div>

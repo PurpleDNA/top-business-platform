@@ -161,7 +161,7 @@ export const EditProductionModal = ({
                         onChange={(e) =>
                           handleFieldChange(`quantity_${color}`, e.target.value)
                         }
-                        className={`${colorClasses.bg} ${colorClasses.text}`}
+                        className={`${colorClasses.bg} ${colorClasses.darkBg} text-foreground`}
                         required
                         min="0"
                       />
@@ -195,7 +195,7 @@ export const EditProductionModal = ({
                             e.target.value
                           )
                         }
-                        className={`${colorClasses.bg} ${colorClasses.text} opacity-75`}
+                        className={`${colorClasses.bg} ${colorClasses.darkBg} text-foreground opacity-75`}
                         required
                         min="0"
                       />
@@ -219,16 +219,17 @@ export const EditProductionModal = ({
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-row ">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
+              className="w-1/2"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading} className="w-1/2">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
             </Button>

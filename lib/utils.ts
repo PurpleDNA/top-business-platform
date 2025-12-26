@@ -29,7 +29,7 @@ export const getColorClasses = (color: string) => {
         text: "text-slate-950",
       },
       brown: {
-        bg: "bg-amber-200",
+        bg: "bg-amber-300",
         darkBg: "dark:bg-amber-700",
         text: "text-amber-950",
       },
@@ -53,4 +53,22 @@ export const getBadgeColorClasses = (color: string) => {
   const classes = getColorClasses(color);
   const colorName = color.toLowerCase();
   return `${classes.bg} ${classes.text} dark:bg-${colorName}-500/20 dark:text-${colorName}-400`;
+};
+
+export const getSortedBreadItems = (
+  breadQuantities: Record<string, number>,
+  multipliers: Record<string, number>
+) => {
+  const breadItems = Object.entries(breadQuantities)
+    .map(([color, quantity]) => ({
+      color,
+      quantity,
+    }))
+    .sort(
+      (a, b) =>
+        multipliers[b.color.toLowerCase()] - multipliers[a.color.toLowerCase()]
+    )
+    .filter((item) => item.quantity > 0);
+
+  return breadItems;
 };

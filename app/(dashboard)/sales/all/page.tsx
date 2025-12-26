@@ -45,6 +45,7 @@ import {
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { getBadgeColorClasses } from "@/lib/utils";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -342,7 +343,7 @@ function AllSalesContent() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Customer</TableHead>
-                    <TableHead>Production</TableHead>
+                    <TableHead>Quantity</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Remaining</TableHead>
                     <TableHead>Status</TableHead>
@@ -356,8 +357,25 @@ function AllSalesContent() {
                       <TableCell className="font-medium">
                         {sale.customer_name || "Unknown"}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {formatDate(sale.production_date || sale.created_at)}
+                      <TableCell>
+                        <div className="flex gap-1.5 flex-wrap justify-center lg:justify-start">
+                          {Object.entries(sale.quantity_bought || {}).map(
+                            ([type, qty]) => {
+                              if (qty === 0) return null;
+                              return (
+                                <Badge
+                                  key={type}
+                                  variant="secondary"
+                                  className={`${getBadgeColorClasses(
+                                    type
+                                  )} text-[10px] px-1.5 py-0 h-5`}
+                                >
+                                  {type.charAt(0).toUpperCase()}: {qty}
+                                </Badge>
+                              );
+                            }
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="font-semibold">
                         ₦{sale.amount.toLocaleString()}
@@ -461,11 +479,26 @@ function AllSalesContent() {
                         {sale.customer_name || "Unknown"}
                       </h3>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {formatQuantity(sale.quantity_bought)}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatDate(sale.created_at)}
+                    <div className="flex gap-1.5 flex-wrap mt-1">
+                      {Object.entries(sale.quantity_bought || {}).map(
+                        ([type, qty]) => {
+                          if (qty === 0) return null;
+                          return (
+                            <Badge
+                              key={type}
+                              variant="secondary"
+                              className={`${getBadgeColorClasses(
+                                type
+                              )} text-[10px] px-1.5 py-0 h-5`}
+                            >
+                              {type.charAt(0).toUpperCase()}: {qty}
+                            </Badge>
+                          );
+                        }
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 font-medium">
+                      Date: {formatDate(sale.created_at)}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
