@@ -114,6 +114,33 @@ export const fetchCustomerTotalSpent = async (customerId: string) => {
   }
 };
 
+export const fetchCustomerMonthlyPurchases = unstable_cache(
+  async (customerId: string) => {
+    try {
+      const { data, error } = await supabase.rpc(
+        "get_customer_monthly_purchases",
+        {
+          p_customer_id: customerId,
+        }
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error("Error fetching customer monthly purchases:", error);
+      return [];
+    }
+  },
+  ["customer_purchases"],
+  {
+    tags: ["customer_purchases"],
+    revalidate: 300,
+  }
+);
+
 export const createCustomer = async (payload: Create) => {
   try {
     const { data: customerData, error } = await supabase

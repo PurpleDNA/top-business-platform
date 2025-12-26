@@ -376,9 +376,13 @@ export const updateSale = async (saleId: string, payload: Partial<Sale>) => {
 
     return { status: "SUCCESS", error: "", data };
   } catch (error) {
-    const errorMsg = String(error)
-     const parts = errorMsg.split(":")
-     return {status : "ERROR" , error:parts[parts.length - 1].trim(), data: null}
+    const errorMsg = String(error);
+    const parts = errorMsg.split(":");
+    return {
+      status: "ERROR",
+      error: parts[parts.length - 1].trim(),
+      data: null,
+    };
   }
 };
 
@@ -397,12 +401,17 @@ export const deleteSale = async (saleId: string) => {
     revalidateTag("sales", {});
     revalidateTag("customers", {});
     revalidateTag("productions", {});
+    revalidateTag("customer_purchases", {});
     await revalidateAllPaths();
 
     return { status: "SUCCESS", error: "" };
   } catch (error) {
-      const errorMsg = String(error)
-     const parts = errorMsg.split(":")
-     return {status : "ERROR" , error:parts[parts.length - 1].trim(), data: null}
+    const errorMsg = String(error);
+    const parts = errorMsg.split(":");
+    return {
+      status: "ERROR",
+      error: parts[parts.length - 1].trim(),
+      data: null,
+    };
   }
 };

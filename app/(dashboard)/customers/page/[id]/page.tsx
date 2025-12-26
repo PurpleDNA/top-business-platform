@@ -2,6 +2,7 @@ import React from "react";
 import {
   fetchCustomerById,
   fetchCustomerTotalSpent,
+  fetchCustomerMonthlyPurchases,
 } from "@/app/services/customers";
 import { fetchSalesByCustomerId } from "@/app/services/sales";
 import { formatDate } from "@/app/services/utils";
@@ -10,6 +11,7 @@ import { AlertTriangle } from "lucide-react";
 import PurchaseHistory from "@/app/components/customer/PurchaseHistory";
 import { getPaymentsByCustomerID } from "@/app/services/payments";
 import { CustomerActions } from "@/app/components/customer/CustomerActions";
+import CartesianGrid from "@/app/components/production/CartesianGrid";
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
@@ -20,6 +22,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const total_spent = await fetchCustomerTotalSpent(id);
   // Fetch all payment history (using a high limit to get all records)
   const payment_history = await getPaymentsByCustomerID(id, 1000);
+  const monthlyPurchases = await fetchCustomerMonthlyPurchases(id);
 
   // Helper function to get initials from full name
   const getInitials = (fullName: string) => {
@@ -198,8 +201,8 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
               {/* <!-- Chart + Debt Status --> */}
               <div className="grid grid-cols-1  gap-4">
-                <div className="lg:col-span-2 rounded-xl bg-card border border-border p-4">
-                  <div className="flex items-center justify-between">
+                <div className="lg:col-span-2 rounded-xl bg-card border border-border p-1">
+                  <div className="flex items-center justify-between px-3">
                     <div>
                       <h2 className="text-base font-semibold tracking-tight text-foreground">
                         Monthly Purchases
@@ -215,11 +218,12 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                   </div>
                   {/* <!-- Wrapper to avoid canvas growth bug --> */}
                   <div className="mt-3">
-                    <div className="h-48">
-                      <canvas
+                    <div className="h-56">
+                      {/* <canvas
                         id="purchasesChart"
                         className="w-full h-full"
-                      ></canvas>
+                      ></canvas> */}
+                      <CartesianGrid data={monthlyPurchases} />
                     </div>
                   </div>
                 </div>
