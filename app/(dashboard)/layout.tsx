@@ -14,7 +14,7 @@ export default async function DashboardLayout({
   return (
     <>
       <DashboardHeader profile={profile} />
-      <div className="flex h-[calc(100vh-4rem)]">
+      <div className={`flex md:h-[calc(100vh-64px)] h-[calc(100vh-128px)]`}>
         <Sidebar />
         <main className="flex-1 overflow-y-auto pb-20 md:pb-0">{children}</main>
       </div>
