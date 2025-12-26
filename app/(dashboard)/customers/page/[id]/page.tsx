@@ -11,7 +11,7 @@ import { AlertTriangle } from "lucide-react";
 import PurchaseHistory from "@/app/components/customer/PurchaseHistory";
 import { getPaymentsByCustomerID } from "@/app/services/payments";
 import { CustomerActions } from "@/app/components/customer/CustomerActions";
-import CartesianGrid from "@/app/components/production/CartesianGrid";
+import MonthlyPurchasesChart from "@/app/components/customer/MonthlyPurchasesChart";
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
@@ -223,7 +223,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
                         id="purchasesChart"
                         className="w-full h-full"
                       ></canvas> */}
-                      <CartesianGrid data={monthlyPurchases} />
+                      <MonthlyPurchasesChart data={monthlyPurchases} />
                     </div>
                   </div>
                 </div>
